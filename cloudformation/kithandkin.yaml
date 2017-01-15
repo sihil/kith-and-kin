@@ -1,0 +1,195 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Kith and Kin website
+
+Parameters:
+  KeyName:
+    Description: An ssh keypair to put on the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: kith-and-kin
+  VpcId:
+    Description: VPC ID
+    Type: String
+    Default: vpc-4e1be827
+  SubnetId:
+    Description: SubnetId to place server / ELB in
+    Type: String
+    Default: subnet-58f21523
+  AMI:
+    Description: Base AMI to boot
+    Type: AWS::EC2::Image::Id
+    Default: ami-57eae033
+  TLSCert:
+    Description: ARN of a TLS certificate to install on the load balancer
+    Type: String
+    Default: arn:aws:acm:eu-west-2:862718471841:certificate/a87b3ced-26eb-4877-a51f-dd76ee42f526
+
+Resources:
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: HTTP and HTTPS access to the load balancer
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: instance
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress:
+        # allow ELB to talk to instance
+      - IpProtocol: tcp
+        FromPort: 9000
+        ToPort: 9000
+        SourceSecurityGroupId:
+          Fn::GetAtt: LoadBalancerSecurityGroup.GroupId
+        # allow SSH access (port 22 for now)
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: instance-policy
+        PolicyDocument:
+          Statement:
+          # grant access to the distribution bucket in S3
+          - Effect: Allow
+            Action: s3:GetObject
+            Resource: arn:aws:s3:::kithandkin/*
+          - Effect: Allow
+            Action:
+            - cloudwatch:*
+            - logs:*
+            Resource: '*'
+          # allow instance to read from and append to dynamo db tables
+          - Effect: Allow
+            Action:
+            - dynamodb:GetItem
+            - dynamodb:BatchGetItem
+            - dynamodb:Query
+            - dynamodb:PutItem
+            - dynamodb:DescribeTable
+            Resource:
+              Fn::Join:
+              - ":"
+              - - arn:aws:dynamodb
+                - Ref: AWS::Region
+                - Ref: AWS::AccountId
+                - table/*
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+      - Ref: InstanceRole
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      Subnets:
+      - Ref: SubnetId
+      Listeners:
+      - LoadBalancerPort: 443
+        InstancePort: 9000
+        Protocol: HTTPS
+        SSLCertificateId:
+          Ref: TLSCert
+      - LoadBalancerPort: 80
+        InstancePort: 9000
+        Protocol: HTTP
+      HealthCheck:
+        Target: HTTP:9000/healthcheck
+        HealthyThreshold: 2
+        UnhealthyThreshold: 10
+        Interval: 30
+        Timeout: 10
+      SecurityGroups:
+      - Fn::GetAtt: LoadBalancerSecurityGroup.GroupId
+
+  LaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      KeyName:
+        Ref: KeyName
+      ImageId:
+        Ref: AMI
+      SecurityGroups:
+      - Fn::GetAtt: InstanceSecurityGroup.GroupId
+      InstanceType: t2.micro
+      IamInstanceProfile:
+        Ref: InstanceProfile
+      AssociatePublicIpAddress: true
+      UserData:
+        'Fn::Base64': |
+          #!/bin/bash -ev
+          locale-gen en_GB.UTF-8
+          add-apt-repository -y ppa:openjdk-r/ppa
+          apt-get -y update
+          apt-get -y upgrade
+          apt-get -y install openjdk-8-jre-headless ntp awscli
+          # setup kithandkin
+          adduser --system --home /kithkin --disabled-password kithkin
+          aws --region eu-west-2 s3 cp s3://kithandkin/application/kith-and-kin_1.0_all.deb /kithkin
+          dpkg -i /kithkin/kithandkin_1.0_all.deb
+
+  AutoscalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AvailabilityZones:
+      - eu-west-2a
+      VPCZoneIdentifier:
+      - Ref: SubnetId
+      LaunchConfigurationName:
+        Ref: LaunchConfig
+      MinSize: 1
+      MaxSize: 1
+      DesiredCapacity: 1
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 120
+      LoadBalancerNames:
+      - Ref: LoadBalancer
+
+  DNSRecords:
+    Type: "AWS::Route53::RecordSetGroup"
+    Properties:
+      HostedZoneName: kithandkin.wedding.
+      RecordSets:
+      - Name: kithandkin.wedding.
+        Type: A
+        AliasTarget:
+          HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneNameID
+          DNSName: !GetAtt LoadBalancer.DNSName
+      - Name: www.kithandkin.wedding.
+        Type: A
+        AliasTarget:
+          HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneNameID
+          DNSName: !GetAtt LoadBalancer.DNSName
+
+Outputs:
+  LoadBalancerUrl:
+    Value:
+      'Fn::GetAtt':
+      - LoadBalancer
+      - DNSName

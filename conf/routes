@@ -1,0 +1,3 @@
+GET /healthcheck controllers.KithAndKinController.healthcheck
+
+GET / controllers.KithAndKinController.index
