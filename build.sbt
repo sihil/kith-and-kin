@@ -7,6 +7,7 @@ version := "1.0"
 scalaVersion := "2.11.8"
 
 libraryDependencies ++= Seq(
+  "org.webjars" %% "webjars-play" % "2.5.0",
   filters
 )
 

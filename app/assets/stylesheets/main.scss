@@ -1,0 +1,60 @@
+@font-face {
+  font-family: 'Sunday';
+  src:url('/assets/fonts/Sunday.ttf.woff') format('woff'),
+  url('/assets/fonts/Sunday.ttf.svg#Sunday') format('svg'),
+  url('/assets/fonts/Sunday.ttf.eot'),
+  url('/assets/fonts/Sunday.ttf.eot?#iefix') format('embedded-opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Janda';
+  src:url('/assets/fonts/Janda-Everyday-Casual.ttf.woff') format('woff'),
+  url('/assets/fonts/Janda-Everyday-Casual.ttf.svg#Sunday') format('svg'),
+  url('/assets/fonts/Janda-Everyday-Casual.ttf.eot'),
+  url('/assets/fonts/Janda-Everyday-Casual.ttf.eot?#iefix') format('embedded-opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+$primary-color: rgb(206, 247, 245);
+
+body {
+  background-color: $primary-color;
+}
+
+h1,h2,h3 {
+  font-family: 'Sunday', sans-serif;
+}
+
+p {
+  font-family: 'Janda', sans-serif;
+}
+
+.center {
+  text-align: center;
+}
+
+.no-margin {
+  margin: 0;
+}
+
+.margin-bottom {
+  margin-bottom: 1em;
+}
+
+.kith-festival {
+  display: flex;
+  justify-content: center;
+}
+
+.kith-image {
+  height: 20%;
+  vertical-align: top;
+}
+
+.festival-image {
+  height: 23%;
+  padding-top: 3%;
+}

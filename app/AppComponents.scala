@@ -1,3 +1,4 @@
+import controllers.Assets
 import filters.ForwardingFilter
 import play.api._
 import play.api.ApplicationLoader.Context
@@ -17,5 +18,7 @@ class AppComponents(context: Context)
   )
 
   val kithKinController = new controllers.KithAndKinController()
-  val router = new Routes(httpErrorHandler, kithKinController)
+  val assets = new Assets(httpErrorHandler)
+
+  val router = new Routes(httpErrorHandler, kithKinController, assets)
 }

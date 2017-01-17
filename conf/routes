@@ -1,3 +1,8 @@
-GET /healthcheck controllers.KithAndKinController.healthcheck
+# healthcheck for the ELB
+GET         /healthcheck        controllers.KithAndKinController.healthcheck
 
-GET / controllers.KithAndKinController.index
+# pages
+GET         /                   controllers.KithAndKinController.index
+
+# serve assets such as JS and
+GET         /assets/*file       controllers.Assets.at(path="/public", file)
