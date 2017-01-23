@@ -8,6 +8,7 @@ scalaVersion := "2.11.8"
 
 libraryDependencies ++= Seq(
   "org.webjars" %% "webjars-play" % "2.5.0",
+  "org.webjars.npm" % "bulma" % "0.3.1",
   filters
 )
 

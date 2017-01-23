@@ -3,19 +3,41 @@
 <html>
     <head>
         <title>The Kith & Kin Festival</title>
+        <link href="@routes.Assets.at("lib/bulma/css/bulma.css")" rel="stylesheet">
         <link href="@routes.Assets.at("stylesheets/main.css")" rel="stylesheet">
     </head>
     <body>
-        <div class="margin-bottom">
-            <h1 class="no-margin center">Simon Hildrew and Christina Kelling</h1>
-            <h2 class="no-margin center">present</h2>
-        </div>
-        <div class="kith-festival">
-            <img class="kith-image" src="@routes.Assets.at("images/kith-kin.png")">
-            <img class="festival-image" src="@routes.Assets.at("images/sun.png")">
-        </div>
-        <h1>Welcome!</h1>
-        <p>Hi there, welcome to our wedding website.</p>
-        <p>There's not much to see right now, but come back in a couple of weeks!</p>
+        <section class="hero is-fullheight is-primary is-bold">
+            <div class="hero-head">
+                <div class="container has-text-centered">
+                    <h1 class="title">Simon Hildrew and Christina Kelling</h1>
+                    <h2 class="subtitle">present</h2>
+                </div>
+            </div>
+
+            <div class="hero-body">
+                <div class="container has-text-centered">
+                    <img src="@routes.Assets.at("images/kith-kin-festival-combined.png")">
+                </div>
+            </div>
+
+            <div class="hero-foot is-hidden-mobile">
+                <div class="tabs is-fullwidth">
+                    <ul>
+                        <li><h2><a>About us</a></h2></li>
+                        <li><h2><a>Accommodation</a></h2></li>
+                        <li><h2><a>Get Involved</a></h2></li>
+                        <li><h2><a>RSVP</a></h2></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        <section class="section">
+            <div class="container">
+                <h1>Welcome!</h1>
+                <p>Hi there, welcome to our wedding website.</p>
+                <p>There's not much to see right now, but come back in a couple of weeks!</p>
+            </div>
+        </section>
     </body>
 </html>
