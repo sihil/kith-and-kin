@@ -4,5 +4,6 @@ GET         /healthcheck        controllers.KithAndKinController.healthcheck
 # pages
 GET         /                   controllers.KithAndKinController.index
 
-# serve assets such as JS and
+# serve assets such as JS and images
+GET         /favicon.ico        controllers.Assets.at(path="/public", file="favicon/favicon.ico")
 GET         /assets/*file       controllers.Assets.at(path="/public", file)
