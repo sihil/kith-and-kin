@@ -1,0 +1,62 @@
+@import "sass/utilities/_all"
+
+.menu
+  +block
+  +unselectable
+  align-items: stretch
+  display: flex
+  justify-content: space-between
+  overflow: hidden
+  overflow-x: auto
+  white-space: nowrap
+  a
+    align-items: center
+    color: $text
+    display: flex
+    justify-content: center
+    margin-bottom: -1px
+    padding: 0.5em 1em
+    vertical-align: top
+    &:hover
+      border-bottom-color: $text-strong
+      color: $text-strong
+  li
+    display: block
+    &.is-active
+      a
+        border-bottom-color: $primary
+        color: $primary
+  ul
+    align-items: center
+    display: flex
+    flex-grow: 1
+    flex-wrap: wrap-reverse
+    justify-content: flex-start
+    &.is-left
+      padding-right: 0.75em
+    &.is-center
+      flex: none
+      justify-content: center
+      padding-left: 0.75em
+      padding-right: 0.75em
+    &.is-right
+      justify-content: flex-end
+      padding-left: 0.75em
+  // Alignment
+  &.is-centered
+    ul
+      justify-content: center
+  &.is-right
+    ul
+      justify-content: flex-end
+  &.is-fullwidth
+    li
+      flex-grow: 1
+      flex-shrink: 0
+  // Sizes
+  &.is-small
+    font-size: $size-small
+  &.is-medium
+    font-size: $size-medium
+  &.is-large
+    font-size: $size-large

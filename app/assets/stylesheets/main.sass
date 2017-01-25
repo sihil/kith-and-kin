@@ -1,0 +1,66 @@
+@charset "utf-8"
+
+@import "fonts"
+@import "sass/utilities/_all"
+@import "sass/base/_all"
+@import "sass/grid/_all"
+@import "sass/layout/_all"
+@import "menu"
+
+$primary-color: rgb(206, 247, 245)
+
+body
+  background-color: $primary-color
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6
+  font-family: 'Sunday', sans-serif
+  + p
+    padding-top: 1em
+
+p
+  font-family: 'Janda', serif
+  line-height: 180%
+  padding-bottom: 0.5em
+
+h1
+  font-size: 24px
+h2
+  font-size: 18px
+h3
+  font-size: 14px
+
+.center
+  text-align: center
+
+.no-margin
+  margin: 0
+
+.margin-bottom
+  margin-bottom: 1em
+
+.kith-festival
+  display: flex
+  justify-content: center
+
+.kith-image
+  height: 20%
+  vertical-align: top
+
+.widescreen-limit
+  +from($widescreen)
+    max-width: 60%
+
+.festival-image
+  height: 23%
+  padding-top: 3%
+
+.top-padding
+  padding-top: 1rem
+
+.bottom-padding
+  padding-bottom: 1rem
