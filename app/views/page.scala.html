@@ -1,4 +1,4 @@
-@(title: String, displayMenu: Boolean = true)(body: Html)
+@(title: String, menu: Boolean = true, bunting: Boolean = true)(body: Html)
 
 <html>
     <head>
@@ -11,15 +11,16 @@
         <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
         <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
         <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+        <link href="@routes.Assets.at("third-party/font-awesome-4.7.0/css/font-awesome.min.css")" rel="stylesheet">
         <link href="@routes.Assets.at("stylesheets/main.css")" rel="stylesheet">
     </head>
     <body>
-        @if(displayMenu) {
+        @if(menu) {
             <section class="hero">
                 <div class="menu">
                     <ul>
                         <li><h2><a href="@routes.KithAndKinController.index.withFragment("about-us")">About us</a></h2></li>
-                        <li><h2><a>Accommodation</a></h2></li>
+                        <li><h2><a href="@routes.KithAndKinController.accommodation">Accommodation</a></h2></li>
                     </ul>
                     <div class="center">
                         <a href="@routes.KithAndKinController.index"><img class="menu-logo" src="@routes.Assets.at("images/kith-kin.png")"></a>
@@ -29,6 +30,11 @@
                         <li><h2><a href="@routes.RsvpController.start">RSVP</a></h2></li>
                     </ul>
                 </div>
+            </section>
+        }
+        @if(menu && bunting) {
+            <section>
+                <img src="@routes.Assets.at("images/bunting.png")">
             </section>
         }
         @body

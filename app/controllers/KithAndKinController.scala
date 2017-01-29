@@ -10,4 +10,8 @@ class KithAndKinController extends Controller {
   def index = Action {
     Ok(views.html.index())
   }
+
+  def accommodation = Action {
+    Ok(views.html.accommodation())
+  }
 }

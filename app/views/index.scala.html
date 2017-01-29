@@ -1,6 +1,6 @@
 @()
 
-@page("The Kith & Kin Festival", displayMenu = false){
+@page("The Kith & Kin Festival", menu = false){
     <section class="hero is-fullheight is-primary is-bold">
         <img class="thistle-bottom-right" src="@routes.Assets.at("images/thistle.png")">
 
@@ -15,8 +15,8 @@
             <div class="container has-text-centered">
                 <img class="widescreen-limit" src="@routes.Assets.at("images/kith-kin-festival-combined.png")">
                 <div class="bring-to-front">
-                <h1 class="super">4-6th August 2017</h1>
-                <h2 class="super">Bogbain farm, Inverness</h2>
+                    <h1 class="super">4-6th August 2017</h1>
+                    <h2 class="super">Bogbain farm, Inverness</h2>
                 </div>
             </div>
         </div>
@@ -25,7 +25,7 @@
             <div class="menu is-fullwidth">
                 <ul>
                     <li><h2><a href="#about-us">About us</a></h2></li>
-                    <li><h2><a>Accommodation</a></h2></li>
+                    <li><h2><a href="@routes.KithAndKinController.accommodation">Accommodation</a></h2></li>
                     <li><h2><a>Get Involved</a></h2></li>
                     <li><h2><a href="@routes.RsvpController.start">RSVP</a></h2></li>
                 </ul>
@@ -33,13 +33,13 @@
         </div>
     </section>
     <section>
-        <img src="@routes.Assets.at("images/bunting.png")">
+        <img id="about-us" src="@routes.Assets.at("images/bunting.png")">
     </section>
     <section class="section inverted">
         <div class="container">
             <div class="columns">
                 <div class="column">
-                    <h1 id="about-us" class="heading">About Us</h1>
+                    <h1 class="heading">About Us</h1>
                     <p>After 7 years of friendship, various meals, drinks, parties and several sailing holidays, romance was born. And what was the great catalyst that brought about this life changing spark? Homeland.</p>
 
                     <p>Christina was doing her Masters full time and working part time. Simon was being Simon - generous and caring and geeky. Christina’s one evening off a week (prior to Monday morning’s early start) was Sunday night - going to a little church community that Simon was also part of, then watching Homeland at Simon’s house (helped by the Tivo box for anytime watching).</p>
