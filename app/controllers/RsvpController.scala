@@ -64,7 +64,7 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
             Redirect(routes.RsvpController.notRight()).
               flashing(
                 "title" -> "Oh no, I can't find you...",
-                "message" -> s"I'm sorry, I can't seem to find $contact in my list of invites. Double check and try again, otherwise please get in touch!"
+                "message" -> s"I'm sorry, I can't seem to find $email in my list of invites. Double check and try again!"
               )
         }
 
