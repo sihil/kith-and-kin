@@ -2,6 +2,8 @@
 
 @page("The Kith & Kin Festival", displayMenu = false){
     <section class="hero is-fullheight is-primary is-bold">
+        <img class="thistle-bottom-right" src="@routes.Assets.at("images/thistle.png")">
+
         <div class="hero-head top-padding">
             <div class="container has-text-centered">
                 <h1 class="title">Simon Hildrew and Christina Kelling</h1>
@@ -12,10 +14,14 @@
         <div class="hero-body">
             <div class="container has-text-centered">
                 <img class="widescreen-limit" src="@routes.Assets.at("images/kith-kin-festival-combined.png")">
+                <div class="bring-to-front">
+                <h1 class="super">4-6th August 2017</h1>
+                <h2 class="super">Bogbain farm, Inverness</h2>
+                </div>
             </div>
         </div>
 
-        <div class="hero-foot bottom-padding">
+        <div class="hero-foot bottom-padding bring-to-front">
             <div class="menu is-fullwidth">
                 <ul>
                     <li><h2><a href="#about-us">About us</a></h2></li>
@@ -29,11 +35,11 @@
     <section>
         <img src="@routes.Assets.at("images/bunting.png")">
     </section>
-    <section class="section">
+    <section class="section inverted">
         <div class="container">
-            <h1 id="about-us" class="title">About Us</h1>
             <div class="columns">
                 <div class="column">
+                    <h1 id="about-us" class="heading">About Us</h1>
                     <p>After 7 years of friendship, various meals, drinks, parties and several sailing holidays, romance was born. And what was the great catalyst that brought about this life changing spark? Homeland.</p>
 
                     <p>Christina was doing her Masters full time and working part time. Simon was being Simon - generous and caring and geeky. Christina’s one evening off a week (prior to Monday morning’s early start) was Sunday night - going to a little church community that Simon was also part of, then watching Homeland at Simon’s house (helped by the Tivo box for anytime watching).</p>
@@ -41,8 +47,25 @@
                     <p>And so, hanging out on Sunday evenings transpired into a drink… A drink (once Simon realised what was happening) transpired into a serious talk. A talk turned into more talk, a kiss, consultation on house buying, a romantic weekend in Wales, skiing in Austria, a sailing holiday in Turkey, getting roped into writing a bibilography for a dissertation, playing with nieces and nephews, stargazing and… a proposal.
                     </p>
                 </div>
-                <div class="column">&nbsp;</div>
+                <div class="column"><img src="http://placehold.it/350x250"></div>
             </div>
         </div>
+    </section>
+    <section class="section">
+        <div class="container">
+            <h1 id="the-festival" class="heading bring-to-front">A festival?</h1>
+            <div class="columns">
+                <div class="column is-one-third"><img class="flip-x thistle-bottom-left" src="@routes.Assets.at("images/thistle.png")"></div>
+                <div class="column is-two-third">
+                    <p>Yes, a wedding is a festival - we're just calling it as much. Much fun and merriment with a marriage ceremony to boot!</p>
+                    <p>Kith & Kin festival will take place from the 4-6th August at Bogbain Farm which is a few miles to the south east of Inverness.</p>
+                    <p><strong>Start time:</strong> 9am Friday 4th August (wedding party will be there from Thursday night)</p>
+                    <p><strong>End time:</strong> 5pm Sunday 6th August ???</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <iframe src="https://www.google.com/maps/d/embed?mid=1ISyydpgZIVI5lKTeQoR7IjA3Lb4" width="100%" height="90%"></iframe>
     </section>
 }

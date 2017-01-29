@@ -14,7 +14,7 @@ import scala.concurrent.Future
 object HttpResults extends Results
 
 trait AuthActions extends Actions {
-  val whitelist = Set("simon@hildrew.net")
+  val whitelist = Set("simon@hildrew.net", "c.l.kelling@gmail.com", "c.l.kelling@googlemail.com")
 
   def baseUrl: String
   def secure = baseUrl.startsWith("https")
