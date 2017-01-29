@@ -1,0 +1,15 @@
+@(contactType: String)
+
+@page("Message sent") {
+    <section>
+        <img src="@routes.Assets.at("images/bunting.png")">
+    </section>
+    <section class="section">
+        <div class="container">
+            <h1>Message Sent!</h1>
+
+            <p>Great news - we've found your @contactType. We've sent you a message with a link that will let you RSVP.</p>
+            <p>This should arrive quickly - if it doesn't then try again or let us know.</p>
+        </div>
+    </section>
+}

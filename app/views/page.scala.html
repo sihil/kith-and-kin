@@ -1,0 +1,36 @@
+@(title: String, displayMenu: Boolean = true)(body: Html)
+
+<html>
+    <head>
+        <title>@title</title>
+        <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+        <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+        <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+        <link href="@routes.Assets.at("stylesheets/main.css")" rel="stylesheet">
+    </head>
+    <body>
+        @if(displayMenu) {
+            <section class="hero">
+                <div class="menu">
+                    <ul>
+                        <li><h2><a href="@routes.KithAndKinController.index#about-us">About us</a></h2></li>
+                        <li><h2><a>Accommodation</a></h2></li>
+                    </ul>
+                    <div class="center">
+                        <img class="menu-logo" src="@routes.Assets.at("images/kith-kin.png")">
+                    </div>
+                    <ul>
+                        <li><h2><a>Get Involved</a></h2></li>
+                        <li><h2><a href="@routes.RsvpController.start">RSVP</a></h2></li>
+                    </ul>
+                </div>
+            </section>
+        }
+        @body
+    </body>
+</html>

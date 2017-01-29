@@ -98,6 +98,17 @@ Resources:
                 - Ref: AWS::AccountId
                 - table/*
 
+  InviteDynamoTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub kk-invites-PROD
+      AttributeDefinitions:
+      - {AttributeName: id, AttributeType: S}
+      KeySchema:
+      - {AttributeName: id, KeyType: HASH}
+      ProvisionedThroughput: {ReadCapacityUnits: 5, WriteCapacityUnits: 2}
+
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:

@@ -4,6 +4,22 @@ GET         /healthcheck        controllers.KithAndKinController.healthcheck
 # pages
 GET         /                   controllers.KithAndKinController.index
 
+# rsvp
+GET         /rsvp               controllers.RsvpController.start
+POST        /rsvp/lookup        controllers.RsvpController.lookup
+GET         /rsvp/sent          controllers.RsvpController.sentMessage
+GET         /rsvp/notRight      controllers.RsvpController.notRight
+GET         /rsvp/login/:id/:secret controllers.RsvpController.login(id: String, secret: String)
+
+GET         /rsvp/details       controllers.RsvpController.details
+
+#admin
+GET         /admin              controllers.AdminController.index
+GET         /admin/test/create  controllers.AdminController.create
+GET         /admin/loginAction  controllers.AdminController.loginAction
+GET         /oauthCallback      controllers.AdminController.oauth2Callback
+
+
 # serve assets such as JS and images
 GET         /favicon.ico        controllers.Assets.at(path="/public", file="favicon/favicon.ico")
 GET         /assets/*file       controllers.Assets.at(path="/public", file)

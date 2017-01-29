@@ -1,0 +1,16 @@
+@(title: String, message: String)
+
+@page(title) {
+    <section>
+        <img src="@routes.Assets.at("images/bunting.png")">
+    </section>
+    <section class="section">
+        <div class="container">
+            <h1>Oh no, I can't find you...</h1>
+
+            <p>@message</p>
+
+            <p>You can start over by clicking <a href="@routes.RsvpController.start()">here</a>. If you continue having trouble then get in touch with me at simon@@hildrew.net.</p>
+        </div>
+    </section>
+}

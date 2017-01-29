@@ -6,9 +6,16 @@ version := "1.0"
 
 scalaVersion := "2.11.8"
 
+val awsVersion = "1.11.86"
+
 libraryDependencies ++= Seq(
   "org.webjars" %% "webjars-play" % "2.5.0",
-  filters
+  "com.gu" %% "play-googleauth" % "0.6.0",
+  "com.gu" %% "scanamo" % "0.9.1",
+  "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
+  "com.amazonaws" % "aws-java-sdk-ses" % awsVersion,
+  filters,
+  ws
 )
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala, JDebPackaging).settings(

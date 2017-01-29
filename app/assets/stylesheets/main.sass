@@ -5,9 +5,8 @@
 @import "sass/base/_all"
 @import "sass/grid/_all"
 @import "sass/layout/_all"
+@import "sass/elements/_all"
 @import "menu"
-
-$primary-color: rgb(206, 247, 245)
 
 body
   background-color: $primary-color
@@ -21,6 +20,8 @@ h6
   font-family: 'Sunday', sans-serif
   + p
     padding-top: 1em
+  &.title
+    padding-bottom: 1em
 
 p
   font-family: 'Janda', serif
@@ -46,6 +47,10 @@ h3
 .kith-festival
   display: flex
   justify-content: center
+
+.menu-logo
+  max-height: 5rem
+  padding: 0.5rem
 
 .kith-image
   height: 20%

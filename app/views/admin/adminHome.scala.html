@@ -1,0 +1,20 @@
+@(invitees: List[Invite])
+
+@page("Admin home", displayMenu = false){
+    <section class="section">
+        <h1>Admin interface</h1>
+        <p>Here are a list of invitees...</p>
+        <table>
+            <thead>
+                <th>Names</th>
+            </thead>
+            <tbody>
+                @invitees.map { invitee =>
+                    <tr>
+                        <td>@invitee.adults.map(_.name).mkString(", ")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
