@@ -4,12 +4,14 @@ import java.util.UUID
 
 import com.gu.googleauth.{Actions, GoogleAuthConfig, UserIdentity}
 import db.InviteRepository
-import models.{Adult, Invite}
+import models.{Adult, Csv, Invite}
+import play.api.Logger
 import play.api.libs.ws.WSClient
 import play.api.mvc.Security.AuthenticatedRequest
 import play.api.mvc._
 
 import scala.concurrent.Future
+import scala.io.Source
 
 object HttpResults extends Results
 
@@ -47,14 +49,14 @@ trait AuthActions extends Actions {
 class AdminController(val wsClient: WSClient, val baseUrl: String, inviteRepository: InviteRepository)
   extends Controller with AuthActions {
 
-  def index = WhitelistAction { r =>
+  def index = WhitelistAction { implicit r =>
     val invites = inviteRepository.getInviteList
     Ok(views.html.admin.adminHome(invites.toList))
   }
 
   def create = WhitelistAction { r =>
     val adult = Adult("Simon Hildrew")
-    val invite = Invite(UUID.randomUUID(), None, "simon@hildrew.net", "07968146282", "62 Allendale Close\nLondon\nSE5 8SG", 0, List(adult), Nil)
+    val invite = Invite(UUID.randomUUID(), None, "simon@hildrew.net", false, Some("62 Allendale Close\nLondon\nSE5 8SG"), 0, List(adult), Nil, "just me", None)
     inviteRepository.putInvite(invite)
     Ok("done")
   }
@@ -63,7 +65,23 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     startGoogleLogin()
   }
 
+  def uploadCsv = WhitelistAction(parse.multipartFormData) { r =>
+    import kantan.csv.ops._
+    import kantan.csv.generic._
 
+    r.body.file("csv").map { csv =>
+      Logger.logger.info(s"processing file ${csv.ref.file}")
+      Logger.logger.info(Source.fromFile(csv.ref.file).getLines().take(3).mkString("\n"))
+      val reader = csv.ref.file.asCsvReader[Csv](',', true)
+      val list = reader.toList.flatMap(_.toList).flatMap(_.toInvite)
+      list.foreach{ invite =>
+        inviteRepository.putInvite(invite)
+        // this is so that we don't breach the limit
+        //Thread.sleep(200)
+      }
+      Ok(s"Inserted ${list.size} invites from CSV")
+    }.getOrElse(UnprocessableEntity("No file"))
+  }
 
   def oauth2Callback = Action.async { implicit request =>
     processOauth2Callback()

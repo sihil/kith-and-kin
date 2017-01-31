@@ -2,17 +2,37 @@ package controllers
 
 import java.util.UUID
 
+import akka.agent.Agent
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService
 import db.InviteRepository
 import helpers.{Email, RsvpCookie, RsvpId, Secret}
 import models.Invite
+import org.joda.time.DateTime
 import play.api.Logger
 import play.api.mvc.Security.AuthenticatedBuilder
 import play.api.mvc.{Action, Controller, RequestHeader}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimpleEmailService) extends Controller {
+  val lastSeenAgent = Agent[Map[UUID, DateTime]](Map.empty)
+
   def inviteFrom(request: RequestHeader) = RsvpCookie.parse(request.cookies).flatMap { rsvpId =>
-    inviteRepository.getInvite(rsvpId.id).filter(RsvpCookie.valid(_, rsvpId))
+    val invite = inviteRepository.getInvite(rsvpId.id).filter(RsvpCookie.valid(_, rsvpId))
+    invite.map { i =>
+      val now = new DateTime()
+      lastSeenAgent().get(i.id) match {
+        // seen within last 15 minutes, do nothing
+        case Some(lastSeen) if (now.getMillis - lastSeen.getMillis) < 1000 * 900 => i
+        // either never seen or more than 10 mins
+        case other =>
+          val updatedInvite = i.copy(lastLoggedIn = Some(now))
+          // update DB and cache
+          inviteRepository.putInvite(updatedInvite)
+          lastSeenAgent.send(_ + (i.id -> now))
+          updatedInvite
+      }
+    }
   }
   object RsvpLogin extends AuthenticatedBuilder[Invite](inviteFrom, _ => Redirect(routes.RsvpController.start()))
 
@@ -21,7 +41,7 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
       case Some(rsvpId)
         if inviteRepository.getInvite(rsvpId.id).exists(RsvpCookie.valid(_, rsvpId)) =>
         Redirect(routes.RsvpController.details())
-      case None => Ok(views.html.rsvp(request))
+      case _ => Ok(views.html.rsvp(request))
     }
   }
 

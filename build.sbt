@@ -14,6 +14,9 @@ libraryDependencies ++= Seq(
   "com.gu" %% "scanamo" % "0.9.1",
   "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
   "com.amazonaws" % "aws-java-sdk-ses" % awsVersion,
+  "com.nrinaudo" %% "kantan.csv-generic" % "0.1.17",
+  "com.nrinaudo" %% "kantan.csv-joda-time" % "0.1.17",
+  "com.typesafe.akka" % "akka-agent_2.11" % "2.4.12",
   filters,
   ws
 )
