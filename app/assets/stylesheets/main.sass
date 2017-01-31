@@ -35,6 +35,8 @@ p
   font-family: 'Janda', serif
   line-height: 180%
   padding-bottom: 0.5em
+  a
+    text-decoration: underline
 
 h1
   font-size: 2.25rem
@@ -81,6 +83,10 @@ h3
 .flip-x
   transform: scaleX(-1)
 
+.thistle-container
+  +mobile
+    padding-bottom: 25rem
+
 .thistle-bottom-right
   max-height: 25rem
   position: absolute
@@ -105,3 +111,49 @@ h3
   background-image: url("/assets/images/mountains.png")
   background-size: cover
   background-position: right bottom
+
+.dictionary
+  font-family: Serif, serif
+  font-size: 2rem
+  display: flex
+  padding-bottom: 2rem
+  line-height: 100%
+
+.dictionary-word
+  white-space: nowrap
+
+.dictionary-defn
+  padding-left: 1rem
+
+
+.words-container
+  font-family: 'Sunday', sans-serif
+  display: flex
+  flex-wrap: wrap
+  justify-content: center
+  align-items: flex-end
+  padding-bottom: 1rem
+
+.words
+  padding: 0.0rem 0.5rem
+
+  &:nth-child(2n)
+    color: #6a59b5
+  &:nth-child(2n+1)
+    color: #b16434
+  &:nth-child(3n+1)
+    color: #09520f
+  &:nth-child(4n)
+    color: #cf5083
+  &:nth-child(4n+1)
+    color: #002553
+
+  &.size-2
+    font-size: 1.8rem
+  &.size-3
+    font-size: 2.4rem
+  &.size-4
+    font-size: 3.0rem
+
+section.inverted
+  background-color: #95dab9

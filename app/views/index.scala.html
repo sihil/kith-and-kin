@@ -24,16 +24,52 @@
         <div class="hero-foot bottom-padding bring-to-front">
             <div class="menu is-fullwidth">
                 <ul>
-                    <li><h2><a href="#about-us">About us</a></h2></li>
+                    <li><h2><a href="#festival">Festival?</a></h2></li>
                     <li><h2><a href="@routes.KithAndKinController.accommodation">Accommodation</a></h2></li>
-                    <li><h2><a>Get Involved</a></h2></li>
+                    <li><h2><a href="@routes.KithAndKinController.getInvolved">Get Involved</a></h2></li>
                     <li><h2><a href="@routes.RsvpController.start">RSVP</a></h2></li>
                 </ul>
             </div>
         </div>
     </section>
     <section>
-        <img id="about-us" src="@routes.Assets.at("images/bunting.png")">
+        <img id="festival" src="@routes.Assets.at("images/bunting.png")">
+    </section>
+    <section class="section thistle-container">
+        <div class="container">
+            <div class="columns">
+                <div class="column is-one-third">
+                    <h1 id="the-festival" class="heading bring-to-front">A festival?</h1>
+                    <img class="flip-x thistle-bottom-left" src="@routes.Assets.at("images/thistle.png")">
+                </div>
+                <div class="column is-two-third">
+                    @* TODO - make this nice and dictionary looking *@
+                    <div class="dictionary">
+                        <div class="dictionary-word"><strong><em>festival (n.)</em></strong></div>
+                        <div class="dictionary-defn">from Old French festival (adj.) &ldquo;suitable for a feast; solemn, magnificent, joyful, happy&rdquo;</div>
+                    </div>
+                    <p>A wedding is a perfect example of a festival, so we're going to make the most of it! Much fun and merriment with a marriage ceremony to boot!</p>
+                    <p>We're planning a whole bunch of activities over the course of the weekend and more than anything, we'd love for you all to <a href="@routes.KithAndKinController.getInvolved()">get involved</a>!</p>
+                    <div class="words-container">
+                        <div class="words size-4">Vows</div>
+                        <div class="words size-3">Ceilidh</div>
+                        <div class="words size-4">Bonfire</div>
+                        <div class="words size-2">Stargazing</div>
+                        <div class="words size-4">Bouncy Castle</div>
+                        <div class="words size-2">Men in skirts</div>
+                        <div class="words size-4">Camping</div>
+                        <div class="words size-3">Poetry</div>
+                        <div class="words size-3">Live Music</div>
+                        <div class="words size-2">Guess the weight of<br/>the bride competition</div>
+                        <div class="words size-3">Highland games</div>
+                        <div class="words size-2">Story Telling</div>
+                    </div>
+                    <p>Kith & Kin festival will take place from the 4-6th August at Bogbain Farm which is a few miles to the south east of Inverness.</p>
+                    <p><strong>Start time:</strong> 10am Friday 4th August (the wedding party will be there from Thursday night)</p>
+                    <p><strong>End time:</strong> 4pm Sunday 6th August</p>
+                </div>
+            </div>
+        </div>
     </section>
     <section class="section inverted">
         <div class="container">
@@ -51,21 +87,7 @@
             </div>
         </div>
     </section>
-    <section class="section">
-        <div class="container">
-            <h1 id="the-festival" class="heading bring-to-front">A festival?</h1>
-            <div class="columns">
-                <div class="column is-one-third"><img class="flip-x thistle-bottom-left" src="@routes.Assets.at("images/thistle.png")"></div>
-                <div class="column is-two-third">
-                    <p>Yes, a wedding is a festival - we're just calling it as much. Much fun and merriment with a marriage ceremony to boot!</p>
-                    <p>Kith & Kin festival will take place from the 4-6th August at Bogbain Farm which is a few miles to the south east of Inverness.</p>
-                    <p><strong>Start time:</strong> 9am Friday 4th August (wedding party will be there from Thursday night)</p>
-                    <p><strong>End time:</strong> 5pm Sunday 6th August ???</p>
-                </div>
-            </div>
-        </div>
-    </section>
-    <section>
-        <iframe src="https://www.google.com/maps/d/embed?mid=1ISyydpgZIVI5lKTeQoR7IjA3Lb4" width="100%" height="90%"></iframe>
+    <section class="section inverted">
+        <img src="@routes.Assets.at("images/tartan.png")">
     </section>
 }

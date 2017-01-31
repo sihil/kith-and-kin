@@ -4,6 +4,7 @@ GET         /healthcheck        controllers.KithAndKinController.healthcheck
 # pages
 GET         /                   controllers.KithAndKinController.index
 GET         /accommodation      controllers.KithAndKinController.accommodation
+GET         /get-involved       controllers.KithAndKinController.getInvolved
 
 # rsvp
 GET         /rsvp               controllers.RsvpController.start

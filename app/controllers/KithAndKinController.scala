@@ -14,4 +14,8 @@ class KithAndKinController extends Controller {
   def accommodation = Action {
     Ok(views.html.accommodation())
   }
+
+  def getInvolved = Action {
+    Ok(views.html.getInvolved())
+  }
 }
