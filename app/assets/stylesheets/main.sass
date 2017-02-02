@@ -18,7 +18,10 @@ h4,
 h5,
 h6
   font-family: 'Sunday', sans-serif
+  line-height: normal
   + p
+    padding-top: 1em
+  + ul
     padding-top: 1em
   &.heading
     padding-bottom: 1em
@@ -30,10 +33,11 @@ h1.super
 h2.super
   font-size: 3rem
 
+body
+  font-family: 'Janda', serif
+  //line-height: 180%
 
 p
-  font-family: 'Janda', serif
-  line-height: 180%
   padding-bottom: 0.5em
   a
     text-decoration: underline
@@ -44,6 +48,17 @@ h2
   font-size: 1.8rem
 h3
   font-size: 1.4rem
+
+ul.asterisk
+  list-style: none
+  margin-left: 0
+  padding-left: 0
+  li
+    padding-left: 1em
+    text-indent: -1em
+    &:before
+      content: "*"
+      padding-right: 5px
 
 .center
   text-align: center
@@ -104,8 +119,12 @@ h3
   position: relative
 
 .accommodation-tent
-  padding: 1em
   max-height: 20rem
+  padding: 1em
+.get-involved-cow
+  max-height: 23rem
+  padding-right: 1em
+
 
 .mountains
   background-image: url("/assets/images/mountains.png")
@@ -129,6 +148,7 @@ h3
 
 .words-container
   font-family: 'Sunday', sans-serif
+  line-height: normal
   display: flex
   flex-wrap: wrap
   justify-content: center
