@@ -22,6 +22,10 @@ Parameters:
     Description: ARN of a TLS certificate to install on the load balancer
     Type: String
     Default: arn:aws:acm:eu-west-2:862718471841:certificate/a87b3ced-26eb-4877-a51f-dd76ee42f526
+  CFCert:
+    Description: ARN of a TLS certificate to install in cloudfront (must be in us-east-1)
+    Type: String
+    Default: arn:aws:acm:us-east-1:862718471841:certificate/6ef64df7-7e36-4274-9f4c-0d362cea3085
 
 Resources:
   LoadBalancerSecurityGroup:
@@ -188,6 +192,50 @@ Resources:
       LoadBalancerNames:
       - Ref: LoadBalancer
 
+  Cloudfront:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+        - www.kithandkin.wedding
+        - kithandkin.wedding
+        Origins:
+        - CustomOriginConfig:
+            HTTPSPort: 443
+            OriginProtocolPolicy: "https-only"
+          DomainName: !GetAtt LoadBalancer.DNSName
+          Id: "kithandkin"
+        DefaultCacheBehavior:
+          AllowedMethods: [DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT]
+          Compress: true
+          ForwardedValues:
+            Headers:
+            - "*"
+            QueryString: true
+            Cookies:
+              Forward: all
+          TargetOriginId: "kithandkin"
+          ViewerProtocolPolicy: "redirect-to-https"
+        CacheBehaviors:
+        - PathPattern: "assets/*"
+          Compress: true
+          ForwardedValues:
+            QueryString: false
+            Headers:
+            - Host
+          TargetOriginId: "kithandkin"
+          ViewerProtocolPolicy: "redirect-to-https"
+        CustomErrorResponses:
+        - ErrorCachingMinTTL: 5
+          ErrorCode: 404
+        PriceClass: PriceClass_All
+        Enabled: true
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CFCert
+          MinimumProtocolVersion: TLSv1
+          SslSupportMethod: "sni-only"
+        HttpVersion: http2
+
   DNSRecords:
     Type: "AWS::Route53::RecordSetGroup"
     Properties:
@@ -196,13 +244,13 @@ Resources:
       - Name: kithandkin.wedding.
         Type: A
         AliasTarget:
-          HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneNameID
-          DNSName: !GetAtt LoadBalancer.DNSName
+          HostedZoneId: Z2FDTNDATAQYW2
+          DNSName: !GetAtt Cloudfront.DomainName
       - Name: www.kithandkin.wedding.
         Type: A
         AliasTarget:
-          HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneNameID
-          DNSName: !GetAtt LoadBalancer.DNSName
+          HostedZoneId: Z2FDTNDATAQYW2
+          DNSName: !GetAtt Cloudfront.DomainName
 
 Outputs:
   LoadBalancerUrl:
