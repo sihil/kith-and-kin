@@ -29,9 +29,19 @@ h6
 .super
   color: #9d2d14
 h1.super
-  font-size: 4rem
+  +from($tablet)
+    font-size: 4rem
 h2.super
-  font-size: 3rem
+  +from($tablet)
+    font-size: 3rem
+
+h1.shrink-mobile
+  +until($tablet)
+    font-size: 1.3rem
+h2.shrink-mobile
+  +until($tablet)
+    font-size: 1.1rem
+
 
 body
   font-family: 'Janda', serif
@@ -45,9 +55,9 @@ p
 h1
   font-size: 2.25rem
 h2
-  font-size: 1.8rem
+  font-size: 1.7rem
 h3
-  font-size: 1.4rem
+  font-size: 1.35rem
 
 ul.asterisk
   list-style: none
@@ -103,7 +113,7 @@ ul.asterisk
     padding-bottom: 25rem
 
 .thistle-bottom-right
-  max-height: 25rem
+  max-height: 35%
   position: absolute
   bottom: 0
   right: 0
@@ -135,7 +145,6 @@ ul.asterisk
   padding-top: 1rem
   font-family: Serif, serif
   font-size: 2rem
-  display: flex
   padding-bottom: 2rem
   line-height: 100%
 

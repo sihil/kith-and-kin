@@ -6,8 +6,8 @@
 
         <div class="hero-head top-padding">
             <div class="container has-text-centered">
-                <h1 class="title">Simon Hildrew and Christina Kelling</h1>
-                <h2 class="subtitle">present</h2>
+                <h1 class="title shrink-mobile">Simon Hildrew and Christina Kelling</h1>
+                <h2 class="subtitle shrink-mobile">present</h2>
             </div>
         </div>
 
@@ -24,10 +24,10 @@
         <div class="hero-foot bottom-padding bring-to-front">
             <div class="menu is-fullwidth">
                 <ul>
-                    <li><h2><a href="#festival">Festival?</a></h2></li>
-                    <li><h2><a href="@routes.KithAndKinController.accommodation">Accommodation</a></h2></li>
-                    <li><h2><a href="@routes.KithAndKinController.getInvolved">Get Involved</a></h2></li>
-                    <li><h2><a href="@routes.RsvpController.start">RSVP</a></h2></li>
+                    <li><h2 class="shrink-mobile"><a href="#festival">Festival?</a></h2></li>
+                    <li><h2 class="shrink-mobile"><a href="@routes.KithAndKinController.accommodation">Accommodation</a></h2></li>
+                    <li><h2 class="shrink-mobile"><a href="@routes.KithAndKinController.getInvolved">Get Involved</a></h2></li>
+                    <li><h2 class="shrink-mobile"><a href="@routes.RsvpController.start">RSVP</a></h2></li>
                 </ul>
             </div>
         </div>
@@ -43,10 +43,9 @@
                     <img class="flip-x thistle-bottom-left" src="@routes.Assets.versioned("images/thistle.png")">
                 </div>
                 <div class="column is-two-third">
-                    @* TODO - make this nice and dictionary looking *@
-                    <div class="dictionary">
-                        <div class="dictionary-word"><strong><em>festival (n.)</em></strong></div>
-                        <div class="dictionary-defn">from Old French festival (adj.) &ldquo;suitable for a feast; solemn, magnificent, joyful, happy&rdquo;</div>
+                    <div class="columns dictionary">
+                        <div class="column dictionary-word"><strong><em>festival (n.)</em></strong></div>
+                        <div class="column is-three-quarters dictionary-defn">from Old French festival (adj.) &ldquo;suitable for a feast; solemn, magnificent, joyful, happy&rdquo;</div>
                     </div>
                     <p>A wedding is a perfect example of a festival, so we're going to make the most of it! Much fun and merriment with a marriage ceremony to boot!</p>
                     <p>We're planning a whole bunch of activities over the course of the weekend and more than anything, we'd love for you all to <a href="@routes.KithAndKinController.getInvolved()">get involved</a>!</p>

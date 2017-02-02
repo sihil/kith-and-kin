@@ -13,21 +13,25 @@
         <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
         <link href="@routes.Assets.versioned("third-party/font-awesome-4.7.0/css/font-awesome.min.css")" rel="stylesheet">
         <link href="@routes.Assets.versioned("stylesheets/main.css")" rel="stylesheet">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
     <body>
         @if(menu) {
             <section class="hero">
+                <div class="center is-hidden-tablet">
+                    <a href="@routes.KithAndKinController.index"><img class="menu-logo" src="@routes.Assets.versioned("images/kith-kin.png")"></a>
+                </div>
                 <div class="menu">
                     <ul>
-                        <li><h2><a href="@routes.KithAndKinController.index.withFragment("festival")">Festival?</a></h2></li>
-                        <li><h2><a href="@routes.KithAndKinController.accommodation">Accommodation</a></h2></li>
+                        <li><h2 class="shrink-mobile"><a href="@routes.KithAndKinController.index.withFragment("festival")">Festival?</a></h2></li>
+                        <li><h2 class="shrink-mobile"><a href="@routes.KithAndKinController.accommodation">Accommodation</a></h2></li>
                     </ul>
-                    <div class="center">
+                    <div class="center is-hidden-mobile">
                         <a href="@routes.KithAndKinController.index"><img class="menu-logo" src="@routes.Assets.versioned("images/kith-kin.png")"></a>
                     </div>
                     <ul>
-                        <li><h2><a href="@routes.KithAndKinController.getInvolved">Get Involved</a></h2></li>
-                        <li><h2><a href="@routes.RsvpController.start">RSVP</a></h2></li>
+                        <li><h2 class="shrink-mobile"><a href="@routes.KithAndKinController.getInvolved">Get Involved</a></h2></li>
+                        <li><h2 class="shrink-mobile"><a href="@routes.RsvpController.start">RSVP</a></h2></li>
                     </ul>
                 </div>
             </section>
