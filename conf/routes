@@ -25,4 +25,4 @@ POST        /admin/uploadCsv    controllers.AdminController.uploadCsv
 
 # serve assets such as JS and images
 GET         /favicon.ico        controllers.Assets.at(path="/public", file="favicon/favicon.ico")
-GET         /assets/*file       controllers.Assets.at(path="/public", file)
+GET         /assets/*file       controllers.Assets.versioned(path="/public", file: Asset)

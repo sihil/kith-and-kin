@@ -21,7 +21,9 @@ libraryDependencies ++= Seq(
   ws
 )
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala, JDebPackaging).settings(
+lazy val root = (project in file(".")).enablePlugins(PlayScala, JDebPackaging, SbtWeb).settings(
+  pipelineStages := Seq(digest),
+
   packageName in Universal := name.value,
   maintainer := "Simon Hildrew <simon@hildrew.net>",
   packageSummary := "Kith and Kin website",
