@@ -4,6 +4,7 @@ import java.util.UUID
 
 import com.gu.googleauth.{Actions, GoogleAuthConfig, UserIdentity}
 import db.InviteRepository
+import helpers.{RsvpCookie, RsvpId}
 import models.{Adult, Csv, Invite}
 import play.api.Logger
 import play.api.libs.ws.WSClient
@@ -12,12 +13,15 @@ import play.api.mvc._
 
 import scala.concurrent.Future
 import scala.io.Source
+import scala.language.reflectiveCalls
 
 object HttpResults extends Results
 
-trait AuthActions extends Actions {
-  val whitelist = Set("simon@hildrew.net", "c.l.kelling@gmail.com", "c.l.kelling@googlemail.com")
+object Whitelist {
+  val users = Set("simon@hildrew.net", "c.l.kelling@gmail.com", "c.l.kelling@googlemail.com")
+}
 
+trait AuthActions extends Actions {
   def baseUrl: String
   def secure = baseUrl.startsWith("https")
   def host = baseUrl.stripSuffix("/").split("://").last
@@ -36,7 +40,7 @@ trait AuthActions extends Actions {
   object WhitelistedActionFilter extends ActionFilter[({ type R[A] = AuthenticatedRequest[A, UserIdentity] })#R] {
     override protected def filter[A](request: AuthenticatedRequest[A, UserIdentity]): Future[Option[Result]] = {
       Future.successful{
-        if (!whitelist.contains(request.user.email)) {
+        if (!Whitelist.users.contains(request.user.email)) {
           Some(HttpResults.Unauthorized(s"User with e-mail ${request.user.email} is not authorized"))
         } else None
       }
@@ -56,7 +60,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
 
   def create = WhitelistAction { r =>
     val adult = Adult("Simon Hildrew")
-    val invite = Invite(UUID.randomUUID(), None, "simon@hildrew.net", false, Some("62 Allendale Close\nLondon\nSE5 8SG"), 0, List(adult), Nil, "just me", None)
+    val invite = Invite(UUID.randomUUID(), 0, None, "simon@hildrew.net", emailPreferred = false, Some("62 Allendale Close\nLondon\nSE5 8SG"), 0, None, List(adult), Nil, "just me", None)
     inviteRepository.putInvite(invite)
     Ok("done")
   }
@@ -72,7 +76,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     r.body.file("csv").map { csv =>
       Logger.logger.info(s"processing file ${csv.ref.file}")
       Logger.logger.info(Source.fromFile(csv.ref.file).getLines().take(3).mkString("\n"))
-      val reader = csv.ref.file.asCsvReader[Csv](',', true)
+      val reader = csv.ref.file.asCsvReader[Csv](',', header = true)
       val list = reader.toList.flatMap(_.toList).flatMap(_.toInvite)
       list.foreach{ invite =>
         inviteRepository.putInvite(invite)
@@ -81,6 +85,26 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
       }
       Ok(s"Inserted ${list.size} invites from CSV")
     }.getOrElse(UnprocessableEntity("No file"))
+  }
+
+  def action = WhitelistAction { r =>
+    val action = r.body.asFormUrlEncoded.flatMap { formData =>
+      val id = formData.get("id").toList.flatten.headOption.map(UUID.fromString)
+      val action = formData.get("action").toList.flatten.headOption
+      id.zip(action).headOption
+    }
+    action match {
+      case Some((id, "impersonate")) =>
+        val loginCookie = RsvpCookie.make(RsvpId(id, "fakeSecret"), r.secure)
+        Redirect(routes.RsvpController.details()).withCookies(loginCookie)
+      case Some((id, "toggleInviteSent")) =>
+        inviteRepository.getInvite(id).map { invite =>
+          inviteRepository.putInvite(invite.copy(sent = !invite.sent))
+          Redirect(routes.AdminController.index())
+        }.getOrElse(NotFound(s"Invite $id not found"))
+      case unknown =>
+        NotFound(s"Unknown id/action: $unknown")
+    }
   }
 
   def oauth2Callback = Action.async { implicit request =>

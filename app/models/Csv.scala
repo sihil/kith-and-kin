@@ -33,11 +33,13 @@ case class Csv(
       Some(
         Invite(
           UUID.randomUUID(),
+          update = 0,
           None,
           email.trim.toLowerCase,
           timbuktu.trim.nonEmpty,
           nonEmptyToOption(postalAddress),
           0,
+          Some(addressee),
           adults,
           kids,
           s"$clanSize${nonEmptyToOption(note).map("\n"+_).getOrElse("")}",

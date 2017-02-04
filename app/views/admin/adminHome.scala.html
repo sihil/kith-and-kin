@@ -3,36 +3,50 @@
 
 @page("Admin home"){
     <section class="section">
-        <h1 class="heading">Admin interface</h1>
-        <h2>Summary</h2>
-        <p>Adults: @invitees.map(_.adults.size).sum</p>
-        <p>Children: @invitees.map(_.children.size).sum</p>
-        <h2>The List</h2>
-        <table class="table">
-            <thead>
-                <th>Names</th>
-                <th>Contact e-mail</th>
-                <th>Children</th>
-                <th>Address?</th>
-                <th>Last seen</th>
-            </thead>
-            <tbody>
-                @invitees.sortBy(_.adults.head.name).map { invitee =>
+        <div class="container">
+            <h1 class="heading">Admin interface</h1>
+            <h2>Summary</h2>
+            <p>Adults: @invitees.map(_.adults.size).sum</p>
+            <p>Children: @invitees.map(_.children.size).sum</p>
+            <h2>The List</h2>
+            <table class="table">
+                <thead>
                     <tr>
-                        <td>@invitee.adults.map(_.name).mkString(", ")</td>
-                        <td>@invitee.email@if(invitee.emailPreferred){ <strong>(preferred)</strong>}</td>
-                        <td>@invitee.children.map(_.name).mkString(", ")</td>
-                        <td>@if(invitee.address.nonEmpty){yes}else{<strong>missing</strong>}</td>
-                        <td>@invitee.lastLoggedIn.map(_.toString).getOrElse("never")</td>
+                        <th>Names</th>
+                        <th>Contact e-mail</th>
+                        <th>Children</th>
+                        <th>Address?</th>
+                        <th>Last seen</th>
+                        <th>Actions</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @invitees.sortBy(_.adults.head.name).map { invitee =>
+                        <tr>
+                            <td>@invitee.giveMeAName</td>
+                            <td>@invitee.email@if(invitee.emailPreferred){ <strong>(preferred)</strong>}</td>
+                            <td>@invitee.children.map(_.name).mkString(", ")</td>
+                            <td>@if(invitee.address.nonEmpty){yes}else{<strong>missing</strong>}</td>
+                            <td>@invitee.lastLoggedIn.map(_.toString).getOrElse("never")</td>
+                            <td>
+                                @form(CSRF(routes.AdminController.action), 'class -> "inline") {
+                                    <input type="hidden" name="id" value="@invitee.id.toString">
+                                    <button class="button is-small" name="action" value="impersonate">Impersonate</button>
+                                    <button class="button is-small@if(invitee.sent){ is-success}" name="action" value="toggleInviteSent">Mark as @if(invitee.sent){unsent}else{sent}</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </section>
     <section>
-        @form(CSRF(routes.AdminController.uploadCsv), 'enctype -> "multipart/form-data") {
-            <input type="file" name="csv">
-            <input type="submit">
-        }
+        <div class="container">
+            @form(CSRF(routes.AdminController.uploadCsv), 'enctype -> "multipart/form-data") {
+                <input type="file" name="csv">
+                <input type="submit">
+            }
+        </div>
     </section>
 }

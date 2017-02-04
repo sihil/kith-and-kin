@@ -21,6 +21,12 @@ h6
   line-height: normal
   + p
     padding-top: 1em
+  + h1
+    padding-top: 1em
+  + h2
+    padding-top: 1em
+  + h3
+    padding-top: 1em
   + ul
     padding-top: 1em
   &.heading
@@ -42,6 +48,8 @@ h2.shrink-mobile
   +until($tablet)
     font-size: 1.1rem
 
+form.inline
+  margin-bottom: 0
 
 body
   font-family: 'Janda', serif
@@ -69,6 +77,10 @@ ul.asterisk
     &:before
       content: "*"
       padding-right: 5px
+
+.container
+  max-width: 1152px
+  margin: 0 auto
 
 .center
   text-align: center

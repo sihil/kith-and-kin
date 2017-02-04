@@ -21,6 +21,7 @@ GET         /admin/test/create  controllers.AdminController.create
 GET         /admin/loginAction  controllers.AdminController.loginAction
 GET         /oauthCallback      controllers.AdminController.oauth2Callback
 POST        /admin/uploadCsv    controllers.AdminController.uploadCsv
+POST        /admin/action       controllers.AdminController.action
 
 
 # serve assets such as JS and images

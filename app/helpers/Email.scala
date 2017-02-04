@@ -6,7 +6,7 @@ import com.amazonaws.services.simpleemail.model._
 import scala.collection.JavaConverters._
 
 object Email {
-  val from: String = "no-reply@kithandkin.wedding"
+  val from: String = "Kith & Kin Festival <no-reply@kithandkin.wedding>"
 
   def sendEmail(sesClient: AmazonSimpleEmailService, to: String, subject: String, message: String): Unit = {
     val destination = new Destination(List(to).asJava)

@@ -15,7 +15,11 @@ class InviteRepository(val client: AmazonDynamoDB, val stage: String) extends Dy
 
   import com.gu.scanamo.syntax._
 
-  def putInvite(invited: Invite): Unit = exec(table.put(invited))
+  def putInvite(invited: Invite): Unit = {
+    // TODO - enforce update ordering so we don't lose info - this seems to be implemented but not documented
+    exec(table.put(invited.copy(update = invited.update + 1)))
+  }
+
   def getInvite(id: UUID): Option[Invite] = exec(table.get('id -> id)).flatMap(_.toOption)
   def deleteInvite(id: UUID): Unit = exec(table.delete('id -> id))
   def getInviteList: Iterable[Invite] = exec(table.scan()).flatMap(_.toOption)

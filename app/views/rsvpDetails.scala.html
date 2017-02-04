@@ -1,19 +1,23 @@
 @(invite: Invite)
+@import helper._
 
-@page("RSVP"){
-    <section class="section">
-        <h1>RSVP details</h1>
-        @invite.adults.map { adult =>
-            <p>@adult.name</p>
-        }
-        @if(invite.children.nonEmpty) {
-            <h2>Kids</h2>
-            @invite.children.map { kid =>
-                <p>@kid.name (DOB: @kid.dob)</p>
-            }
-        }
-        <h2>Your RSVP has the following contact details:</h2>
-        <p><strong>E-mail:</strong> @invite.email</p>
-        <p><strong>Address:</strong> @invite.address</p>
-    </section>
-}
+    @page("RSVP") {
+        <section class="section">
+            <div class="container">
+                <h1>RSVP details</h1>
+                <h2>Grown ups</h2>
+                @invite.adults.map { adult =>
+                    <p>@adult.name</p>
+                }
+                @if(invite.children.nonEmpty) {
+                    <h2>Kids</h2>
+                    @invite.children.map { kid =>
+                        <p>@kid.name (DOB: @kid.dob)</p>
+                    }
+                }
+                <h2>Your RSVP has the following contact details:</h2>
+                <p><strong>E-mail:</strong> @invite.email</p>
+                <p><strong>Address:</strong> @invite.address</p>
+            </div>
+        </section>
+    }
