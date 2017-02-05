@@ -1,9 +1,10 @@
-@(invite: Invite)
+@(invite: Invite)(implicit rh: RequestHeader)
 @import helper._
 
     @page("RSVP") {
         <section class="section">
             <div class="container">
+                <div>
                 <h1>RSVP details</h1>
                 <h2>Grown ups</h2>
                 @invite.adults.map { adult =>
@@ -18,6 +19,15 @@
                 <h2>Your RSVP has the following contact details:</h2>
                 <p><strong>E-mail:</strong> @invite.email</p>
                 <p><strong>Address:</strong> @invite.address</p>
+                </div>
+                <div>
+                    @form(CSRF(routes.RsvpController.update("rsvp"))) {
+                        <h2 class="heading">Can you make it?</h2>
+                        <input type="hidden" name="id" value="@invite.id.toString">
+                        <button class="button is-primary is-large sunday" type="submit" name="rsvp" value="yes">Yes!!</button>
+                        <button class="button is-warning is-large sunday" type="submit" name="rsvp" value="no">Sadly not</button>
+                    }
+                </div>
             </div>
         </section>
     }

@@ -14,6 +14,10 @@ GET         /rsvp/notRight      controllers.RsvpController.notRight
 GET         /rsvp/login/:id/:secret controllers.RsvpController.login(id: String, secret: String)
 
 GET         /rsvp/details       controllers.RsvpController.details
+POST        /rsvp/update/:field controllers.RsvpController.update(field: String)
+GET         /rsvp/accommodation controllers.RsvpController.accommodation()
+GET         /rsvp/notComing   controllers.RsvpController.notComing()
+GET         /rsvp/thanks/:coming        controllers.RsvpController.thanks(coming: Boolean)
 
 #admin
 GET         /admin              controllers.AdminController.index

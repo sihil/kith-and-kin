@@ -9,14 +9,21 @@ scalaVersion := "2.11.8"
 val awsVersion = "1.11.86"
 
 libraryDependencies ++= Seq(
+  // webjars
   "org.webjars" %% "webjars-play" % "2.5.0",
+  "org.webjars" % "react" % "15.3.2",
+  // scala deps
   "com.gu" %% "play-googleauth" % "0.6.0",
   "com.gu" %% "scanamo" % "0.9.1",
+  // email and db
   "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
   "com.amazonaws" % "aws-java-sdk-ses" % awsVersion,
+  // parsing CSV files
   "com.nrinaudo" %% "kantan.csv-generic" % "0.1.17",
   "com.nrinaudo" %% "kantan.csv-joda-time" % "0.1.17",
+  // akka agents
   "com.typesafe.akka" % "akka-agent_2.11" % "2.4.12",
+  // play framework
   filters,
   ws
 )
@@ -40,5 +47,8 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala, JDebPackaging, S
     s"-J-Xloggc:/var/log/${packageName.value}/gc.log"
   ),
 
-  serverLoading in Debian := Systemd
+  serverLoading in Debian := Systemd,
+
+  sources in (Compile,doc) := Seq.empty,
+  publishArtifact in (Compile, packageDoc) := false
 )

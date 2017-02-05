@@ -4,6 +4,26 @@ import java.util.UUID
 
 import org.joda.time.{DateTime, LocalDate}
 
+sealed trait Accommodation
+case class OffSite(location: String, onSiteBreakfast: Boolean) extends Accommodation
+case class OnSite(option: OnSiteOption) extends Accommodation
+
+sealed trait OnSiteOption
+case object OwnTent extends OnSiteOption
+case object OwnCamper extends OnSiteOption
+case object OwnCaravan extends OnSiteOption
+case object BellTent extends OnSiteOption
+
+case class Rsvp(
+  coming: Boolean,
+  message: Option[String] = None,
+  arrival: Option[DateTime] = None,
+  departure: Option[DateTime] = None,
+  accommodation: Option[Accommodation] = None
+)
+
+case class Payment(amount: Double, authCode: String, successful: Boolean)
+
 case class Adult(name: String)
 case class Child(name: String, dob: LocalDate)
 case class Invite(
@@ -29,16 +49,3 @@ case class Invite(
   def giveMeAName = addressee.getOrElse(stringifyList(firstNames))
 }
 
-sealed trait Accommodation
-case class OffSite(location: String, onSiteBreakfast: Boolean) extends Accommodation
-case class OnSite(option: OnSiteOption) extends Accommodation
-
-sealed trait OnSiteOption
-case object OwnTent extends OnSiteOption
-case object OwnCamper extends OnSiteOption
-case object OwnCaravan extends OnSiteOption
-case object BellTent extends OnSiteOption
-
-case class Rsvp(coming: Boolean, message: String, arrival: DateTime, departure: DateTime, accommodation: Accommodation)
-
-case class Payment(amount: Double, authCode: String, successful: Boolean)

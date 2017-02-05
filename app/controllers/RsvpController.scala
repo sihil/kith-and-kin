@@ -7,7 +7,7 @@ import com.amazonaws.services.simpleemail.AmazonSimpleEmailService
 import com.gu.googleauth.{GoogleAuthConfig, UserIdentifier}
 import db.InviteRepository
 import helpers.{Email, RsvpCookie, RsvpId, Secret}
-import models.Invite
+import models.{Invite, Rsvp}
 import org.joda.time.DateTime
 import play.api.Logger
 import play.api.mvc.Security.AuthenticatedBuilder
@@ -47,7 +47,7 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
   object RsvpLogin extends AuthenticatedBuilder[Invite](inviteFrom, _ => Redirect(routes.RsvpController.start()))
 
   def start = Action { request =>
-    Ok(views.html.rsvpStart(request))
+    Ok(views.html.rsvp.start(request))
   }
 
   def lookup = Action { request =>
@@ -100,13 +100,13 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
 
   def sentMessage = Action { request =>
     val contactType = request.flash.data("contactType")
-    Ok(views.html.sentMessage(contactType))
+    Ok(views.html.rsvp.sentMessage(contactType))
   }
 
   def notRight = Action { request =>
     val title = request.flash.data("title")
     val message = request.flash.data("message")
-    Ok(views.html.notRight(title, message))
+    Ok(views.html.rsvp.notRight(title, message))
   }
 
   def login(idString: String, secret: String) = Action { request =>
@@ -129,7 +129,41 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
     }
   }
 
-  def details = RsvpLogin { request =>
-    Ok(views.html.rsvpDetails(request.user))
+  def details = RsvpLogin { implicit request =>
+    Ok(views.html.rsvp.details(request.user))
   }
+
+  def update(field: String) = RsvpLogin { request =>
+    def formField(name: String) = request.body.asFormUrlEncoded.flatMap(_.get(name).toList.flatten.headOption)
+    val maybeChoice = formField(field)
+    maybeChoice.map { choice =>
+      field match {
+        case "rsvp" =>
+          val coming = choice == "yes"
+          val rsvp = request.user.rsvp.map(_.copy(coming = coming)).getOrElse(Rsvp(coming))
+          inviteRepository.putInvite(request.user.copy(rsvp=Some(rsvp)))
+          if (coming)
+            Redirect(routes.RsvpController.accommodation())
+          else
+            Redirect(routes.RsvpController.notComing())
+        case "message" =>
+          val rsvp = request.user.rsvp.map(_.copy(message = Some(choice)))
+          inviteRepository.putInvite(request.user.copy(rsvp=rsvp))
+          Redirect(routes.RsvpController.thanks(coming=false))
+      }
+    }.getOrElse(BadRequest(s"no $field field"))
+  }
+
+  def notComing() = RsvpLogin { implicit request =>
+    Ok(views.html.rsvp.notComing(request.user))
+  }
+
+  def accommodation() = RsvpLogin { implicit request =>
+    Ok(views.html.rsvp.accommodation(request.user))
+  }
+
+  def thanks(coming: Boolean) = RsvpLogin { implicit request =>
+    Ok(views.html.rsvp.thanks(coming))
+  }
+
 }
