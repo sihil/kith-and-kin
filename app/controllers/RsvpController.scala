@@ -7,7 +7,7 @@ import com.amazonaws.services.simpleemail.AmazonSimpleEmailService
 import com.gu.googleauth.{GoogleAuthConfig, UserIdentifier}
 import db.InviteRepository
 import helpers.{Email, RsvpCookie, RsvpId, Secret}
-import models.{Invite, Questions}
+import models.{Invite, Questions, Rsvp}
 import org.joda.time.DateTime
 import play.api.Logger
 import play.api.libs.json.Json
@@ -15,6 +15,8 @@ import play.api.mvc.Security.AuthenticatedBuilder
 import play.api.mvc.{Action, Controller, RequestHeader}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+
+import com.softwaremill.quicklens._
 
 class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimpleEmailService) extends Controller with UserIdentifier {
 
@@ -134,17 +136,22 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
     Ok(views.html.rsvp.details(request.user))
   }
 
-  def update = RsvpLogin(parse.json) { request =>
-    val bug = for {
-      field <- (request.body \ "field").asOpt[String]
-      choice <- (request.body \ "value").asOpt[String]
-      question <- Questions.allQuestions.find(_.updateKey==field)
-    } yield {
-      val updatedInvite = question.update(request.user, choice)
-      inviteRepository.putInvite(updatedInvite)
-      Ok(Json.obj("result" -> "success"))
+  def update(complete: Boolean) = RsvpLogin(parse.json) { request =>
+    val updateMap = request.body.as[Map[String,String]]
+    val maybeRsvp = if (complete) request.user.rsvp else request.user.draftRsvp
+    val updatedRsvp = updateMap.foldLeft(maybeRsvp.getOrElse(Rsvp())) { case (rsvp, (question, answer)) =>
+      Questions.allQuestions.find(_.updateKey==question).map { q =>
+        q.update(rsvp, answer)
+      }.getOrElse(rsvp)
     }
-    bug.getOrElse(Ok(Json.obj("result" -> "error")))
+    val updatedInvite = if (complete)
+      request.user.modify(_.draftRsvp).setTo(Some(updatedRsvp)).modify(_.rsvp).setTo(Some(updatedRsvp))
+    else
+      request.user.modify(_.draftRsvp).setTo(Some(updatedRsvp))
+
+    inviteRepository.putInvite(updatedInvite)
+
+    Ok(Json.obj("result" -> "success"))
   }
 
   def notComing() = RsvpLogin { implicit request =>
@@ -155,12 +162,12 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
     Ok(views.html.rsvp.accommodation(request.user))
   }
 
-  def thanks(coming: Boolean) = RsvpLogin { implicit request =>
-    Ok(views.html.rsvp.thanks(coming))
+  def complete = RsvpLogin { implicit request =>
+    Ok(views.html.rsvp.thanks(request.user.rsvp.flatMap(_.coming).get))
   }
 
   def questions = RsvpLogin { r =>
-    val answers = Questions.answers(r.user)
+    val answers = Questions.answers(r.user.rsvp.orElse(r.user.draftRsvp).getOrElse(Rsvp()))
     val answerJson = Json.obj("answers" -> answers)
     Ok(Questions.questionJson ++ answerJson)
   }

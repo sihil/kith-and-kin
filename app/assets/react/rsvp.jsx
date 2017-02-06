@@ -25,6 +25,14 @@ class Question extends React.Component {
 }
 
 class Rsvp extends React.Component {
+    map(o, f, ctx) {
+        ctx = ctx || this;
+        let result = {};
+        Object.keys(o).forEach(function(k) {
+            result[k] = f.call(ctx, o[k], k, o);
+        });
+        return result;
+    }
     constructor() {
         super();
         this.state = {
@@ -45,22 +53,29 @@ class Rsvp extends React.Component {
 
             return response.json().then((json) => {
                 const answerMap = json.answers;
-                const answerMapWithObjects = Object.assign(...Object.keys(answerMap).map(k => ({[k]: this.findAnswer(json.questions, k, answerMap[k])})));
+                const answerMapWithObjects = this.map(answerMap, (v, k) => {
+                    return this.findAnswer(json.questions, k, v)
+                });
                 this.setState({questions: json.questions, startKey: json.startPage, answers: answerMapWithObjects});
             });
         });
         // get any responses
     }
-    onAnswer(question, answer) {
-        fetch("/rsvp/update", {
+    update(answers, complete) {
+        return fetch("/rsvp/update?complete="+complete, {
             credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'Csrf-Token': window.csrf
             },
             method: 'POST',
-            body: JSON.stringify({field: question.updateKey, value: answer.updateKey})
-        }).then((res) => {
+            body: JSON.stringify(answers)
+        })
+    }
+    onAnswer(question, answer) {
+        const answers = {};
+        answers[question.updateKey] = answer.updateKey;
+        this.update(answers, false).then((res) => {
             if (res.status == 200) {
                 this.setState((previous) => {
                     const newAnswer = {};
@@ -86,14 +101,36 @@ class Rsvp extends React.Component {
             <Question key={question.updateKey} question={question} answer={answer} onAnswer={(answer) => this.onAnswer(question, answer)}/>
         );
     }
+    finishRsvp() {
+        console.log("finished!");
+        const answers = this.map(this.state.answers, (v) => {
+            return v.updateKey
+        });
+        this.update(answers, true).then((res) => {
+            if (res.status == 200) {
+                window.location = '/rsvp/complete'
+            }
+        })
+    }
     render() {
         if (this.state.questions) {
             const questionList = this.questionAnswers(this.state.startKey);
             const questionElements = questionList.map((question) => {
                 return this.renderQuestion(question.question, question.answer);
             });
+            const bottomQuestion = questionList[questionList.length-1];
+            const terminusQuestion = bottomQuestion.question.nextQuestion === undefined;
+            const finished = terminusQuestion && bottomQuestion.answer;
             return (
-                <div>{questionElements}</div>
+                <div>
+                    {questionElements}
+                    {finished &&
+                        <div>
+                            <h2 className="heading">You're finished!</h2>
+                            <Button colour="is-primary" onClick={() => this.finishRsvp()} text="Send RSVP"/>
+                        </div>
+                    }
+                </div>
             );
         } else {
             return (

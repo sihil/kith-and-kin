@@ -5,8 +5,15 @@
         <div class="container">
             <div>
                 <h1>Thanks for RSVPing</h1>
-                <p>Thanks for letting us know whether you'll be coming or not.</p>
-                <p></p>
+                @if(coming) {
+                    <p>Yey! We're so excited that you'll be joining us at Kith & Kin. Keep your eyes open for more festival details in the coming months and if you have any questions in the meantime, fire them over to us at <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a></p>
+                    <p>See you in August!</p>
+                    <p><strong>Simon and Christina xx</strong></p>
+                } else {
+                    <p>We're sad that you won't be able to make it, but thanks for letting us know. Hopefully we'll be able to catch up with you soon.</p>
+                    <p>Simon and Christina xx</p>
+                }
+
             </div>
         </div>
     </section>

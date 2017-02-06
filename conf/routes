@@ -14,10 +14,10 @@ GET         /rsvp/notRight      controllers.RsvpController.notRight
 GET         /rsvp/login/:id/:secret controllers.RsvpController.login(id: String, secret: String)
 
 GET         /rsvp/details       controllers.RsvpController.details
-POST        /rsvp/update        controllers.RsvpController.update
+POST        /rsvp/update        controllers.RsvpController.update(complete: Boolean)
 GET         /rsvp/accommodation controllers.RsvpController.accommodation()
 GET         /rsvp/notComing   controllers.RsvpController.notComing()
-GET         /rsvp/thanks/:coming        controllers.RsvpController.thanks(coming: Boolean)
+GET         /rsvp/complete     controllers.RsvpController.complete
 GET         /rsvp/questions     controllers.RsvpController.questions
 
 #admin

@@ -12,7 +12,7 @@ case object OnSiteOwnCaravan extends Accommodation
 case object OnSiteBellTent extends Accommodation
 
 case class Rsvp(
-  coming: Option[Boolean],
+  coming: Option[Boolean] = None,
   message: Option[String] = None,
   arrival: Option[DateTime] = None,
   departure: Option[DateTime] = None,
@@ -39,6 +39,7 @@ case class Invite(
   note: String,
   lastLoggedIn: Option[DateTime],
   sent: Boolean = false,
+  draftRsvp: Option[Rsvp] = None,
   rsvp: Option[Rsvp] = None,
   payments: List[Payment] = Nil
 ) {

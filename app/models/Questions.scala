@@ -24,13 +24,13 @@ object Answer {
 trait QuestionReference {
   def updateKey: String
 }
-case class Question[T](question: String, updateKey: String, answers: List[Answer[T]], updateInvite: (Invite, Option[Answer[T]]) => Invite, fromInvite: Invite => Option[T]) extends QuestionReference {
+case class Question[T](question: String, updateKey: String, answers: List[Answer[T]], updateRsvp: (Rsvp, Option[Answer[T]]) => Rsvp, fromRsvp: Rsvp => Option[T]) extends QuestionReference {
   def fromKey(key: String): Option[Answer[T]] = answers.find(_.updateKey == key)
-  def update(invite: Invite, choice: String) = updateInvite(invite, fromKey(choice))
+  def update(rsvp: Rsvp, choice: String) = updateRsvp(rsvp, fromKey(choice))
   def jsonQuestion = JsonQuestion(question, updateKey, answers.map(_.jsonAnswer))
-  def answer(invite: Invite): Option[String] = {
+  def answer(rsvp: Rsvp): Option[String] = {
     for {
-      answerValue <- fromInvite(invite)
+      answerValue <- fromRsvp(rsvp)
       answer <- answers.find(_.internalValue == answerValue)
     } yield { answer.updateKey }
   }
@@ -46,13 +46,11 @@ object JsonQuestion {
 }
 
 object Questions {
-  val ensureRsvp = (invite: Invite) => invite.modify(_.rsvp).using(_.orElse(Some(Rsvp(coming = None))))
-
   lazy val startPage = areYouComing
   lazy val areYouComing: Question[Boolean] = Question("Can you make Kith & Kin?", "canYouMakeIt", List(
     Answer("yes", "Yes!!")(true).next(accommodation),
     Answer("no", "Sadly not")(false)
-  ), (invite, answer) => ensureRsvp(invite).modify(_.rsvp.each.coming).setToIfDefined(Some(answer.map(_.internalValue))), _.rsvp.flatMap(_.coming))
+  ), (rsvp, answer) => rsvp.modify(_.coming).setToIfDefined(Some(answer.map(_.internalValue))), _.coming)
 
   lazy val accommodation: Question[Accommodation] = Question("Where are you planning to stay?", "accommodation", List(
     Answer("ownTent", "Own tent")(OnSiteOwnTent),
@@ -60,14 +58,14 @@ object Questions {
     Answer("caravan", "Own Caravan")(OnSiteOwnCaravan),
     Answer("belltent", "Bell Tent")(OnSiteBellTent),
     Answer[Accommodation]("offsite", "Off Site")(OffSite).next(offsite)
-  ), (invite, answer) => ensureRsvp(invite).modify(_.rsvp.each.accommodation).setToIfDefined(answer.map(a => Some(a.internalValue))),
-    _.rsvp.flatMap(_.accommodation))
+  ), (rsvp, answer) => rsvp.modify(_.accommodation).setToIfDefined(answer.map(a => Some(a.internalValue))),
+    _.accommodation)
 
   lazy val offsite: Question[Boolean] = Question("Do you want to join us for breakfast on site?", "onSiteBreakfast", List(
     Answer("yes", "Yes")(true),
     Answer("no", "No, thanks")(false)
-  ), (invite, answer) => ensureRsvp(invite).modify(_.rsvp.each.offSiteHavingBreakfast).setToIfDefined(answer.map(a => Some(a.internalValue))),
-    _.rsvp.flatMap(_.offSiteHavingBreakfast))
+  ), (rsvp, answer) => rsvp.modify(_.offSiteHavingBreakfast).setToIfDefined(answer.map(a => Some(a.internalValue))),
+    _.offSiteHavingBreakfast)
 
   val allQuestions: Seq[Question[_]] = Seq(areYouComing, accommodation, offsite)
   val jsonQuestions = allQuestions.map(_.jsonQuestion)
@@ -77,5 +75,5 @@ object Questions {
     "startPage" -> startPage.updateKey
   )
 
-  def answers(invite: Invite): Map[String, String] = allQuestions.flatMap(q => q.answer(invite).map(q.updateKey ->)).toMap
+  def answers(rsvp: Rsvp): Map[String, String] = allQuestions.flatMap(q => q.answer(rsvp).map(q.updateKey ->)).toMap
 }
