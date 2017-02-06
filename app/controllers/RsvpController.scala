@@ -159,8 +159,10 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
     Ok(views.html.rsvp.thanks(coming))
   }
 
-  def questions = RsvpLogin {
-    Ok(Questions.questionJson)
+  def questions = RsvpLogin { r =>
+    val answers = Questions.answers(r.user)
+    val answerJson = Json.obj("answers" -> answers)
+    Ok(Questions.questionJson ++ answerJson)
   }
 
 }

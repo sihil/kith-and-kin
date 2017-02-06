@@ -10,12 +10,13 @@ class Question extends React.Component {
         const question = this.props.question.question;
         const answers = this.props.question.answers;
         const answerButtons = answers.map((answer, index) => {
+            const colour = (this.props.answer === answer) ? "is-success" : "";
             return (
-                <Button key={index} colour={answer.colour} text={answer.text} onClick={() => this.props.onAnswer(answer)}/>
+                <Button key={index} colour={colour} text={answer.text} onClick={() => this.props.onAnswer(answer)}/>
             );
         });
         return (
-            <div>
+            <div className="question">
                 <h2 className="heading">{question}</h2>
                 {answerButtons}
             </div>
@@ -28,24 +29,29 @@ class Rsvp extends React.Component {
         super();
         this.state = {
             questions: null,
-            page: "yesOrNo"
+            startKey: null,
+            answers: {}
         }
+    }
+    findAnswer(questions, questionKey, answerKey) {
+        const question = questions[questionKey];
+        return question.answers.find((answer) => { return answer.updateKey === answerKey });
     }
     componentDidMount() {
         // get questions
         fetch("/rsvp/questions", {
             credentials: 'include'
         }).then((response) => {
+
             return response.json().then((json) => {
-                this.setState({questions: json.questions, page: json.startPage});
+                const answerMap = json.answers;
+                const answerMapWithObjects = Object.assign(...Object.keys(answerMap).map(k => ({[k]: this.findAnswer(json.questions, k, answerMap[k])})));
+                this.setState({questions: json.questions, startKey: json.startPage, answers: answerMapWithObjects});
             });
         });
         // get any responses
     }
     onAnswer(question, answer) {
-        console.log(question);
-        console.log(answer);
-
         fetch("/rsvp/update", {
             credentials: 'include',
             headers: {
@@ -54,20 +60,40 @@ class Rsvp extends React.Component {
             },
             method: 'POST',
             body: JSON.stringify({field: question.updateKey, value: answer.updateKey})
-        }).then((res) => console.log(res));
-
-        const nextPage = answer.nextQuestion;
-        if (nextPage) {
-            this.setState({page: nextPage})
-        } else {
-            // deal with case of being finished
-        }
+        }).then((res) => {
+            if (res.status == 200) {
+                this.setState((previous) => {
+                    const newAnswer = {};
+                    newAnswer[question.updateKey] = answer;
+                    return {answers: Object.assign({}, previous.answers, newAnswer)};
+                });
+            }
+        });
+    }
+    questionAnswers(key) {
+        const question = this.state.questions[key];
+        if (question) {
+            const answer = this.state.answers[question.updateKey];
+            if (answer) {
+                return [{question: question, answer: answer}].concat(this.questionAnswers(answer.nextQuestion));
+            } else {
+                return [{question: question}];
+            }
+        } else return [];
+    }
+    renderQuestion(question, answer) {
+        return (
+            <Question key={question.updateKey} question={question} answer={answer} onAnswer={(answer) => this.onAnswer(question, answer)}/>
+        );
     }
     render() {
         if (this.state.questions) {
-            const question = this.state.questions[this.state.page];
+            const questionList = this.questionAnswers(this.state.startKey);
+            const questionElements = questionList.map((question) => {
+                return this.renderQuestion(question.question, question.answer);
+            });
             return (
-                <Question question={question} onAnswer={(answer) => this.onAnswer(question, answer)}/>
+                <div>{questionElements}</div>
             );
         } else {
             return (

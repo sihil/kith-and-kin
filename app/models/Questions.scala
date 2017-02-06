@@ -24,10 +24,16 @@ object Answer {
 trait QuestionReference {
   def updateKey: String
 }
-case class Question[T](question: String, updateKey: String, answers: List[Answer[T]], updateInvite: (Invite, Option[Answer[T]]) => Invite) extends QuestionReference {
+case class Question[T](question: String, updateKey: String, answers: List[Answer[T]], updateInvite: (Invite, Option[Answer[T]]) => Invite, fromInvite: Invite => Option[T]) extends QuestionReference {
   def fromKey(key: String): Option[Answer[T]] = answers.find(_.updateKey == key)
   def update(invite: Invite, choice: String) = updateInvite(invite, fromKey(choice))
   def jsonQuestion = JsonQuestion(question, updateKey, answers.map(_.jsonAnswer))
+  def answer(invite: Invite): Option[String] = {
+    for {
+      answerValue <- fromInvite(invite)
+      answer <- answers.find(_.internalValue == answerValue)
+    } yield { answer.updateKey }
+  }
 }
 
 case class JsonAnswer(updateKey: String, text: String, nextQuestion: Option[String], colour: Option[String])
@@ -46,7 +52,7 @@ object Questions {
   lazy val areYouComing: Question[Boolean] = Question("Can you make Kith & Kin?", "canYouMakeIt", List(
     Answer("yes", "Yes!!")(true).next(accommodation),
     Answer("no", "Sadly not")(false)
-  ), (invite, answer) => ensureRsvp(invite).modify(_.rsvp.each.coming).setToIfDefined(Some(answer.map(_.internalValue))))
+  ), (invite, answer) => ensureRsvp(invite).modify(_.rsvp.each.coming).setToIfDefined(Some(answer.map(_.internalValue))), _.rsvp.flatMap(_.coming))
 
   lazy val accommodation: Question[Accommodation] = Question("Where are you planning to stay?", "accommodation", List(
     Answer("ownTent", "Own tent")(OnSiteOwnTent),
@@ -54,18 +60,22 @@ object Questions {
     Answer("caravan", "Own Caravan")(OnSiteOwnCaravan),
     Answer("belltent", "Bell Tent")(OnSiteBellTent),
     Answer[Accommodation]("offsite", "Off Site")(OffSite).next(offsite)
-  ), (invite, answer) => ensureRsvp(invite).modify(_.rsvp.each.accommodation).setToIfDefined(answer.map(a => Some(a.internalValue))))
+  ), (invite, answer) => ensureRsvp(invite).modify(_.rsvp.each.accommodation).setToIfDefined(answer.map(a => Some(a.internalValue))),
+    _.rsvp.flatMap(_.accommodation))
 
   lazy val offsite: Question[Boolean] = Question("Do you want to join us for breakfast on site?", "onSiteBreakfast", List(
     Answer("yes", "Yes")(true),
     Answer("no", "No, thanks")(false)
-  ), (invite, answer) => ensureRsvp(invite).modify(_.rsvp.each.offSiteHavingBreakfast).setToIfDefined(answer.map(a => Some(a.internalValue))))
+  ), (invite, answer) => ensureRsvp(invite).modify(_.rsvp.each.offSiteHavingBreakfast).setToIfDefined(answer.map(a => Some(a.internalValue))),
+    _.rsvp.flatMap(_.offSiteHavingBreakfast))
 
   val allQuestions: Seq[Question[_]] = Seq(areYouComing, accommodation, offsite)
   val jsonQuestions = allQuestions.map(_.jsonQuestion)
   val questionMap = jsonQuestions.map(q => q.updateKey -> q).toMap
-  val questionJson = Json.toJson(Json.obj(
+  val questionJson = Json.obj(
     "questions" -> questionMap,
     "startPage" -> startPage.updateKey
-  ))
+  )
+
+  def answers(invite: Invite): Map[String, String] = allQuestions.flatMap(q => q.answer(invite).map(q.updateKey ->)).toMap
 }
