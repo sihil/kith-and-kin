@@ -5,20 +5,70 @@ function Button(props) {
     )
 }
 
-class Question extends React.Component {
+class Textbox extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            value: props.text
+        };
+        this.timer = null;
+
+        this.handleChange = this.handleChange.bind(this);
+    }
+
+    update(text) {
+        this.props.onClick(text)
+    }
+
+    handleChange(event) {
+        const text = event.target.value;
+        this.setState({value: text});
+        if (this.timer) window.clearTimeout(this.timer);
+        this.timer = window.setTimeout(() => this.update(text), 2000)
+    }
+
     render() {
-        const question = this.props.question.question;
-        const answers = this.props.question.answers;
-        const answerButtons = answers.map((answer, index) => {
-            const colour = (this.props.answer === answer) ? "is-success" : "";
-            return (
-                <Button key={index} colour={colour} text={answer.text} onClick={() => this.props.onAnswer(answer)}/>
-            );
-        });
+        return (
+            <div>
+                <textarea className="textarea" value={this.state.value} onChange={this.handleChange} />
+            </div>
+        );
+    }
+}
+
+class Question extends React.Component {
+
+
+    renderAnswer(questionType) {
+        switch (questionType) {
+            case "multipleChoice":
+                const answers = this.props.question.answers;
+                return answers.map((answer, index) => {
+                    const colour = (this.props.answer === answer.updateKey) ? "is-success" : "";
+                    return (
+                        <Button key={index} colour={colour} text={answer.text}
+                                onClick={() => this.props.onAnswer(answer.updateKey)}/>
+                    );
+                });
+            case "text":
+                return (
+                    <Textbox text={this.props.answer} onClick={(newAnswer) => this.props.onAnswer(newAnswer)}/>
+                );
+        }
+    }
+
+    render() {
+        const question = this.props.question;
+        const htmlQuestion = <h2 className="heading">{question.question}</h2>;
+
+        const htmlAnswer = this.renderAnswer(question.questionType);
         return (
             <div className="question">
-                <h2 className="heading">{question}</h2>
-                {answerButtons}
+                {htmlQuestion}
+                {question.helpText &&
+                    <p>{question.helpText}</p>
+                }
+                {htmlAnswer}
             </div>
         )
     }
@@ -38,11 +88,11 @@ class Rsvp extends React.Component {
         this.state = {
             questions: null,
             startKey: null,
-            answers: {}
+            answers: {},
+            unsent: true
         }
     }
-    findAnswer(questions, questionKey, answerKey) {
-        const question = questions[questionKey];
+    findAnswer(question, answerKey) {
         return question.answers.find((answer) => { return answer.updateKey === answerKey });
     }
     componentDidMount() {
@@ -53,10 +103,7 @@ class Rsvp extends React.Component {
 
             return response.json().then((json) => {
                 const answerMap = json.answers;
-                const answerMapWithObjects = this.map(answerMap, (v, k) => {
-                    return this.findAnswer(json.questions, k, v)
-                });
-                this.setState({questions: json.questions, startKey: json.startPage, answers: answerMapWithObjects});
+                this.setState({questions: json.questions, startKey: json.startPage, answers: answerMap, unsent: json.unsent});
             });
         });
         // get any responses
@@ -74,23 +121,33 @@ class Rsvp extends React.Component {
     }
     onAnswer(question, answer) {
         const answers = {};
-        answers[question.updateKey] = answer.updateKey;
+        answers[question.updateKey] = answer;
         this.update(answers, false).then((res) => {
             if (res.status == 200) {
                 this.setState((previous) => {
                     const newAnswer = {};
                     newAnswer[question.updateKey] = answer;
-                    return {answers: Object.assign({}, previous.answers, newAnswer)};
+                    return {answers: Object.assign({}, previous.answers, newAnswer), unsent: true};
                 });
             }
         });
     }
+    nextQuestion(question, answerObject) {
+        switch(question.questionType) {
+            case "multipleChoice":
+                return answerObject.nextQuestion;
+            case "text":
+                return question.nextQuestion;
+        }
+    }
     questionAnswers(key) {
         const question = this.state.questions[key];
         if (question) {
-            const answer = this.state.answers[question.updateKey];
-            if (answer) {
-                return [{question: question, answer: answer}].concat(this.questionAnswers(answer.nextQuestion));
+            const answerKey = this.state.answers[question.updateKey];
+            if (answerKey) {
+                const answerObject = this.findAnswer(question, answerKey);
+                const nextQuestion = this.nextQuestion(question, answerObject);
+                return [{question: question, answer: answerKey}].concat(this.questionAnswers(nextQuestion));
             } else {
                 return [{question: question}];
             }
@@ -102,11 +159,7 @@ class Rsvp extends React.Component {
         );
     }
     finishRsvp() {
-        console.log("finished!");
-        const answers = this.map(this.state.answers, (v) => {
-            return v.updateKey
-        });
-        this.update(answers, true).then((res) => {
+        this.update(this.state.answers, true).then((res) => {
             if (res.status == 200) {
                 window.location = '/rsvp/complete'
             }
@@ -121,13 +174,14 @@ class Rsvp extends React.Component {
             const bottomQuestion = questionList[questionList.length-1];
             const terminusQuestion = bottomQuestion.question.nextQuestion === undefined;
             const finished = terminusQuestion && bottomQuestion.answer;
+            const unsent = this.state.unsent;
             return (
                 <div>
                     {questionElements}
                     {finished &&
                         <div>
                             <h2 className="heading">You're finished!</h2>
-                            <Button colour="is-primary" onClick={() => this.finishRsvp()} text="Send RSVP"/>
+                            {unsent && <Button colour="is-danger" onClick={() => this.finishRsvp()} text="Send RSVP"/>}
                         </div>
                     }
                 </div>

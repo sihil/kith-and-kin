@@ -4,19 +4,16 @@ import java.util.UUID
 
 import org.joda.time.{DateTime, LocalDate}
 
-sealed trait Accommodation
-case object OffSite extends Accommodation
-case object OnSiteOwnTent extends Accommodation
-case object OnSiteOwnCamper extends Accommodation
-case object OnSiteOwnCaravan extends Accommodation
-case object OnSiteBellTent extends Accommodation
-
 case class Rsvp(
   coming: Option[Boolean] = None,
+  everyone: Option[Boolean] = None,
+  hookup: Option[Boolean] = None,
+  bellTentSharing: Option[Int] = None,
+  bellTentBedding: Option[Boolean] = None,
   message: Option[String] = None,
-  arrival: Option[DateTime] = None,
-  departure: Option[DateTime] = None,
-  accommodation: Option[Accommodation] = None,
+  arrival: Option[String] = None,
+  departure: Option[String] = None,
+  accommodation: Option[String] = None,
   offSiteLocation: Option[String] = None,
   offSiteHavingBreakfast: Option[Boolean] = None
 )

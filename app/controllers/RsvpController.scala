@@ -167,8 +167,9 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
   }
 
   def questions = RsvpLogin { r =>
-    val answers = Questions.answers(r.user.rsvp.orElse(r.user.draftRsvp).getOrElse(Rsvp()))
-    val answerJson = Json.obj("answers" -> answers)
+    val draftAndSentIdentical = r.user.draftRsvp == r.user.rsvp
+    val answers = Questions.answers(r.user.draftRsvp.getOrElse(Rsvp()))
+    val answerJson = Json.obj("answers" -> answers, "unsent" -> !draftAndSentIdentical)
     Ok(Questions.questionJson ++ answerJson)
   }
 
