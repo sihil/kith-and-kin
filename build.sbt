@@ -15,6 +15,7 @@ libraryDependencies ++= Seq(
   // scala deps
   "com.gu" %% "play-googleauth" % "0.6.0",
   "com.gu" %% "scanamo" % "0.9.1",
+  "com.softwaremill.quicklens" % "quicklens_2.11" % "1.4.8",
   // email and db
   "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
   "com.amazonaws" % "aws-java-sdk-ses" % awsVersion,
@@ -29,6 +30,8 @@ libraryDependencies ++= Seq(
 )
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala, JDebPackaging, SbtWeb).settings(
+  JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
+
   pipelineStages := Seq(digest),
 
   packageName in Universal := name.value,

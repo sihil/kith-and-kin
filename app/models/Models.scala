@@ -5,21 +5,20 @@ import java.util.UUID
 import org.joda.time.{DateTime, LocalDate}
 
 sealed trait Accommodation
-case class OffSite(location: String, onSiteBreakfast: Boolean) extends Accommodation
-case class OnSite(option: OnSiteOption) extends Accommodation
-
-sealed trait OnSiteOption
-case object OwnTent extends OnSiteOption
-case object OwnCamper extends OnSiteOption
-case object OwnCaravan extends OnSiteOption
-case object BellTent extends OnSiteOption
+case object OffSite extends Accommodation
+case object OnSiteOwnTent extends Accommodation
+case object OnSiteOwnCamper extends Accommodation
+case object OnSiteOwnCaravan extends Accommodation
+case object OnSiteBellTent extends Accommodation
 
 case class Rsvp(
-  coming: Boolean,
+  coming: Option[Boolean],
   message: Option[String] = None,
   arrival: Option[DateTime] = None,
   departure: Option[DateTime] = None,
-  accommodation: Option[Accommodation] = None
+  accommodation: Option[Accommodation] = None,
+  offSiteLocation: Option[String] = None,
+  offSiteHavingBreakfast: Option[Boolean] = None
 )
 
 case class Payment(amount: Double, authCode: String, successful: Boolean)

@@ -7,9 +7,10 @@ import com.amazonaws.services.simpleemail.AmazonSimpleEmailService
 import com.gu.googleauth.{GoogleAuthConfig, UserIdentifier}
 import db.InviteRepository
 import helpers.{Email, RsvpCookie, RsvpId, Secret}
-import models.{Invite, Rsvp}
+import models.{Invite, Questions}
 import org.joda.time.DateTime
 import play.api.Logger
+import play.api.libs.json.Json
 import play.api.mvc.Security.AuthenticatedBuilder
 import play.api.mvc.{Action, Controller, RequestHeader}
 
@@ -133,25 +134,17 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
     Ok(views.html.rsvp.details(request.user))
   }
 
-  def update(field: String) = RsvpLogin { request =>
-    def formField(name: String) = request.body.asFormUrlEncoded.flatMap(_.get(name).toList.flatten.headOption)
-    val maybeChoice = formField(field)
-    maybeChoice.map { choice =>
-      field match {
-        case "rsvp" =>
-          val coming = choice == "yes"
-          val rsvp = request.user.rsvp.map(_.copy(coming = coming)).getOrElse(Rsvp(coming))
-          inviteRepository.putInvite(request.user.copy(rsvp=Some(rsvp)))
-          if (coming)
-            Redirect(routes.RsvpController.accommodation())
-          else
-            Redirect(routes.RsvpController.notComing())
-        case "message" =>
-          val rsvp = request.user.rsvp.map(_.copy(message = Some(choice)))
-          inviteRepository.putInvite(request.user.copy(rsvp=rsvp))
-          Redirect(routes.RsvpController.thanks(coming=false))
-      }
-    }.getOrElse(BadRequest(s"no $field field"))
+  def update = RsvpLogin(parse.json) { request =>
+    val bug = for {
+      field <- (request.body \ "field").asOpt[String]
+      choice <- (request.body \ "value").asOpt[String]
+      question <- Questions.allQuestions.find(_.updateKey==field)
+    } yield {
+      val updatedInvite = question.update(request.user, choice)
+      inviteRepository.putInvite(updatedInvite)
+      Ok(Json.obj("result" -> "success"))
+    }
+    bug.getOrElse(Ok(Json.obj("result" -> "error")))
   }
 
   def notComing() = RsvpLogin { implicit request =>
@@ -164,6 +157,10 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
 
   def thanks(coming: Boolean) = RsvpLogin { implicit request =>
     Ok(views.html.rsvp.thanks(coming))
+  }
+
+  def questions = RsvpLogin {
+    Ok(Questions.questionJson)
   }
 
 }

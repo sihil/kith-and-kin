@@ -20,17 +20,6 @@
                 <p><strong>E-mail:</strong> @invite.email</p>
                 <p><strong>Address:</strong> @invite.address</p>
             </div>
-            <div>
-            @form(CSRF(routes.RsvpController.update("rsvp-accom"))) {
-                <h2 class="heading">What about accommodation, are you planning to...</h2>
-                <input type="hidden" name="id" value="@invite.id.toString">
-                <button class="button is-primary is-large sunday" type="submit" name="rsvp-accom" value="tent">Bring a tent</button>
-                <button class="button is-warning is-large sunday" type="submit" name="rsvp-accom" value="camper">Bring a campervan</button>
-                <button class="button is-warning is-large sunday" type="submit" name="rsvp-accom" value="camper">Bring a caravan</button>
-                <button class="button is-warning is-large sunday" type="submit" name="rsvp-accom" value="camper">Stay in a bell tent</button>
-                <button class="button is-warning is-large sunday" type="submit" name="rsvp-accom" value="camper">Stay off-site</button>
-            }
-            </div>
         </div>
     </section>
 }

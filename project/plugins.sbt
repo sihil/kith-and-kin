@@ -10,4 +10,4 @@ addSbtPlugin("org.irundaia.sbt" % "sbt-sassify" % "1.4.2")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-digest" % "1.1.1")
 
-addSbtPlugin("com.github.ddispaltro" % "sbt-reactjs" % "0.6.8")
+addSbtPlugin("io.teamscala.sbt" % "sbt-babel" % "1.0.5")

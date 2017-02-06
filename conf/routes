@@ -14,10 +14,11 @@ GET         /rsvp/notRight      controllers.RsvpController.notRight
 GET         /rsvp/login/:id/:secret controllers.RsvpController.login(id: String, secret: String)
 
 GET         /rsvp/details       controllers.RsvpController.details
-POST        /rsvp/update/:field controllers.RsvpController.update(field: String)
+POST        /rsvp/update        controllers.RsvpController.update
 GET         /rsvp/accommodation controllers.RsvpController.accommodation()
 GET         /rsvp/notComing   controllers.RsvpController.notComing()
 GET         /rsvp/thanks/:coming        controllers.RsvpController.thanks(coming: Boolean)
+GET         /rsvp/questions     controllers.RsvpController.questions
 
 #admin
 GET         /admin              controllers.AdminController.index
@@ -26,7 +27,6 @@ GET         /admin/loginAction  controllers.AdminController.loginAction
 GET         /oauthCallback      controllers.AdminController.oauth2Callback
 POST        /admin/uploadCsv    controllers.AdminController.uploadCsv
 POST        /admin/action       controllers.AdminController.action
-
 
 # serve assets such as JS and images
 GET         /favicon.ico        controllers.Assets.at(path="/public", file="favicon/favicon.ico")
