@@ -52,7 +52,7 @@
         }
         @body
         @reactComponent.map { compName =>
-            <script src="@routes.Assets.versioned(s"react/$compName.js")"></script>
+            <script src="@routes.Assets.versioned(s"build/$compName.js")"></script>
         }
     </body>
     <script>

@@ -1,3 +1,5 @@
+import {map} from './utils.js'
+
 function Button(props) {
     const classes = "button is-large "+props.colour;
     return (
@@ -75,14 +77,6 @@ class Question extends React.Component {
 }
 
 class Rsvp extends React.Component {
-    map(o, f, ctx) {
-        ctx = ctx || this;
-        let result = {};
-        Object.keys(o).forEach(function(k) {
-            result[k] = f.call(ctx, o[k], k, o);
-        });
-        return result;
-    }
     constructor() {
         super();
         this.state = {
@@ -100,7 +94,6 @@ class Rsvp extends React.Component {
         fetch("/rsvp/questions", {
             credentials: 'include'
         }).then((response) => {
-
             return response.json().then((json) => {
                 const answerMap = json.answers;
                 this.setState({questions: json.questions, startKey: json.startPage, answers: answerMap, unsent: json.unsent});

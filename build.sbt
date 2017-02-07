@@ -11,7 +11,6 @@ val awsVersion = "1.11.86"
 libraryDependencies ++= Seq(
   // webjars
   "org.webjars" %% "webjars-play" % "2.5.0",
-  "org.webjars" % "react" % "15.3.2",
   // scala deps
   "com.gu" %% "play-googleauth" % "0.6.0",
   "com.gu" %% "scanamo" % "0.9.1",

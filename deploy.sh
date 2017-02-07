@@ -6,6 +6,9 @@ AWS_DEFAULT_PROFILE=kk
 AWS_DEFAULT_REGION=eu-west-2
 REMOTE_DEB_LOCATION="s3://kithandkin/application/kith-and-kin_1.0_all.deb"
 
+yarn
+yarn build
+
 # build the deb
 sbt debian:packageBin
 
