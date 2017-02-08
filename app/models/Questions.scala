@@ -3,7 +3,6 @@ package models
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 import com.softwaremill.quicklens._
-import play.api.Logger
 
 import scala.language.postfixOps
 
@@ -122,7 +121,6 @@ object QuestionMaster {
     val pluralInvited = invite.number > 1
     val numberComing = invite.number - invite.draftRsvp.map(_.cantMakeIt.size).getOrElse(0)
     val pluralComing = numberComing > 1
-    Logger.logger.info(s"$pluralInvited $numberComing $pluralComing")
     def cond(plural: Boolean, singleAnswer: String, pluralAnswer: String): String = if (plural) pluralAnswer else singleAnswer
 
     lazy val startPage = areYouComing
