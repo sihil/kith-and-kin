@@ -158,7 +158,6 @@ class Rsvp extends React.Component {
                     return {answers: Object.assign({}, previous.answers, newAnswer), unsent: true};
                 });
                 res.json().then((json) => {
-                    console.log(json);
                     if (json.questions) {
                         this.setState({questions: json.questions});
                     }
