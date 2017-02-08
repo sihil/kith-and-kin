@@ -108,6 +108,17 @@ Resources:
             - ses:SendEmail
             Resource: arn:aws:ses:eu-west-1:862718471841:identity/*
 
+  DevInviteDynamoTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub kk-invites-DEV
+      AttributeDefinitions:
+      - {AttributeName: id, AttributeType: S}
+      KeySchema:
+      - {AttributeName: id, KeyType: HASH}
+      ProvisionedThroughput: {ReadCapacityUnits: 5, WriteCapacityUnits: 2}
+
   InviteDynamoTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
@@ -117,7 +128,7 @@ Resources:
       - {AttributeName: id, AttributeType: S}
       KeySchema:
       - {AttributeName: id, KeyType: HASH}
-      ProvisionedThroughput: {ReadCapacityUnits: 5, WriteCapacityUnits: 2}
+      ProvisionedThroughput: {ReadCapacityUnits: 15, WriteCapacityUnits: 15}
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile

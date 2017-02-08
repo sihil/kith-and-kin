@@ -7,6 +7,9 @@ import org.joda.time.{DateTime, LocalDate}
 case class Rsvp(
   coming: Option[Boolean] = None,
   everyone: Option[Boolean] = None,
+  cantMakeIt: List[String] = Nil,
+  haveDietaryRequirements: Option[Boolean] = None,
+  dietaryDetails: Option[String] = None,
   hookup: Option[Boolean] = None,
   bellTentSharing: Option[Int] = None,
   bellTentBedding: Option[Boolean] = None,
@@ -44,5 +47,7 @@ case class Invite(
   def firstNames: List[String] = (adults.map(_.name) ::: children.map(_.name)).map(firstName)
   def stringifyList(list: List[String]) = if (list.size <= 1) list.mkString(", ") else s"${list.init.mkString(", ")} and ${list.last}"
   def giveMeAName = addressee.getOrElse(stringifyList(firstNames))
+  def number = adults.size + children.size
+  def numberOfAdults = adults.size
 }
 

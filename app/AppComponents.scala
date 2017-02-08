@@ -30,7 +30,11 @@ class AppComponents(context: Context)
     "http://127.0.0.1:9000"
   }
 
-  val stage = "PROD"
+  val stage = if (environment.mode == Mode.Prod) {
+    "PROD"
+  } else {
+    "DEV"
+  }
 
   private val credentialsProviderChain = new AWSCredentialsProviderChain(
     new ProfileCredentialsProvider("kk"),
