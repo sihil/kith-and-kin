@@ -59,7 +59,6 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
         // lookup e-mail in DB
         val list = inviteRepository.getInviteList
         val maybeInvite = list.find(_.email.trim.equalsIgnoreCase(email.trim))
-        Logger.logger.info(s"$email $list $maybeInvite")
         maybeInvite match {
           case Some(invite) =>
             // generate a new secret
@@ -74,7 +73,7 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
                 |
                 |We've found your invite to Kith & Kin - please use the link below to access all areas and continue with your RSVP!
                 |
-                |You can use the link above as many times as you need it, but don't give it to others as anyone who has the link can change your RSVP.
+                |You can use this link as many times as you need it, but don't give it to others as anyone who has the link can change your RSVP.
                 |
                 |${routes.RsvpController.login(invite.id.toString, secret).absoluteURL(request.secure, request.host)}
                 |
@@ -95,7 +94,44 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
               )
         }
 
-      case Some(phone) => NotImplemented("Phone support not implemented yet")
+      case Some(name) =>
+        // lookup name in DB
+        val list = inviteRepository.getInviteList
+        val maybeInvite = list.find{invite => invite.adults.map(_.name).contains(name)}
+        maybeInvite match {
+          case Some(invite) =>
+            // generate a new secret
+            val secret = Secret.newSecret()
+            val withNewSecret = invite.copy(secret = Some(secret))
+            inviteRepository.putInvite(withNewSecret)
+
+            // now send e-mail to user with magic URL
+            val message =
+              s"""
+                |Hi ${invite.giveMeAName}!
+                |
+                |We've found your invite to Kith & Kin - please use the link below to access all areas and continue with your RSVP!
+                |
+                |You can use this link as many times as you need it, but don't give it to others as anyone who has the link can change your RSVP.
+                |
+                |${routes.RsvpController.login(invite.id.toString, secret).absoluteURL(request.secure, request.host)}
+                |
+                |Much love,
+                |Simon & Christina
+              """.stripMargin
+            Email.sendEmail(sesClient, invite.email, "RSVP information", message)
+
+            // now redirect
+            Redirect(routes.RsvpController.sentMessage()).flashing("contactType" -> "e-mail address")
+          case None =>
+            // invite not found - nice error
+
+            Redirect(routes.RsvpController.notRight()).
+              flashing(
+                "title" -> "Oh no, I can't find you...",
+                "message" -> s"I'm sorry, I can't seem to find '$name' in my list of invites. Double check and try again!"
+              )
+        }
       case None => Redirect(routes.RsvpController.start())
     }
   }
@@ -153,11 +189,11 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
 
     inviteRepository.putInvite(updatedInvite)
 
-    if (updatedQuestions.questionJson != questions.questionJson) {
-      Ok(Json.obj("result" -> "success") ++ updatedQuestions.questionJson)
-    } else {
-      Ok(Json.obj("result" -> "success"))
-    }
+    val updatedQuestionJson = Some(updatedQuestions.questionJson).filterNot(_ == questions.questionJson)
+    val updatedPricesJson = Some(updatedQuestions.jsonPrices).filterNot(_ == questions.jsonPrices).map(json => Json.obj("prices" -> json))
+    val fields = Seq(Json.obj("result" -> "success")) ++ updatedQuestionJson ++ updatedPricesJson
+
+    Ok(fields.reduce(_ ++ _))
   }
 
   def notComing() = RsvpLogin { implicit request =>
@@ -169,14 +205,16 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
   }
 
   def complete = RsvpLogin { implicit request =>
-    Ok(views.html.rsvp.thanks(request.user.rsvp.flatMap(_.coming).get))
+    val questions = QuestionMaster.questions(request.user)
+    Ok(views.html.rsvp.thanks(request.user.rsvp.flatMap(_.coming).get, questions.breakdowns, questions.totalPrice))
   }
 
   def questions = RsvpLogin { r =>
     val draftAndSentIdentical = r.user.draftRsvp == r.user.rsvp
     val questions = QuestionMaster.questions(r.user)
     val answers = questions.answers
-    val answerJson = Json.obj("answers" -> answers, "unsent" -> !draftAndSentIdentical)
+    val prices = questions.jsonPrices
+    val answerJson = Json.obj("answers" -> answers, "unsent" -> !draftAndSentIdentical, "prices" -> prices)
     Ok(questions.questionJson ++ answerJson)
   }
 

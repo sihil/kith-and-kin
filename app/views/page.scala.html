@@ -14,10 +14,6 @@
         <link href="@routes.Assets.versioned("third-party/font-awesome-4.7.0/css/font-awesome.min.css")" rel="stylesheet">
         <link href="@routes.Assets.versioned("stylesheets/main.css")" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        @if(reactComponent.nonEmpty) {
-            <script type='text/javascript' src='@routes.Assets.versioned("lib/react/react.js")'></script>
-            <script type='text/javascript' src='@routes.Assets.versioned("lib/react/react-dom.js")'></script>
-        }
         @requestHeader.map { rh =>
             <script type='text/javascript'>
                 window.csrf = '@play.filters.csrf.CSRF.getToken(rh).getOrElse(sys.error("No CSRF token present!")).value';

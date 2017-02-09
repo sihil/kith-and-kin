@@ -12,7 +12,7 @@ case class Rsvp(
   dietaryDetails: Option[String] = None,
   hookup: Option[Boolean] = None,
   bellTentSharing: Option[Int] = None,
-  bellTentBedding: Option[Boolean] = None,
+  bellTentBedding: Option[Int] = None,
   message: Option[String] = None,
   arrival: Option[String] = None,
   departure: Option[String] = None,

@@ -6,7 +6,40 @@ import com.softwaremill.quicklens._
 
 import scala.language.postfixOps
 
-case class Answer[T](key: String, text: String, nextQuestion: Option[QuestionReference] = None, colour: Option[String] = None)(val internalValue: T) {
+sealed trait Price {
+  def desc: String
+  def amount: Double
+  def english: Option[String] = None
+}
+case class Fixed(desc: String, amount: Double) extends Price
+case class PerPerson(desc: String, amount: Double) extends Price {
+  override def english: Option[String] = Some("per person")
+}
+case class PerAdult(desc: String, amount: Double) extends Price {
+  override def english: Option[String] = Some("per adult")
+}
+
+object Price {
+  implicit def writes(people: Int, adults: Int) = new Writes[Price] {
+    override def writes(o: Price): JsValue = {
+      val subTotal = Price.subTotal(o, people, adults)
+      val fields: Seq[(String, JsValueWrapper)] = Seq("desc" -> o.desc, "amount" -> o.amount, "subTotal" -> subTotal)
+      val english: Option[(String, JsValueWrapper)] = o.english.map(e => "english" -> e)
+      Json.obj(fields ++ english: _*)
+    }
+  }
+  def subTotal(price: Price, people: Int, adults: Int): Double = {
+    price match {
+      case Fixed(_, amount) => amount
+      case PerPerson(_, amount) => people * amount
+      case PerAdult(_, amount) => adults * amount
+    }
+  }
+  def total(prices: List[Price], people: Int, adults: Int): Double = prices.map(p => subTotal(p, people, adults)).sum
+}
+
+case class Answer[T](key: String, text: String, price: List[Price] = Nil, nextQuestion: Option[QuestionReference] = None,
+                     colour: Option[String] = None)(val internalValue: T) {
   def next(question: QuestionReference): Answer[T] = this.copy(nextQuestion = Some(question))(internalValue)
   def jsonAnswer = JsonAnswer(key, text, nextQuestion.map(_.key), colour)
 }
@@ -38,6 +71,9 @@ trait QuestionReference {
   def answer: Rsvp => Option[JsValue]
   /* Used to apply an update to an Rsvp given the client answer */
   def update(rsvp: Rsvp, choice: JsValue): Rsvp
+  /* Price */
+  def calculatePrice: Rsvp => List[Price]
+  def selectedOnwardQuestion: Rsvp => Option[QuestionReference]
 }
 trait Question[T] extends QuestionReference {
   /* Update an Rsvp from the internal type */
@@ -52,25 +88,30 @@ case class MultipleChoice[T](question: String, key: String, answers: List[Answer
   def update(rsvp: Rsvp, choice: JsValue) = {
     updateRsvp(rsvp, choice.asOpt[String].flatMap { fromKey(_).map(_.internalValue) })
   }
-  def answer = (rsvp: Rsvp) => {
+  private def answerT = (rsvp: Rsvp) =>
     for {
       answerValue <- fromRsvp(rsvp)
       answer <- answers.find(_.internalValue == answerValue)
-    } yield { JsString(answer.key) }
-  }
+    } yield answer
+  def answer = (rsvp: Rsvp) => answerT(rsvp).map(a => JsString(a.key))
   override def allOnwardQuestions: List[QuestionReference] = answers.flatMap(_.nextQuestion)
+  override def calculatePrice = (rsvp: Rsvp) => answerT(rsvp).toList.flatMap(_.price)
+  override def selectedOnwardQuestion = (rsvp: Rsvp) => answerT(rsvp).flatMap(_.nextQuestion)
 }
-case class Text(question: String, key: String, helpText: Option[String] = None, optional: Boolean = false, updateRsvp: (Rsvp, Option[String]) => Rsvp, fromRsvp: Rsvp => Option[String], nextQuestion: Option[QuestionReference] = None) extends Question[String] {
+case class Text(question: String, key: String, helpText: Option[String] = None, optional: Boolean = false,
+                updateRsvp: (Rsvp, Option[String]) => Rsvp, fromRsvp: Rsvp => Option[String],
+                nextQuestion: Option[QuestionReference] = None, calculatePrice: (Rsvp) => List[Price] = _ => Nil) extends Question[String] {
   override def jsonQuestion: JsonQuestion = JsonQuestion(question, helpText, key, "text", optional = Some(optional), nextQuestion = nextQuestion.map(_.key))
   override def answer = rsvp => fromRsvp(rsvp).map(a => JsString(a))
   override def update(rsvp: Rsvp, choice: JsValue): Rsvp = updateRsvp(rsvp, choice.asOpt[String])
   def next(question: QuestionReference): Text = this.copy(nextQuestion = Some(question))
   override def allOnwardQuestions: List[QuestionReference] = nextQuestion.toList
+  override def selectedOnwardQuestion: (Rsvp) => Option[QuestionReference] = _ => nextQuestion
 }
 
 case class Selection[T](question: String, key: String, answers: List[Answer[T]], helpText: Option[String] = None,
   updateRsvp: (Rsvp, Option[List[(T, Boolean)]]) => Rsvp, fromRsvp: Rsvp => Option[List[(T, Boolean)]],
-  nextQuestion: Option[QuestionReference] = None) extends Question[List[(T, Boolean)]] {
+  nextQuestion: Option[QuestionReference] = None, calculatePrice: (Rsvp) => List[Price] = _ => Nil) extends Question[List[(T, Boolean)]] {
   private def fromKey(key: String): Option[Answer[T]] = answers.find(_.key == key)
   def next(question: QuestionReference): Selection[T] = this.copy(nextQuestion = Some(question))
   override def allOnwardQuestions: List[QuestionReference] = nextQuestion.toList
@@ -95,6 +136,7 @@ case class Selection[T](question: String, key: String, answers: List[Answer[T]],
     }
     updateRsvp(rsvp, selected)
   }
+  override def selectedOnwardQuestion: (Rsvp) => Option[QuestionReference] = _ => nextQuestion
 }
 
 case class JsonAnswer(key: String, text: String, nextQuestion: Option[String], colour: Option[String])
@@ -106,20 +148,28 @@ object JsonQuestion {
   implicit val jsonQuestionFormats = Json.format[JsonQuestion]
 }
 
+case class PriceBreakdown(desc: String, itemAmount: Double, subTotal: Double)
+
 trait Questions {
   def allQuestions: Seq[QuestionReference]
   def jsonQuestions: Seq[JsonQuestion]
   def questionMap: Map[String, JsonQuestion]
   def questionJson: JsObject
   def answers: Map[String, JsValue]
+  def prices: List[(String, List[Price])]
+  def breakdowns: List[PriceBreakdown]
+  def totalPrice: Double
+  def jsonPrices: JsObject
 }
 
 object QuestionMaster {
   val numbersToWords = Map(1 -> "one", 2 -> "both", 3 -> "all three", 4 -> "all four", 5 -> "all five", 6 -> "all six")
 
   def questions(invite: Invite): Questions = new Questions {
+    val cantMakeIt = invite.draftRsvp.toList.flatMap(_.cantMakeIt)
     val pluralInvited = invite.number > 1
-    val numberComing = invite.number - invite.draftRsvp.map(_.cantMakeIt.size).getOrElse(0)
+    val numberComing = invite.number - cantMakeIt.size
+    val adultsComing = invite.adults.filterNot(adult => cantMakeIt.contains(adult.name)).size
     val pluralComing = numberComing > 1
     def cond(plural: Boolean, singleAnswer: String, pluralAnswer: String): String = if (plural) pluralAnswer else singleAnswer
 
@@ -166,53 +216,63 @@ object QuestionMaster {
     ).next(accommodation)
 
     lazy val accommodation: Question[String] = MultipleChoice("Where are you planning to stay?", "accommodation", List(
-      Answer("ownTent", "Own tent")("ownTent").next(arrival),
-      Answer("camper", "Own Campervan")("camper").next(hookup),
-      Answer("caravan", "Own Caravan")("caravan").next(hookup),
+      Answer("ownTent", "Own tent", price=List(PerAdult("Pitch and breakfast", 25.0)))("ownTent").next(arrival),
+      Answer("camper", "Own Campervan", price=List(PerAdult("Pitch and breakfast", 25.0)))("camper").next(hookup),
+      Answer("caravan", "Own Caravan", price=List(PerAdult("Pitch and breakfast", 25.0)))("caravan").next(hookup),
       Answer("belltent", "Bell Tent")("belltent").next(bellTentSharing),
       Answer("offsite", "Off Site")("offsite").next(offsiteLocation)
     ), updateRsvp = (rsvp, answer) => rsvp.modify(_.accommodation).setTo(answer),
       fromRsvp = _.accommodation)
+
     lazy val hookup: Question[Boolean] = MultipleChoice("Will you want an electrical hookup?", "hookup", List(
-      Answer("yes", "Yes")(true).next(arrival),
+      Answer("yes", "Yes", price=List(Fixed("Electrical hookup", 50.0)))(true).next(arrival),
       Answer("no", "No")(false).next(arrival)
     ), updateRsvp = (rsvp, answer) => rsvp.modify(_.hookup).setTo(answer), fromRsvp = _.hookup)
 
     lazy val bellTentSharing: Question[Int] = MultipleChoice("How many people are you ideally planning to share with (total number in the bell tent)?", "bellTentSharing", List(
-      Answer("1", "One")(1).next(bellTentBedding),
-      Answer("2", "Two")(2).next(bellTentBedding),
-      Answer("3", "Three")(3).next(bellTentBedding),
-      Answer("4", "Four")(4).next(bellTentBedding),
-      Answer("5", "Five")(5).next(bellTentBedding),
-      Answer("6", "Six")(6).next(bellTentBedding)
+      Answer("1", "One", price=List(PerPerson("Bell tent hire", 150.0), PerAdult("Bed and breakfast", 40.0)))(1).next(bellTentBedding),
+      Answer("2", "Two", price=List(PerPerson("Bell tent hire (half)", 75.0), PerAdult("Bed and breakfast", 40.0)))(2).next(bellTentBedding),
+      Answer("3", "Three", price=List(PerPerson("Bell tent hire (third)", 50.0), PerAdult("Bed and breakfast", 40.0)))(3).next(bellTentBedding),
+      Answer("4", "Four", price=List(PerPerson("Bell tent hire (quarter)", 37.5), PerAdult("Bed and breakfast", 40.0)))(4).next(bellTentBedding),
+      Answer("5", "Five", price=List(PerPerson("Bell tent hire (fifth)", 30.0), PerAdult("Bed and breakfast", 40.0)))(5).next(bellTentBedding),
+      Answer("6", "Six", price=List(PerPerson("Bell tent hire (sixth)", 25.0), PerAdult("Bed and breakfast", 40.0)))(6).next(bellTentBedding)
     ).drop(numberComing-1), updateRsvp = (rsvp, answer) => rsvp.modify(_.bellTentSharing).setTo(answer), fromRsvp = _.bellTentSharing,
       helpText = Some("Are there two of you and you want some privacy? Choose two. Is it just you and you're happy to share with others? Choose the number you'd like to share with and let us know (in the message box later) if you already have friends in mind."))
 
-    lazy val bellTentBedding: Question[Boolean] = MultipleChoice("Do you want bedding (duvet/pillow)?", "bellTentBedding", List(
-      Answer("yes", "Yes")(true).next(arrival),
-      Answer("no", "No")(false).next(arrival)
-    ), updateRsvp = (rsvp, answer) => rsvp.modify(_.bellTentBedding).setTo(answer), fromRsvp = _.bellTentBedding)
+    lazy val bellTentBedding: Question[Int] = MultipleChoice("How many of you want proper bedding (duvet/pillow)?", "bellTentBedding", List(
+      Answer("0", "None of us")(0).next(arrival),
+      Answer("1", "One", price = List(Fixed("Bedding hire (1 person)", 15.0)))(1).next(arrival),
+      Answer("2", "Two", price = List(Fixed("Bedding hire (2 people)", 30.0)))(2).next(arrival),
+      Answer("3", "Three", price = List(Fixed("Bedding hire (3 people)", 45.0)))(3).next(arrival),
+      Answer("4", "Four", price = List(Fixed("Bedding hire (4 people)", 60.0)))(4).next(arrival),
+      Answer("5", "Five", price = List(Fixed("Bedding hire (5 people)", 75.0)))(5).next(arrival),
+      Answer("6", "Six", price = List(Fixed("Bedding hire (6 people)", 90.0)))(6).next(arrival)
+    ).take(numberComing+1), updateRsvp = (rsvp, answer) => rsvp.modify(_.bellTentBedding).setTo(answer), fromRsvp = _.bellTentBedding)
 
     lazy val offsiteLocation = Text("Where are you planning to stay offsite (distance and location)", "offsiteLocation", updateRsvp = (rsvp, location) => rsvp.modify(_.offSiteLocation).setTo(location), fromRsvp = _.offSiteLocation).next(offsiteBreakfast)
 
     lazy val offsiteBreakfast: Question[Boolean] = MultipleChoice("Do you want to join us for breakfast on site?", "onSiteBreakfast", List(
-      Answer("yes", "Yes")(true).next(arrival),
+      Answer("yes", "Yes", List(PerAdult("Breakfasts", 15.0)))(true).next(arrival),
       Answer("no", "No, thanks")(false).next(arrival)
     ), updateRsvp = (rsvp, answer) => rsvp.modify(_.offSiteHavingBreakfast).setTo(answer),
       fromRsvp = _.offSiteHavingBreakfast)
 
+    private val lunchCatering = PerAdult("Friday lunch catering", 10.0)
+    private val eveningCatering = PerAdult("Friday evening catering", 20.0)
     lazy val arrival: Question[String] = MultipleChoice("When are you planning to arrive?", "arrival", List(
-      Answer("thursEve", "Thursday evening")("thursEve").next(departure),
-      Answer("friMorn", "Friday morning")("friMorn").next(departure),
-      Answer("friLunch", "Friday lunchtime")("friLunch").next(departure),
-      Answer("friAft", "Friday afternoon")("friAft").next(departure),
-      Answer("friEve", "Friday evening")("friEve").next(departure)
-    ), updateRsvp = (rsvp, answer) => rsvp.modify(_.arrival).setTo(answer), fromRsvp = _.arrival)
+      Answer("thursEve", "Thursday evening", List(lunchCatering, eveningCatering))("thursEve").next(departure),
+      Answer("friMorn", "Friday morning", List(lunchCatering, eveningCatering))("friMorn").next(departure),
+      Answer("friLunch", "Friday lunchtime", List(lunchCatering, eveningCatering))("friLunch").next(departure),
+      Answer("friAft", "Friday afternoon", List(eveningCatering))("friAft").next(departure),
+      Answer("friEve", "Friday evening", List(eveningCatering))("friEve").next(departure)
+    ), updateRsvp = (rsvp, answer) => rsvp.modify(_.arrival).setTo(answer), fromRsvp = _.arrival,
+      helpText = Some("We need rough arrival times to help plan catering and activities"))
 
+    private val sunLunchCatering = PerAdult("Sunday lunch catering", 15.0)
     lazy val departure: Question[String] = MultipleChoice("And when are you planning to leave?", "departure", List(
       Answer("sunMorn", "Sunday morning")("sunMorn").next(message),
-      Answer("sunLunch", "Sunday lunchtime")("sunLunch").next(message),
-      Answer("sunAft", "Sunday afternoon")("sunAft").next(message)
+      Answer("sunLunch", "Sunday lunchtime", List(sunLunchCatering))("sunLunch").next(message),
+      Answer("sunAft", "Sunday afternoon", List(sunLunchCatering))("sunAft").next(message)
     ), updateRsvp = (rsvp, answer) => rsvp.modify(_.departure).setTo(answer), fromRsvp = _.departure)
 
     lazy val message = Text("Send a message to Simon & Christina", "message", optional = true, updateRsvp = (rsvp, message) => rsvp.modify(_.message).setTo(message), fromRsvp = _.message,
@@ -234,6 +294,35 @@ object QuestionMaster {
     override val answers: Map[String, JsValue] = {
       val rsvp = invite.draftRsvp.getOrElse(Rsvp())
       allQuestions.flatMap(q => q.answer(rsvp).map(q.key ->)).toMap
+    }
+    override val prices: List[(String, List[Price])] = {
+      val rsvp = invite.draftRsvp.getOrElse(Rsvp())
+      def rec(questionReference: Option[QuestionReference], acc: List[(String, List[Price])] = Nil): List[(String, List[Price])] = {
+        questionReference match {
+          case None => acc
+          case Some(ref) =>
+            val questionReferencePrice = ref.key -> ref.calculatePrice(rsvp)
+            val maybeNextQuestion = ref.selectedOnwardQuestion(rsvp)
+            rec(maybeNextQuestion, questionReferencePrice :: acc)
+        }
+      }
+      rec(Some(startPage)).reverse
+    }
+
+    override def breakdowns: List[PriceBreakdown] = {
+      prices.flatMap(_._2).map { price =>
+        val desc = price.desc + price.english.map(e => s" - $e").getOrElse("")
+        PriceBreakdown(desc, price.amount, Price.subTotal(price, numberComing, adultsComing))
+      }
+    }
+
+    override val totalPrice: Double = Price.total(prices.flatMap{case(_, priceList)=>priceList}, numberComing, adultsComing)
+    override val jsonPrices: JsObject = {
+      implicit val priceWrites = Price.writes(numberComing, adultsComing)
+      Json.obj(
+        "total" -> totalPrice,
+        "breakdown" -> Json.toJson(prices.toMap)
+      )
     }
   }
 }

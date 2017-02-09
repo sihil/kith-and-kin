@@ -1,3 +1,5 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
 import {map} from './utils.js'
 
 function Button(props) {
@@ -70,9 +72,28 @@ class Selection extends React.Component {
     }
 }
 
+class Price extends React.Component {
+    render() {
+        const price = this.props.price;
+        const subTotal = price.map((p) => p.subTotal).reduce((a, b) => a + b, 0);
+        const showBreakdown = price.length > 1 || price.filter((a) => a.english).length > 0;
+        const breakdown = price.map((p) => {
+            const english = p.english ? " "+p.english : "";
+            return "£"+p.amount+english+" ("+p.desc+")";
+        }).join(" + ");
+        const maybeBreakdown = showBreakdown ? " = "+breakdown+"" : "";
+        const soleDesc = (price.length == 1 && !price[0].english) ? price[0].desc+" " : "";
+        if (subTotal > 0) {
+            return(
+                <div>
+                    <p>{soleDesc}£{subTotal}{maybeBreakdown}</p>
+                </div>
+            );
+        } else return null;
+    }
+}
+
 class Question extends React.Component {
-
-
     renderAnswer(questionType) {
         const answers = this.props.question.answers;
         switch (questionType) {
@@ -100,6 +121,7 @@ class Question extends React.Component {
         const needHeading = question.helpText ? "" : "heading";
         const htmlQuestion = <h2 className={needHeading}>{question.question}</h2>;
         const htmlAnswer = this.renderAnswer(question.questionType);
+        const price = this.props.price;
         return (
             <div className="question">
                 {htmlQuestion}
@@ -107,6 +129,9 @@ class Question extends React.Component {
                     <p>{question.helpText}</p>
                 }
                 {htmlAnswer}
+                {price &&
+                    <Price price={price}/>
+                }
             </div>
         )
     }
@@ -119,7 +144,8 @@ class Rsvp extends React.Component {
             questions: null,
             startKey: null,
             answers: {},
-            unsent: true
+            unsent: true,
+            prices: {}
         }
     }
     findAnswer(question, answerKey) {
@@ -132,7 +158,10 @@ class Rsvp extends React.Component {
         }).then((response) => {
             return response.json().then((json) => {
                 const answerMap = json.answers;
-                this.setState({questions: json.questions, startKey: json.startPage, answers: answerMap, unsent: json.unsent});
+                this.setState({
+                    questions: json.questions, startKey: json.startPage, answers: answerMap,
+                    unsent: json.unsent, prices: json.prices
+                });
             });
         });
     }
@@ -161,6 +190,9 @@ class Rsvp extends React.Component {
                     if (json.questions) {
                         this.setState({questions: json.questions});
                     }
+                    if (json.prices) {
+                        this.setState({prices: json.prices});
+                    }
                 })
             }
         });
@@ -179,18 +211,19 @@ class Rsvp extends React.Component {
         const question = this.state.questions[key];
         if (question) {
             const answerKey = this.state.answers[question.key];
+            const price = this.state.prices.breakdown[question.key];
             if (answerKey || question.optional) {
                 const answerObject = this.findAnswer(question, answerKey);
                 const nextQuestion = this.nextQuestion(question, answerObject);
-                return [{question: question, answer: answerKey}].concat(this.questionAnswers(nextQuestion));
+                return [{question: question, answer: answerKey, price: price}].concat(this.questionAnswers(nextQuestion));
             } else {
-                return [{question: question}];
+                return [{question: question, price: price}];
             }
         } else return [];
     }
-    renderQuestion(question, answer) {
+    renderQuestion(question, answer, price) {
         return (
-            <Question key={question.key} question={question} answer={answer} onAnswer={(answer) => this.onAnswer(question, answer)}/>
+            <Question key={question.key} question={question} answer={answer} price={price} onAnswer={(answer) => this.onAnswer(question, answer)}/>
         );
     }
     finishRsvp() {
@@ -204,7 +237,7 @@ class Rsvp extends React.Component {
         if (this.state.questions) {
             const questionList = this.questionAnswers(this.state.startKey);
             const questionElements = questionList.map((question) => {
-                return this.renderQuestion(question.question, question.answer);
+                return this.renderQuestion(question.question, question.answer, question.price);
             });
             const bottomQuestion = questionList[questionList.length-1];
             const terminusQuestion = bottomQuestion.question.nextQuestion === undefined;
