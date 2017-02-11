@@ -1,7 +1,7 @@
-@(coming: Boolean, total: Int)
+@(coming: Boolean, total: Int)(implicit request: Security.AuthenticatedRequest[_, Invite])
 @import helpers._
 
-@page("Thanks for RSVPing") {
+@views.html.rsvp.rsvpPage("Thanks for RSVPing") {
     <section class="section">
         <div class="container">
             <div>
