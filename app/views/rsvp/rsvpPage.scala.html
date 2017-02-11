@@ -1,0 +1,26 @@
+@(title: String, reactComponent: Option[String] = None)(rsvpPageContent: Html)(implicit request: Security.AuthenticatedRequest[_, Invite])
+
+@page(title, reactComponent=reactComponent, requestHeader = Some(request), buntingSectionClass = Some("rsvp")) {
+    <section class="section rsvp">
+        <div class="container">
+            <div class="menu">
+                <ul>
+                    <li@if(request.path.contains(routes.RsvpController.details.url)){ class="is-active"}>
+                        <h2 class="shrink-mobile"><a href="@routes.RsvpController.details">Your invite</a></h2>
+                    </li>
+                    <li@if(request.path.contains(routes.RsvpController.rsvp.url)){ class="is-active"}>
+                        <h2 class="shrink-mobile"><a href="@routes.RsvpController.rsvp">Your RSVP</a></h2>
+                    </li>
+                    @if(request.user.rsvp.nonEmpty) {
+                        <li
+                        @if(request.path.contains(routes.Payments.home.url)) { class="is-active"}
+                        >
+                        <h2 class="shrink-mobile"><a href="@routes.Payments.home">Your payments</a></h2>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </section>
+    @rsvpPageContent
+}

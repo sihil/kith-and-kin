@@ -1,0 +1,9 @@
+@()(implicit request: Security.AuthenticatedRequest[_, Invite])
+
+    @views.html.rsvp.rsvpPage("RSVP", reactComponent = Some("rsvp")) {
+        <section class="section">
+            <div class="container">
+                <div id="container"></div>
+            </div>
+        </section>
+    }

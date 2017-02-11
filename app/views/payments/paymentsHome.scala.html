@@ -2,9 +2,9 @@
 @import helpers._
 @import helper._
 @import org.joda.time.format.DateTimeFormat
-@(email: Option[String], breakdown: NonEmptyList[PriceBreakdown], total: Int, payments: List[Payment], paid: Int, publishableKey: String)(implicit requestHeader: RequestHeader)
+@(email: Option[String], breakdown: NonEmptyList[PriceBreakdown], total: Int, payments: List[Payment], paid: Int, publishableKey: String)(implicit request: Security.AuthenticatedRequest[_, Invite])
 
-@page("Payments portal") {
+@views.html.rsvp.rsvpPage("Your payments") {
     <section class="section">
         <div class="container">
             <div>
@@ -79,22 +79,25 @@
 
                 <p>You can pay us either using a direct bank transfer or by card.</p>
 
-                <div class="columns">
-                    <div class="column">
+                <div class="tile is-ancestor">
+                    <div class="tile is-parent">
+                    <article class="tile is-child notification is-success">
                         <h3>Bank transfers</h3>
                         <p>If paying by bank transfer then please use a reference we can easily find (surname and initials or something amusing if you prefer). Our account details are:</p>
-                        <pre>Simon Hildrew<br/>The Co-operative Bank<br/>s/c: 08-91-03<br/>a/c: 14152119</pre>
+                        <pre class="is-success">Simon Hildrew<br/>The Co-operative Bank<br/>s/c: 08-91-03<br/>a/c: 14152119</pre>
                         <p>Tell us you're sending up a bank transfer for @total.sterling by filling out this little form:</p>
                         @form(CSRF(routes.Payments.bankTransfer)) {
                             <input type="hidden" name="amount" value="@total"/>
-                            <label class="label">Reference to look out for:</label>
+                            <label class="label inverted">Reference to look out for:</label>
                             <p class="control">
                                 <input class="input" name="reference" type="text" placeholder="Your transfer reference">
                             </p>
-                            <button class="button is-primary is-large" type="submit">I'm paying @total.sterling by transfer</button>
+                            <button class="button is-large" type="submit">I'm paying @total.sterling by transfer</button>
                         }
+                    </article>
                     </div>
-                    <div class="column">
+                    <div class="tile is-parent">
+                    <article class="tile is-child notification is-info">
                         <h3>Card payment</h3>
                         <p>If you want to pay by card then simply click the button below.</p>
                         @form(CSRF(routes.Payments.stripeForm)) {
@@ -111,8 +114,9 @@
                             data-zip-code="true"
                             data-currency="GBP">
                             </script>
-                            <button class="button is-primary is-large" type="submit">Pay @total.sterling by card</button>
+                            <button class="button is-large" type="submit">Pay @total.sterling by card</button>
                         }
+                    </article>
                     </div>
                 </div>
                 }

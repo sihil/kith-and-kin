@@ -1,24 +1,39 @@
-@(invite: Invite)(implicit rh: RequestHeader)
-@import helper._
+@(invite: Invite)(implicit request: Security.AuthenticatedRequest[_, Invite])
 
-    @page("RSVP", reactComponent=Some("rsvp"), requestHeader = Some(rh)) {
+    @rsvp.rsvpPage("RSVP") {
         <section class="section">
             <div class="container">
-                <div>
-                <h1>RSVP details</h1>
-                <h2>Grown ups</h2>
-                @invite.adults.map { adult =>
-                    <p>@adult.name</p>
-                }
-                @if(invite.children.nonEmpty) {
-                    <h2>Kids</h2>
-                    @invite.children.map { kid =>
-                        <p>@kid.name (DOB: @kid.dob)</p>
-                    }
-                }
-                <h2>Your RSVP has the following contact details:</h2>
-                <p><strong>E-mail:</strong> @invite.email</p>
-                <p><strong>Address:</strong> @invite.address</p>
+                <p>We hope we have these details right - if you spot mistakes or want to change anything please shoot
+                    us an e-mail at <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a>.</p>
+                <p>Ready to RSVP? <a href="@routes.RsvpController.rsvp">Go here</a></p>
+                <div class="tile is-ancestor">
+                    <div class="tile is-parent">
+                        <article class="tile is-child notification is-primary">
+                            <h2>Grown ups</h2>
+                            @invite.adults.map { adult =>
+                                <p>@adult.name</p>
+                            }
+                        </article>
+                    </div>
+                    <div class="tile is-parent">
+                        <article class="tile is-child notification is-info">
+                            <h2>Kids</h2>
+                            @if(invite.children.nonEmpty) {
+                            @invite.children.map { kid =>
+                                <p>@kid.name (DOB: @kid.dob)</p>
+                            }
+                            } else {
+                                <p>No kids! We're still having a bouncy castle for adults!</p>
+                            }
+                        </article>
+                    </div>
+                    <div class="tile is-parent">
+                        <article class="tile is-child notification is-success">
+                            <h2>Contact details:</h2>
+                            <p><strong>E-mail:</strong> @invite.email</p>
+                            <p><strong>Address:</strong> @invite.address</p>
+                        </article>
+                    </div>
                 </div>
                 <div id="container"></div>
             </div>

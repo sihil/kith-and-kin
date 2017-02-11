@@ -1,4 +1,5 @@
-@(title: String, menu: Boolean = true, bunting: Boolean = true, reactComponent: Option[String] = None, requestHeader: Option[RequestHeader] = None)(body: Html)
+@(title: String, menu: Boolean = true, bunting: Boolean = true, buntingSectionClass: Option[String] = None,
+        reactComponent: Option[String] = None, requestHeader: Option[RequestHeader] = None)(body: Html)
 
 <html>
     <head>
@@ -42,7 +43,7 @@
             </section>
         }
         @if(menu && bunting) {
-            <section>
+            <section @buntingSectionClass.map{bsc => class="@bsc"}>
                 <img src="@routes.Assets.versioned("images/bunting.png")">
             </section>
         }

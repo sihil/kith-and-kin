@@ -135,6 +135,10 @@ class RsvpController(val inviteRepository: InviteRepository, sesClient: AmazonSi
     Ok(views.html.rsvp.details(request.user))
   }
 
+  def rsvp = RsvpLogin { implicit request =>
+    Ok(views.html.rsvp.rsvp())
+  }
+
   def update(complete: Boolean) = RsvpLogin(parse.json) { request =>
     val questions = QuestionMaster.questions(request.user)
     val updateMap = request.body.as[Map[String, JsValue]]
