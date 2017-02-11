@@ -27,7 +27,8 @@ trait RsvpAuth extends UserIdentifier with Results {
     val googleAuth = userIdentity(request).filter(user => Whitelist.users.contains(user.email))
     val invite = inviteRepository.getInvite(rsvpId.id)
     (invite, googleAuth) match {
-      case (Some(i), None) if RsvpCookie.valid(i, rsvpId) =>
+      case (Some(i), _) if RsvpCookie.valid(i, rsvpId) =>
+        Logger.logger.info(s"Valid user login for ${i.adults.head.name}")
         val now = new DateTime()
         Some(RsvpAuth.lastSeenAgent().get(i.id) match {
           // seen within last 15 minutes, do nothing
