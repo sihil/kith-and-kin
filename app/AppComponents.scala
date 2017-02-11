@@ -1,9 +1,9 @@
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.auth.{AWSCredentialsProviderChain, InstanceProfileCredentialsProvider}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
-import com.amazonaws.services.simpleemail.{AmazonSimpleEmailServiceClient, AmazonSimpleEmailServiceClientBuilder}
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder
 import controllers._
-import db.InviteRepository
+import db.{InviteRepository, PaymentRepository}
 import filters.ForwardingFilter
 import play.api.ApplicationLoader.Context
 import play.api._
@@ -11,6 +11,8 @@ import play.api.libs.ws.ahc.AhcWSComponents
 import play.filters.csrf.CSRFComponents
 import play.filters.gzip.GzipFilterComponents
 import router.Routes
+
+import scala.concurrent.ExecutionContext
 
 class AppComponents(context: Context)
   extends BuiltInComponentsFromContext(context)
@@ -46,12 +48,16 @@ class AppComponents(context: Context)
   val sesClient = AmazonSimpleEmailServiceClientBuilder.standard().
     withCredentials(credentialsProviderChain).withRegion("eu-west-1").build()
 
+  implicit val operationContext: ExecutionContext = actorSystem.dispatchers.lookup("operation-context")
+
   val inviteRepository = new InviteRepository(dynamoClient, stage)
+  val paymentRepository = new PaymentRepository(dynamoClient, stage)
 
   val kithKinController = new KithAndKinController()
   val rsvpController = new RsvpController(inviteRepository, sesClient)
   val adminController = new AdminController(wsClient, baseUrl, inviteRepository)
+  val paymentsController = new Payments(inviteRepository, paymentRepository)
   val assets = new Assets(httpErrorHandler)
 
-  val router = new Routes(httpErrorHandler, kithKinController, rsvpController, adminController, assets)
+  val router = new Routes(httpErrorHandler, kithKinController, rsvpController, paymentsController, adminController, assets)
 }

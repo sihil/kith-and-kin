@@ -117,7 +117,7 @@ Resources:
       - {AttributeName: id, AttributeType: S}
       KeySchema:
       - {AttributeName: id, KeyType: HASH}
-      ProvisionedThroughput: {ReadCapacityUnits: 5, WriteCapacityUnits: 2}
+      ProvisionedThroughput: {ReadCapacityUnits: 2, WriteCapacityUnits: 2}
 
   InviteDynamoTable:
     Type: AWS::DynamoDB::Table
@@ -128,7 +128,29 @@ Resources:
       - {AttributeName: id, AttributeType: S}
       KeySchema:
       - {AttributeName: id, KeyType: HASH}
-      ProvisionedThroughput: {ReadCapacityUnits: 15, WriteCapacityUnits: 15}
+      ProvisionedThroughput: {ReadCapacityUnits: 12, WriteCapacityUnits: 12}
+
+  DevPaymentDynamoTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub kk-payments-DEV
+      AttributeDefinitions:
+      - {AttributeName: id, AttributeType: S}
+      KeySchema:
+      - {AttributeName: id, KeyType: HASH}
+      ProvisionedThroughput: {ReadCapacityUnits: 2, WriteCapacityUnits: 2}
+
+  PaymentDynamoTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub kk-payments-PROD
+      AttributeDefinitions:
+      - {AttributeName: id, AttributeType: S}
+      KeySchema:
+      - {AttributeName: id, KeyType: HASH}
+      ProvisionedThroughput: {ReadCapacityUnits: 5, WriteCapacityUnits: 5}
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile

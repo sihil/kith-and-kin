@@ -21,7 +21,13 @@ case class Rsvp(
   offSiteHavingBreakfast: Option[Boolean] = None
 )
 
-case class Payment(amount: Double, authCode: String, successful: Boolean)
+case class StripePayment(stripeToken: String, charged: Boolean, stripeId: Option[String] = None, error: Option[String] = None)
+case class BankTransfer(reference: String, received: Boolean)
+case class Payment(id: UUID, date: DateTime, update: Int, inviteId: UUID, amount: Int, stripePayment: Option[StripePayment] = None, bankTransfer: Option[BankTransfer] = None){
+  val paymentType = if (stripePayment.nonEmpty) "Card" else if (bankTransfer.nonEmpty) "Bank transfer" else "Unknown"
+  val confirmed = stripePayment.map(_.charged).orElse(bankTransfer.map(_.received)).getOrElse(false)
+}
+
 
 case class Adult(name: String)
 case class Child(name: String, dob: LocalDate)

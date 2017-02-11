@@ -73,20 +73,30 @@ class Selection extends React.Component {
 }
 
 class Price extends React.Component {
+    amount(currencyInt) {
+        const sign = (currencyInt < 0) ? "-" : "";
+        const initialString = Math.abs(currencyInt).toString();
+        const minimalString = (initialString.length < 3) ? "0" * (3-initialString.length) + initialString : initialString;
+        console.log(minimalString);
+        const pounds = minimalString.slice(0, minimalString.length - 2);
+        const pence = minimalString.slice(minimalString.length-2, minimalString.length);
+        return `${sign}£${pounds}.${pence}`
+    }
+
     render() {
         const price = this.props.price;
         const subTotal = price.map((p) => p.subTotal).reduce((a, b) => a + b, 0);
         const showBreakdown = price.length > 1 || price.filter((a) => a.english).length > 0;
         const breakdown = price.map((p) => {
             const english = p.english ? " "+p.english : "";
-            return "£"+p.amount+english+" ("+p.desc+")";
+            return this.amount(p.amount)+english+" ("+p.desc+")";
         }).join(" + ");
         const maybeBreakdown = showBreakdown ? " = "+breakdown+"" : "";
         const soleDesc = (price.length == 1 && !price[0].english) ? price[0].desc+" " : "";
         if (subTotal > 0) {
             return(
                 <div>
-                    <p>{soleDesc}£{subTotal}{maybeBreakdown}</p>
+                    <p>{soleDesc}{this.amount(subTotal)}{maybeBreakdown}</p>
                 </div>
             );
         } else return null;

@@ -1,33 +1,38 @@
 # healthcheck for the ELB
-GET         /healthcheck        controllers.KithAndKinController.healthcheck
+GET         /healthcheck                   controllers.KithAndKinController.healthcheck
 
 # pages
-GET         /                   controllers.KithAndKinController.index
-GET         /accommodation      controllers.KithAndKinController.accommodation
-GET         /get-involved       controllers.KithAndKinController.getInvolved
+GET         /                              controllers.KithAndKinController.index
+GET         /accommodation                 controllers.KithAndKinController.accommodation
+GET         /get-involved                  controllers.KithAndKinController.getInvolved
 
 # rsvp
-GET         /rsvp               controllers.RsvpController.start
-POST        /rsvp/lookup        controllers.RsvpController.lookup
-GET         /rsvp/sent          controllers.RsvpController.sentMessage
-GET         /rsvp/notRight      controllers.RsvpController.notRight
-GET         /rsvp/login/:id/:secret controllers.RsvpController.login(id: String, secret: String)
+GET         /rsvp                          controllers.RsvpController.start
+POST        /rsvp/lookup                   controllers.RsvpController.lookup
+GET         /rsvp/sent                     controllers.RsvpController.sentMessage
+GET         /rsvp/notRight                 controllers.RsvpController.notRight
+GET         /rsvp/login/:id/:secret        controllers.RsvpController.login(id: String, secret: String)
 
-GET         /rsvp/details       controllers.RsvpController.details
-POST        /rsvp/update        controllers.RsvpController.update(complete: Boolean)
-GET         /rsvp/accommodation controllers.RsvpController.accommodation()
-GET         /rsvp/notComing   controllers.RsvpController.notComing()
-GET         /rsvp/complete     controllers.RsvpController.complete
-GET         /rsvp/questions     controllers.RsvpController.questions
+GET         /rsvp/details                  controllers.RsvpController.details
+POST        /rsvp/update                   controllers.RsvpController.update(complete: Boolean)
+GET         /rsvp/accommodation            controllers.RsvpController.accommodation()
+GET         /rsvp/notComing                controllers.RsvpController.notComing()
+GET         /rsvp/complete                 controllers.RsvpController.complete
+GET         /rsvp/questions                controllers.RsvpController.questions
+
+# payments
+GET         /payments/home                 controllers.Payments.home
+POST        /payments/stripeForm           controllers.Payments.stripeForm
+POST        /payments/bankTransfer         controllers.Payments.bankTransfer
 
 #admin
-GET         /admin              controllers.AdminController.index
-GET         /admin/test/create  controllers.AdminController.create
-GET         /admin/loginAction  controllers.AdminController.loginAction
-GET         /oauthCallback      controllers.AdminController.oauth2Callback
-POST        /admin/uploadCsv    controllers.AdminController.uploadCsv
-POST        /admin/action       controllers.AdminController.action
+GET         /admin                         controllers.AdminController.index
+GET         /admin/test/create             controllers.AdminController.create
+GET         /admin/loginAction             controllers.AdminController.loginAction
+GET         /oauthCallback                 controllers.AdminController.oauth2Callback
+POST        /admin/uploadCsv               controllers.AdminController.uploadCsv
+POST        /admin/action                  controllers.AdminController.action
 
 # serve assets such as JS and images
-GET         /favicon.ico        controllers.Assets.at(path="/public", file="favicon/favicon.ico")
-GET         /assets/*file       controllers.Assets.versioned(path="/public", file: Asset)
+GET         /favicon.ico                   controllers.Assets.at(path="/public", file="favicon/favicon.ico")
+GET         /assets/*file                  controllers.Assets.versioned(path="/public", file: Asset)

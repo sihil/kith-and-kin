@@ -1,4 +1,5 @@
-@(coming: Boolean, breakdown: List[PriceBreakdown], total: Double)
+@(coming: Boolean, total: Int)
+@import helpers._
 
 @page("Thanks for RSVPing") {
     <section class="section">
@@ -6,33 +7,14 @@
             <div>
                 <h1>Thanks for RSVPing</h1>
                 @if(coming) {
-                    <p>Yey! We're so excited that you'll be joining us at Kith & Kin. Keep your eyes open for more festival details in the coming months and if you have any questions in the meantime, fire them over to us at <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a></p>
+                    <p>Yey! We're so excited that you'll be joining us at Kith & Kin. Keep your eyes open for more
+                        festival details in the coming months and if you have any questions in the meantime, \
+                        fire them over to us at <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a></p>
+                    @if(total > 0) {
+                        <p>The accommodation and food choices you've made come to a total of @total.sterling.</p>
+                        <p>We'd love for this to be paid ahead of the festival. <a href="@routes.Payments.home()">Pay now.</a></p>
+                    }
                     <p>See you in August!</p>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Description</th>
-                                <th class="align-right">Price</th>
-                                <th class="align-right">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @breakdown.map { price =>
-                                <tr>
-                                    <td>@price.desc</td>
-                                    <td class="align-right">£@("%.2f".format(price.itemAmount))</td>
-                                    <td class="align-right">£@("%.2f".format(price.subTotal))</td>
-                                </tr>
-                            }
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <th>Total</th>
-                                <th></th>
-                                <th class="align-right">£@("%.2f".format(total))</th>
-                            </tr>
-                        </tfoot>
-                    </table>
                     <p><strong>Simon and Christina xx</strong></p>
                 } else {
                     <p>We're sad that you won't be able to make it, but thanks for letting us know. Hopefully we'll be able to catch up with you soon.</p>

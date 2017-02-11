@@ -23,6 +23,8 @@ libraryDependencies ++= Seq(
   "com.nrinaudo" %% "kantan.csv-joda-time" % "0.1.17",
   // akka agents
   "com.typesafe.akka" % "akka-agent_2.11" % "2.4.12",
+  // stripe
+  "com.stripe" % "stripe-java" % "3.9.0",
   // play framework
   filters,
   ws

@@ -1,0 +1,123 @@
+@import cats.data.NonEmptyList
+@import helpers._
+@import helper._
+@import org.joda.time.format.DateTimeFormat
+@(email: Option[String], breakdown: NonEmptyList[PriceBreakdown], total: Int, payments: List[Payment], paid: Int, publishableKey: String)(implicit requestHeader: RequestHeader)
+
+@page("Payments portal") {
+    <section class="section">
+        <div class="container">
+            <div>
+                <h1>Paying for accommodation and food</h1>
+
+                <p>To make things smoother we would love it if you could sort out money for accommodation and catering
+                    ahead of time. You're also welcome to pay in installments if that's easier for you.</p>
+
+                <p>You can send us money either by direct bank transfer or using a credit card (we are using a reputable
+                    online payments provider called Stripe to take these payments).</p>
+
+                <p>If you have any questions, fire them over to us at
+                    <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a></p>
+
+                <h2>Statement</h2>
+
+                <p>We've calculated the following based on your answers </p>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th class="align-right">Price</th>
+                            <th class="align-right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @breakdown.toList.map { price =>
+                        <tr>
+                            <td>@price.desc</td>
+                            <td class="align-right">@price.itemAmount.sterling</td>
+                            <td class="align-right">@price.subTotal.sterling</td>
+                        </tr>
+                    }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total</th>
+                            <th></th>
+                            <th class="align-right">@total.sterling</th>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                @if(paid != 0) {
+                    <p>You've paid us @paid.sterling@if(paid < total){ so far.}else{. Thank you!}</p>
+
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Type</th>
+                                <th>Confirmed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @payments.map { payment =>
+                            <tr>
+                                <td>@DateTimeFormat.mediumDateTime().print(payment.date)</td>
+                                <td>@payment.amount.sterling</td>
+                                <td>@payment.paymentType</td>
+                                <td>@if(payment.confirmed) {Confirmed} else {Not yet confirmed}</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+
+                @if(paid < total) {
+                <h2>Paying</h2>
+
+                <p>You can pay us either using a direct bank transfer or by card.</p>
+
+                <div class="columns">
+                    <div class="column">
+                        <h3>Bank transfers</h3>
+                        <p>If paying by bank transfer then please use a reference we can easily find (surname and initials or something amusing if you prefer). Our account details are:</p>
+                        <pre>Simon Hildrew<br/>The Co-operative Bank<br/>s/c: 08-91-03<br/>a/c: 14152119</pre>
+                        <p>Tell us you're sending up a bank transfer for @total.sterling by filling out this little form:</p>
+                        @form(CSRF(routes.Payments.bankTransfer)) {
+                            <input type="hidden" name="amount" value="@total"/>
+                            <label class="label">Reference to look out for:</label>
+                            <p class="control">
+                                <input class="input" name="reference" type="text" placeholder="Your transfer reference">
+                            </p>
+                            <button class="button is-primary is-large" type="submit">I'm paying @total.sterling by transfer</button>
+                        }
+                    </div>
+                    <div class="column">
+                        <h3>Card payment</h3>
+                        <p>If you want to pay by card then simply click the button below.</p>
+                        @form(CSRF(routes.Payments.stripeForm)) {
+                            <input type="hidden" name="amount" value="@total"/>
+                            <script
+                            src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+                            data-key="@publishableKey"
+                            data-amount="@total"
+                            data-name="Kith & Kin"
+                                @email.map { emailAddress => data-email="@emailAddress" }
+                            data-description="Accommodation and food"
+                            data-image="@routes.Assets.versioned("favicon/apple-touch-icon-152x152.png")"
+                            data-locale="auto"
+                            data-zip-code="true"
+                            data-currency="GBP">
+                            </script>
+                            <button class="button is-primary is-large" type="submit">Pay @total.sterling by card</button>
+                        }
+                    </div>
+                </div>
+                }
+
+            </div>
+        </div>
+    </section>
+}

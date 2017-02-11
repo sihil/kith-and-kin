@@ -2,51 +2,15 @@ package controllers
 
 import java.util.UUID
 
-import akka.agent.Agent
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService
-import com.gu.googleauth.{GoogleAuthConfig, UserIdentifier}
 import com.softwaremill.quicklens._
 import db.InviteRepository
-import helpers.{Email, RsvpCookie, RsvpId, Secret}
-import models.{Invite, QuestionMaster, Rsvp}
-import org.joda.time.DateTime
-import play.api.Logger
+import helpers._
+import models.{QuestionMaster, Rsvp}
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.Security.AuthenticatedBuilder
-import play.api.mvc.{Action, Controller, RequestHeader}
+import play.api.mvc.{Action, Controller}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
-class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimpleEmailService) extends Controller with UserIdentifier {
-
-  override def authConfig: GoogleAuthConfig = GoogleAuthConfig.withNoDomainRestriction("","","",enforceValidity = false)
-
-  val lastSeenAgent = Agent[Map[UUID, DateTime]](Map.empty)
-
-  def inviteFrom(request: RequestHeader): Option[Invite] = RsvpCookie.parse(request.cookies).flatMap { rsvpId =>
-    val googleAuth = userIdentity(request).filter(user => Whitelist.users.contains(user.email))
-    val invite = inviteRepository.getInvite(rsvpId.id)
-    (invite, googleAuth) match {
-      case (Some(i), None) if RsvpCookie.valid(i, rsvpId) =>
-        val now = new DateTime()
-        Some(lastSeenAgent().get(i.id) match {
-          // seen within last 15 minutes, do nothing
-          case Some(lastSeen) if (now.getMillis - lastSeen.getMillis) < 1000 * 900 => i
-          // either never seen or more than 10 mins
-          case other =>
-            val updatedInvite = i.copy(lastLoggedIn = Some(now))
-            // update DB and cache
-            inviteRepository.putInvite(updatedInvite)
-            lastSeenAgent.send(_ + (i.id -> now))
-            updatedInvite
-        })
-      case (Some(i), Some(auth)) =>
-        Logger.logger.warn(s"Invite for ${i.email} impersonated by ${auth.email}")
-        Some(i)
-      case _ => None
-    }
-  }
-  object RsvpLogin extends AuthenticatedBuilder[Invite](inviteFrom, _ => Redirect(routes.RsvpController.start()))
+class RsvpController(val inviteRepository: InviteRepository, sesClient: AmazonSimpleEmailService) extends Controller with RsvpAuth {
 
   def start = Action { request =>
     Ok(views.html.rsvp.start(request))
@@ -206,7 +170,7 @@ class RsvpController(inviteRepository: InviteRepository, sesClient: AmazonSimple
 
   def complete = RsvpLogin { implicit request =>
     val questions = QuestionMaster.questions(request.user)
-    Ok(views.html.rsvp.thanks(request.user.rsvp.flatMap(_.coming).get, questions.breakdowns, questions.totalPrice))
+    Ok(views.html.rsvp.thanks(request.user.rsvp.flatMap(_.coming).get, questions.totalPrice))
   }
 
   def questions = RsvpLogin { r =>

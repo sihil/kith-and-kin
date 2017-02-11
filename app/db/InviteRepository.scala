@@ -21,6 +21,5 @@ class InviteRepository(val client: AmazonDynamoDB, val stage: String) extends Dy
   }
 
   def getInvite(id: UUID): Option[Invite] = exec(table.get('id -> id)).flatMap(_.toOption)
-  def deleteInvite(id: UUID): Unit = exec(table.delete('id -> id))
   def getInviteList: Iterable[Invite] = exec(table.scan()).flatMap(_.toOption)
 }
