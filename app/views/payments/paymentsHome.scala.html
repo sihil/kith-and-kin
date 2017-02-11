@@ -85,7 +85,7 @@
                         <h3>Bank transfers</h3>
                         <p>If paying by bank transfer then please use a reference we can easily find (surname and initials or something amusing if you prefer). Our account details are:</p>
                         <pre class="is-success">Simon Hildrew<br/>The Co-operative Bank<br/>s/c: 08-91-03<br/>a/c: 14152119</pre>
-                        <p>Tell us you're sending up a bank transfer for @total.sterling by filling out this little form:</p>
+                        <p>Tell us you're sending us a bank transfer for @total.sterling by filling out this little form:</p>
                         @form(CSRF(routes.Payments.bankTransfer)) {
                             <input type="hidden" name="amount" value="@total"/>
                             <label class="label inverted">Reference to look out for:</label>

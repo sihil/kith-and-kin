@@ -8,6 +8,17 @@
                 <p>Ready to RSVP? <a href="@routes.RsvpController.rsvp">Go here</a></p>
                 <div class="tile is-ancestor">
                     <div class="tile is-parent">
+                        <article class="tile is-child notification is-purple">
+                            <h2>Contact details:</h2>
+                            <p><strong>E-mail:</strong> <br/>@invite.email</p>
+                            @invite.address.map { address =>
+                                <p><strong>Address:</strong><br/>
+                                    @Html(address.split("\n").map(line => Html(line).toString).mkString("<br/>"))
+                                </p>
+                            }
+                        </article>
+                    </div>
+                    <div class="tile is-parent">
                         <article class="tile is-child notification is-primary">
                             <h2>Grown ups</h2>
                             @invite.adults.map { adult =>
@@ -23,15 +34,9 @@
                                 <p>@kid.name (DOB: @kid.dob)</p>
                             }
                             } else {
-                                <p>No kids! We're still having a bouncy castle for adults!</p>
+                                <p>No kids!</p>
+                                <p>Don't worry, we're also getting a bouncy castle for adults...</p>
                             }
-                        </article>
-                    </div>
-                    <div class="tile is-parent">
-                        <article class="tile is-child notification is-success">
-                            <h2>Contact details:</h2>
-                            <p><strong>E-mail:</strong> @invite.email</p>
-                            <p><strong>Address:</strong> @invite.address</p>
                         </article>
                     </div>
                 </div>
