@@ -34,6 +34,7 @@
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
     "whatwg-fetch": "^2.0.2",
-    "lodash.isequal": "4.5.0"
+    "lodash.isequal": "4.5.0",
+    "animated-scroll-to": "1.0.1"
   }
 }

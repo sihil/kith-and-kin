@@ -1,7 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import isEqual from 'lodash.isequal';
-import {map} from './utils.js'
+import animateScrollTo from 'animated-scroll-to';
+
 
 function Button(props) {
     const classes = "button is-large "+props.colour;
@@ -78,10 +79,13 @@ class Price extends React.Component {
         const sign = (currencyInt < 0) ? "-" : "";
         const initialString = Math.abs(currencyInt).toString();
         const minimalString = (initialString.length < 3) ? "0" * (3-initialString.length) + initialString : initialString;
-        console.log(minimalString);
         const pounds = minimalString.slice(0, minimalString.length - 2);
         const pence = minimalString.slice(minimalString.length-2, minimalString.length);
-        return `${sign}£${pounds}.${pence}`
+        if (pence === "00") {
+            return `${sign}£${pounds}`
+        } else {
+            return `${sign}£${pounds}.${pence}`
+        }
     }
 
     render() {
@@ -105,6 +109,25 @@ class Price extends React.Component {
 }
 
 class Question extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            scrolled: false
+        };
+    }
+    scrollToBottom() {
+        const options = {
+            speed: 500,
+            minDuration: 250,
+            maxDuration: 1000,
+            cancelOnUserAction: true
+        };
+        const body = document.body,
+            html = document.documentElement;
+        const height = Math.max( body.scrollHeight, body.offsetHeight,
+            html.clientHeight, html.scrollHeight, html.offsetHeight );
+        animateScrollTo(height, options);
+    }
     renderAnswer(questionType) {
         const answers = this.props.question.answers;
         switch (questionType) {
@@ -124,6 +147,14 @@ class Question extends React.Component {
                 return (
                     <Selection question={this.props.question} answers={this.props.answer} onUpdate={(newAnswers) => this.props.onAnswer(newAnswers)} />
                 );
+        }
+    }
+
+    componentDidUpdate() {
+        if (this.props.scrollTo && !this.state.scrolled) {
+            this.scrollToBottom();
+            console.log("scrolled in "+this.props.question.key);
+            this.setState({scrolled: true});
         }
     }
 
@@ -223,6 +254,9 @@ class Rsvp extends React.Component {
                 return question.nextQuestion;
         }
     }
+    isTerminus(question) {
+        return question.nextQuestion === undefined && question.answers.length === 0;
+    }
     questionAnswers(key) {
         const question = this.state.questions[key];
         if (question) {
@@ -237,9 +271,9 @@ class Rsvp extends React.Component {
             }
         } else return [];
     }
-    renderQuestion(question, answer, price) {
+    renderQuestion(question, answer, price, scrollTo) {
         return (
-            <Question key={question.key} question={question} answer={answer} price={price} onAnswer={(answer) => this.onAnswer(question, answer)}/>
+            <Question key={question.key} question={question} answer={answer} price={price} scrollTo={scrollTo} onAnswer={(answer) => this.onAnswer(question, answer)}/>
         );
     }
     finishRsvp() {
@@ -265,8 +299,11 @@ class Rsvp extends React.Component {
     render() {
         if (this.state.questions) {
             const questionList = this.questionAnswers(this.state.startKey);
-            const questionElements = questionList.map((question) => {
-                return this.renderQuestion(question.question, question.answer, question.price);
+            const questionElements = questionList.map((question, index) => {
+                const bottomQuestion = index === questionList.length-1;
+                const lastQuestion = this.isTerminus(question.question);
+                const scrollTo = bottomQuestion && !lastQuestion;
+                return this.renderQuestion(question.question, question.answer, question.price, scrollTo);
             });
             const bottomQuestion = questionList[questionList.length-1];
             const terminusQuestion = bottomQuestion.question.nextQuestion === undefined;
