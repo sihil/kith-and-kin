@@ -120,16 +120,21 @@ object JsonQuestion {
 
 case class PriceBreakdown(desc: String, itemAmount: Int, subTotal: Int)
 
-trait Questions {
-  def allQuestions: Seq[QuestionReference]
-  def jsonQuestions: Seq[JsonQuestion]
-  def questionMap: Map[String, JsonQuestion]
-  def questionJson: JsObject
+trait Response {
   def answers: Map[String, JsValue]
   def prices: List[(String, List[Item])]
   def breakdown: Option[NonEmptyList[PriceBreakdown]]
   def totalPrice: Int
   def jsonPrices: JsObject
+}
+
+trait Questions {
+  def allQuestions: Seq[QuestionReference]
+  def jsonQuestions: Seq[JsonQuestion]
+  def questionMap: Map[String, JsonQuestion]
+  def questionJson: JsObject
+  def draftResponse: Response
+  def finalResponse: Response
 }
 
 object QuestionMaster {
@@ -288,38 +293,46 @@ object QuestionMaster {
       "questions" -> questionMap,
       "startPage" -> startPage.key
     )
-    override val answers: Map[String, JsValue] = {
-      val rsvp = invite.draftRsvp.getOrElse(Rsvp())
-      allQuestions.flatMap(q => q.answer(rsvp).map(q.key ->)).toMap
-    }
-    override val prices: List[(String, List[Item])] = {
-      val rsvp = invite.draftRsvp.getOrElse(Rsvp())
-      def rec(questionReference: Option[QuestionReference], acc: List[(String, List[Item])] = Nil): List[(String, List[Item])] = {
-        questionReference match {
-          case None => acc
-          case Some(ref) =>
-            val questionReferencePrice = ref.key -> ref.calculatePrice(rsvp)
-            val maybeNextQuestion = ref.selectedOnwardQuestion(rsvp)
-            rec(maybeNextQuestion, questionReferencePrice :: acc)
+
+
+    override def draftResponse = buildResponse(invite.draftRsvp)
+    override def finalResponse = buildResponse(invite.rsvp)
+
+    def buildResponse(maybeRsvp: Option[Rsvp]): Response = {
+      val rsvp = maybeRsvp.getOrElse(Rsvp())
+      new Response {
+        override val answers = allQuestions.flatMap(q => q.answer(rsvp).map(q.key ->)).toMap
+
+        override val prices = {
+          def rec(questionReference: Option[QuestionReference], acc: List[(String, List[Item])] = Nil): List[(String, List[Item])] = {
+            questionReference match {
+              case None => acc
+              case Some(ref) =>
+                val questionReferencePrice = ref.key -> ref.calculatePrice(rsvp)
+                val maybeNextQuestion = ref.selectedOnwardQuestion(rsvp)
+                rec(maybeNextQuestion, questionReferencePrice :: acc)
+            }
+          }
+          rec(Some(startPage)).reverse
+        }
+
+        override val breakdown = {
+          NonEmptyList.fromList(prices.flatMap(_._2).map { price =>
+            val desc = price.desc + price.english.map(e => s" - $e").getOrElse("")
+            PriceBreakdown(desc, price.amount, Item.subTotal(price, numberComing, adultsComing))
+          })
+        }
+
+        override val totalPrice = Item.total(prices.flatMap{case(_, priceList)=>priceList}, numberComing, adultsComing)
+
+        override val jsonPrices = {
+          implicit val priceWrites = Item.writes(numberComing, adultsComing)
+          Json.obj(
+            "total" -> totalPrice,
+            "breakdown" -> Json.toJson(prices.toMap)
+          )
         }
       }
-      rec(Some(startPage)).reverse
-    }
-
-    override def breakdown: Option[NonEmptyList[PriceBreakdown]] = {
-      NonEmptyList.fromList(prices.flatMap(_._2).map { price =>
-        val desc = price.desc + price.english.map(e => s" - $e").getOrElse("")
-        PriceBreakdown(desc, price.amount, Item.subTotal(price, numberComing, adultsComing))
-      })
-    }
-
-    override val totalPrice: Int = Item.total(prices.flatMap{case(_, priceList)=>priceList}, numberComing, adultsComing)
-    override val jsonPrices: JsObject = {
-      implicit val priceWrites = Item.writes(numberComing, adultsComing)
-      Json.obj(
-        "total" -> totalPrice,
-        "breakdown" -> Json.toJson(prices.toMap)
-      )
     }
   }
 }

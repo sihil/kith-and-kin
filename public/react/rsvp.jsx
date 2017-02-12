@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import isEqual from 'lodash.isequal';
 import {map} from './utils.js'
 
 function Button(props) {
@@ -157,7 +158,9 @@ class Rsvp extends React.Component {
             questions: null,
             startKey: null,
             answers: {},
+            submittedAnswers: {},
             unsent: true,
+            modified: false,
             prices: {}
         }
     }
@@ -170,10 +173,10 @@ class Rsvp extends React.Component {
             credentials: 'include'
         }).then((response) => {
             return response.json().then((json) => {
-                const answerMap = json.answers;
                 this.setState({
-                    questions: json.questions, startKey: json.startPage, answers: answerMap,
-                    unsent: json.unsent, prices: json.prices
+                    questions: json.questions, startKey: json.startPage, answers: json.answers,
+                    submittedAnswers: json.submittedAnswers,
+                    unsent: json.unsent, modified: json.modified, prices: json.prices
                 });
             });
         });
@@ -197,7 +200,7 @@ class Rsvp extends React.Component {
                 this.setState((previous) => {
                     const newAnswer = {};
                     newAnswer[question.key] = answer;
-                    return {answers: Object.assign({}, previous.answers, newAnswer), unsent: true};
+                    return {answers: Object.assign({}, previous.answers, newAnswer), modified: true};
                 });
                 res.json().then((json) => {
                     if (json.questions) {
@@ -246,6 +249,19 @@ class Rsvp extends React.Component {
             }
         })
     }
+    resetRsvp() {
+        return fetch("/rsvp/reset", {
+            credentials: 'include',
+            headers: {
+                'Csrf-Token': window.csrf
+            },
+            method: 'POST'
+        }).then((res) => {
+            if (res.status == 204) {
+                this.componentDidMount()
+            }
+        })
+    }
     render() {
         if (this.state.questions) {
             const questionList = this.questionAnswers(this.state.startKey);
@@ -256,13 +272,32 @@ class Rsvp extends React.Component {
             const terminusQuestion = bottomQuestion.question.nextQuestion === undefined;
             const finished = terminusQuestion && (bottomQuestion.answer || bottomQuestion.question.optional);
             const unsent = this.state.unsent;
+            const modified = !isEqual(this.state.answers, this.state.submittedAnswers);
+
             return (
                 <div>
+                    {finished &&
+                        <div className="margin-bottom">
+                            {modified && !unsent &&
+                            <div className="notification is-danger">
+                                NOTE: You've made changes to your RSVP since you last sent it to us. Once you're happy
+                                with the changes remember to send them to us!
+                            </div>
+                            }
+                        </div>
+                    }
                     {questionElements}
                     {finished &&
                         <div>
-                            <h2 className="heading">You're finished!</h2>
-                            {unsent && <Button colour="is-danger" onClick={() => this.finishRsvp()} text="Send RSVP"/>}
+                            {!modified && <h2 className="heading">You're finished!</h2>}
+                            {modified && unsent && <Button colour="is-danger" onClick={() => this.finishRsvp()} text="Send RSVP"/>}
+                            {modified && !unsent &&
+                                <div className="question">
+                                    <p>You've made changes to your RSVP since you last sent it to us. Remember to send them to us!</p>
+                                    <Button colour="is-danger" onClick={() => this.finishRsvp()} text="Update RSVP"/>
+                                    <Button colour="is-warning" onClick={() => this.resetRsvp()} text="Forget RSVP changes"/>
+                                </div>
+                            }
                         </div>
                     }
                 </div>

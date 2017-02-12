@@ -24,8 +24,9 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
     val questions = QuestionMaster.questions(request.user)
     val payments = paymentRepository.getPaymentsForInvite(request.user).toList
     val paid = payments.map(_.amount).sum
-    questions.breakdown.map {breakdown =>
-      Ok(views.html.payments.paymentsHome(Some(request.user.email), breakdown, questions.totalPrice, payments, paid, stripePublishableKey))
+    val response = questions.finalResponse
+    response.breakdown.map { breakdown =>
+      Ok(views.html.payments.paymentsHome(Some(request.user.email), breakdown, response.totalPrice, payments, paid, stripePublishableKey))
     } getOrElse NotFound
   }
 

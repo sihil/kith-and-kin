@@ -20,6 +20,7 @@ GET         /rsvp/accommodation            controllers.RsvpController.accommodat
 GET         /rsvp/notComing                controllers.RsvpController.notComing()
 GET         /rsvp/complete                 controllers.RsvpController.complete
 GET         /rsvp/questions                controllers.RsvpController.questions
+POST        /rsvp/reset                    controllers.RsvpController.reset
 
 # payments
 GET         /payments/home                 controllers.Payments.home

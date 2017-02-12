@@ -158,7 +158,10 @@ class RsvpController(val inviteRepository: InviteRepository, sesClient: AmazonSi
     inviteRepository.putInvite(updatedInvite)
 
     val updatedQuestionJson = Some(updatedQuestions.questionJson).filterNot(_ == questions.questionJson)
-    val updatedPricesJson = Some(updatedQuestions.jsonPrices).filterNot(_ == questions.jsonPrices).map(json => Json.obj("prices" -> json))
+    val updatedPricesJson =
+      Some(updatedQuestions.draftResponse.jsonPrices)
+        .filterNot(_ == questions.draftResponse.jsonPrices)
+        .map(json => Json.obj("prices" -> json))
     val fields = Seq(Json.obj("result" -> "success")) ++ updatedQuestionJson ++ updatedPricesJson
 
     Ok(fields.reduce(_ ++ _))
@@ -174,16 +177,28 @@ class RsvpController(val inviteRepository: InviteRepository, sesClient: AmazonSi
 
   def complete = RsvpLogin { implicit request =>
     val questions = QuestionMaster.questions(request.user)
-    Ok(views.html.rsvp.thanks(request.user.rsvp.flatMap(_.coming).get, questions.totalPrice))
+    Ok(views.html.rsvp.thanks(request.user.rsvp.flatMap(_.coming).get, questions.finalResponse.totalPrice))
   }
 
   def questions = RsvpLogin { r =>
-    val draftAndSentIdentical = r.user.draftRsvp == r.user.rsvp
+    val unsent = r.user.rsvp.isEmpty
+    val modified = r.user.draftRsvp != r.user.rsvp
     val questions = QuestionMaster.questions(r.user)
-    val answers = questions.answers
-    val prices = questions.jsonPrices
-    val answerJson = Json.obj("answers" -> answers, "unsent" -> !draftAndSentIdentical, "prices" -> prices)
+    val answers = questions.draftResponse.answers
+    val submittedAnswers = questions.finalResponse.answers
+    val prices = questions.draftResponse.jsonPrices
+    val answerJson = Json.obj(
+      "answers" -> answers, "submittedAnswers" -> submittedAnswers,
+      "unsent" -> unsent, "modified" -> modified, "prices" -> prices
+    )
     Ok(questions.questionJson ++ answerJson)
+  }
+
+  def reset = RsvpLogin { r =>
+    // set draft back to state of final
+    val invite = r.user.modify(_.draftRsvp).setTo(r.user.rsvp)
+    inviteRepository.putInvite(invite)
+    NoContent
   }
 
 }
