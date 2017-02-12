@@ -1,6 +1,9 @@
 // The Typesafe repository
 resolvers += Resolver.typesafeRepo("releases")
 
+lazy val root = project.in(file(".")).dependsOn(sbtAutoprefixer)
+lazy val sbtAutoprefixer = uri("git://github.com/matthewrennie/sbt-autoprefixer")
+
 // Use the Play sbt plugin for Play projects
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.5.10")
 

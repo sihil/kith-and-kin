@@ -33,7 +33,7 @@ libraryDependencies ++= Seq(
 lazy val root = (project in file(".")).enablePlugins(PlayScala, JDebPackaging, SbtWeb).settings(
   JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
 
-  pipelineStages := Seq(digest),
+  pipelineStages := Seq(autoprefixer, digest),
 
   packageName in Universal := name.value,
   maintainer := "Simon Hildrew <simon@hildrew.net>",
