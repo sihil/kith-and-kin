@@ -73,12 +73,14 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     import kantan.csv.ops._
     import kantan.csv.generic._
 
+    val existingEmails = inviteRepository.getInviteList.map(_.email).toSet
+
     r.body.file("csv").map { csv =>
       Logger.logger.info(s"processing file ${csv.ref.file}")
       Logger.logger.info(Source.fromFile(csv.ref.file).getLines().take(3).mkString("\n"))
       val reader = csv.ref.file.asCsvReader[Csv](',', header = true)
       val list = reader.toList.flatMap(_.toList).flatMap(_.toInvite)
-      list.foreach{ invite =>
+      list.filterNot(i => existingEmails.contains(i.email)).foreach{ invite =>
         inviteRepository.putInvite(invite)
         // this is so that we don't breach the limit
         //Thread.sleep(200)
