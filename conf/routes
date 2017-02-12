@@ -16,8 +16,6 @@ GET         /rsvp/login/:id/:secret        controllers.RsvpController.login(id: 
 GET         /rsvp/details                  controllers.RsvpController.details
 GET         /rsvp/rsvp                     controllers.RsvpController.rsvp
 POST        /rsvp/update                   controllers.RsvpController.update(complete: Boolean)
-GET         /rsvp/accommodation            controllers.RsvpController.accommodation()
-GET         /rsvp/notComing                controllers.RsvpController.notComing()
 GET         /rsvp/complete                 controllers.RsvpController.complete
 GET         /rsvp/questions                controllers.RsvpController.questions
 POST        /rsvp/reset                    controllers.RsvpController.reset

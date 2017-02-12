@@ -167,14 +167,6 @@ class RsvpController(val inviteRepository: InviteRepository, sesClient: AmazonSi
     Ok(fields.reduce(_ ++ _))
   }
 
-  def notComing() = RsvpLogin { implicit request =>
-    Ok(views.html.rsvp.notComing(request.user))
-  }
-
-  def accommodation() = RsvpLogin { implicit request =>
-    Ok(views.html.rsvp.accommodation(request.user))
-  }
-
   def complete = RsvpLogin { implicit request =>
     val questions = QuestionMaster.questions(request.user)
     Ok(views.html.rsvp.thanks(request.user.rsvp.flatMap(_.coming).get, questions.finalResponse.totalPrice))
