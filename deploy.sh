@@ -19,7 +19,7 @@ aws s3 cp ${DIR}/target/kith-and-kin_1.0_all.deb ${REMOTE_DEB_LOCATION}
 
 # find instance
 INSTANCE_ID=$( aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names KithAndKin-AutoscalingGroup-7XNO9TRBKHH6 | jq -r .AutoScalingGroups[0].Instances[0].InstanceId )
-HOSTNAME=$( aws ec2 describe-instances --instance-ids i-0d4b33ed3db5b3ae9 | jq -r .Reservations[0].Instances[0].PublicDnsName )
+HOSTNAME=$( aws ec2 describe-instances --instance-ids ${INSTANCE_ID} | jq -r .Reservations[0].Instances[0].PublicDnsName )
 
 # update the instance
 ssh -t ${HOSTNAME} "sudo aws --region eu-west-2 s3 cp ${REMOTE_DEB_LOCATION} /kithkin"
