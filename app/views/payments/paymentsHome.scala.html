@@ -11,10 +11,10 @@
                 <h1>Paying for accommodation and food</h1>
 
                 <p>To make things smoother we would love it if you could sort out money for accommodation and catering
-                    ahead of time. You're also welcome to pay in installments if that's easier for you.</p>
+                    ahead of time.</p>
 
-                <p>You can send us money either by direct bank transfer or using a credit card (we are using a reputable
-                    online payments provider called Stripe to take these payments).</p>
+                <p>You can send us money either by direct bank transfer or using a credit card. You're also welcome to pay in
+                    installments if that's easier for you (drop us a line if you want to do this and we'll sort it out).</p>
 
                 <p>If you have any questions, fire them over to us at
                     <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a></p>
@@ -50,7 +50,7 @@
                 </table>
 
                 @if(paid != 0) {
-                    <p>You've paid us @paid.sterling(true)@if(paid < total){ so far.}else{. Thank you!}</p>
+                    <p>You've paid us @paid.sterling(true)@if(paid < total) { so far.} else {. Thank you!}</p>
 
                     <table class="table">
                         <thead>
@@ -77,10 +77,12 @@
                 @if(paid > total) {
                     <h2>Refunds</h2>
 
-                    <p>You've overpaid us by @{(paid - total).sterling(true)}. I expect you'll be wanting that money back. We'll
+                    <p>You've overpaid us by @{
+                        (paid - total).sterling(true)
+                    }. I expect you'll be wanting that money back. We'll
                         figure it out evenutally, but if you want it back sooner or paid by bank transfer, then please
                         give us a shout at <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a> with
-                    the details.</p>
+                        the details.</p>
                 }
 
                 @if(paid < total) {
@@ -91,43 +93,63 @@
                     @defining(total - paid) { amountDue =>
                         <div class="tile is-ancestor">
                             <div class="tile is-parent">
-                            <article class="tile is-child notification is-success">
-                                <h3>Bank transfers</h3>
-                                <p>If paying by bank transfer then please use a reference we can easily find (surname and initials or something amusing if you prefer). Our account details are:</p>
-                                <pre class="is-success">Simon Hildrew<br/>The Co-operative Bank<br/>s/c: 08-91-03<br/>a/c: 14152119</pre>
-                                <p>Tell us you're sending us a bank transfer for @amountDue.sterling by filling out this little form:</p>
-                                @form(CSRF(routes.Payments.bankTransfer)) {
-                                    <input type="hidden" name="amount" value="@amountDue"/>
-                                    <label class="label inverted">Reference to look out for:</label>
-                                    <p class="control">
-                                        <input class="input" name="reference" type="text" placeholder="Your transfer reference">
-                                    </p>
-                                    <button class="button is-large" type="submit">I'm paying @amountDue.sterling by transfer</button>
-                                }
-                            </article>
+                                <article class="tile is-child notification is-success">
+                                    <h3>Bank transfers</h3>
+                                    <p>If paying by bank transfer then please use a reference we can easily find (surname
+                                        and initials or something amusing if you prefer). Our account details are:</p>
+                                    <pre class="is-success">Simon Hildrew<br/>The Co-operative Bank<br/>s/c: 08-91-03<br/>a/c: 14152119</pre>
+                                    <p>Tell us to look out for your bank transfer (for @amountDue.sterling(true)) by filling out this little form:</p>
+                                    @form(CSRF(routes.Payments.bankTransfer)) {
+                                        <input type="hidden" name="amount" value="@amountDue"/>
+                                        <p class="control">
+                                            <input class="input" name="reference" type="text" placeholder="Reference to look out for">
+                                        </p>
+                                        <div class="has-text-right">
+                                        <button class="button is-large" type="submit">
+                                            I'm paying @amountDue.sterling(true) by transfer</button>
+                                        </div>
+                                    }
+                                </article>
                             </div>
                             <div class="tile is-parent">
-                            <article class="tile is-child notification is-info">
-                                <h3>Card payment</h3>
-                                <p>If you want to pay by card then simply click the button below.</p>
-                                @form(CSRF(routes.Payments.stripeForm)) {
-                                    <input type="hidden" name="amount" value="@amountDue"/>
-                                    <script
-                                    src="https://checkout.stripe.com/checkout.js" class="stripe-button"
-                                    data-key="@publishableKey"
-                                    data-amount="@amountDue"
-                                    data-name="Kith & Kin"
-                                        @email.map { emailAddress => data-email="@emailAddress" }
-                                    data-description="Accommodation and food"
-                                    data-image="@routes.Assets.versioned("favicon/apple-touch-icon-152x152.png")"
-                                    data-locale="auto"
-                                    data-zip-code="true"
-                                    data-currency="GBP">
-                                    </script>
-                                    <button class="button is-large" type="submit">Pay @amountDue.sterling by card</button>
-                                }
-                            </article>
+                                <article class="tile is-child notification is-info">
+                                    <h3>Card payment</h3>
+                                    <p>We're using a well known online credit card payments provider called Stripe to
+                                        take these payments. Stripe handle the card information, we don't see or store
+                                        any of your personal information.</p>
+                                    @email.map { emailAddress =>
+                                        <p>Once complete you'll receive a receipt for the payment to @emailAddress.</p>
+                                    }
+                                    <p>If you want to pay by card then simply click the button below.</p>
+                                    @if(publishableKey.contains("test")) {
+                                        <p><strong>(note that this payments system is currently configured in test mode
+                                            and will not work with real credit cards, you can use 4242 4242 4242 4242 to
+                                            test with a future expiry, any CVC and a UK postcode)</strong></p>
+                                    }
+                                    @form(CSRF(routes.Payments.stripeForm)) {
+                                        <input type="hidden" name="amount" value="@amountDue"/>
+                                        <script
+                                        src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+                                        data-key="@publishableKey"
+                                        data-amount="@amountDue"
+                                        data-name="Kith & Kin"
+                                            @email.map { emailAddress => data-email="@emailAddress" }
+                                        data-description="Accommodation and food"
+                                        data-image="@routes.Assets.versioned("favicon/apple-touch-icon-152x152.png")"
+                                        data-locale="auto"
+                                        data-zip-code="true"
+                                        data-currency="GBP"
+                                        data-allow-remember-me="false">
+                                        </script>
+                                        <div class="has-text-right">
+                                        <button class="button is-large" type="submit">Pay @amountDue.sterling(true) by card</button>
+                                        </div>
+                                    }
+
+                                    </article>
                             </div>
+
+
                         </div>
                     }
                 }

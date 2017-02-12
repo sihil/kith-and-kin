@@ -3,9 +3,16 @@
     @rsvp.rsvpPage("RSVP") {
         <section class="section">
             <div class="container">
-                <p>We hope we have these details right - if you spot mistakes or want to change anything please shoot
-                    us an e-mail at <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a>.</p>
-                <p>Ready to RSVP? <a href="@routes.RsvpController.rsvp">Go here</a></p>
+                <div class="columns">
+                    <div class="column"><p>We hope we have these details right - if you spot mistakes or want to change anything please shoot
+                        us an e-mail at <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a>.</p></div>
+                    @if(request.user.rsvp.isEmpty) {
+                        <div class="column is-one-third has-text-right"><a class="button is-large is-danger" href="@routes.RsvpController.rsvp">
+                            Ready to RSVP? Click here</a></div>
+                    }
+                </div>
+
+
                 <div class="tile is-ancestor">
                     <div class="tile is-parent">
                         <article class="tile is-child notification is-purple">

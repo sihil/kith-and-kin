@@ -4,13 +4,13 @@ import java.util.UUID
 
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService
 import com.softwaremill.quicklens._
-import db.InviteRepository
+import db.{InviteRepository, PaymentRepository}
 import helpers._
 import models.{QuestionMaster, Rsvp}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
 
-class RsvpController(val inviteRepository: InviteRepository, sesClient: AmazonSimpleEmailService) extends Controller with RsvpAuth {
+class RsvpController(val inviteRepository: InviteRepository, paymentRepository: PaymentRepository, sesClient: AmazonSimpleEmailService) extends Controller with RsvpAuth {
 
   def start = Action { request =>
     Ok(views.html.rsvp.start(request))
@@ -169,7 +169,10 @@ class RsvpController(val inviteRepository: InviteRepository, sesClient: AmazonSi
 
   def complete = RsvpLogin { implicit request =>
     val questions = QuestionMaster.questions(request.user)
-    Ok(views.html.rsvp.thanks(request.user.rsvp.flatMap(_.coming).get, questions.finalResponse.totalPrice))
+    val payments = paymentRepository.getPaymentsForInvite(request.user).toList
+    val paid = payments.map(_.amount).sum
+    val total = questions.finalResponse.totalPrice
+    Ok(views.html.rsvp.thanks(request.user.rsvp.flatMap(_.coming).get, total, math.abs(total-paid)))
   }
 
   def questions = RsvpLogin { r =>
