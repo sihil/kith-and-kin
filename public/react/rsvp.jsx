@@ -131,12 +131,15 @@ class Question extends React.Component {
         const needHeading = question.helpText ? "" : "heading";
         const htmlQuestion = <h2 className={needHeading}>{question.question}</h2>;
         const htmlAnswer = this.renderAnswer(question.questionType);
+        const dangerousHelpText = () => {
+            return {__html: question.helpText};
+        };
         const price = this.props.price;
         return (
             <div className="question">
                 {htmlQuestion}
                 {question.helpText &&
-                    <p>{question.helpText}</p>
+                    <p dangerouslySetInnerHTML={dangerousHelpText()}/>
                 }
                 {htmlAnswer}
                 {price &&

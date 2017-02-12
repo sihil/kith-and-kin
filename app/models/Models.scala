@@ -18,7 +18,9 @@ case class Rsvp(
   departure: Option[String] = None,
   accommodation: Option[String] = None,
   offSiteLocation: Option[String] = None,
-  offSiteHavingBreakfast: Option[Boolean] = None
+  offSiteHavingBreakfast: Option[Boolean] = None,
+  getInvolvedPreference: Option[String] = None,
+  getInvolved: Option[String] = None
 )
 
 case class StripePayment(stripeToken: String, charged: Boolean, stripeId: Option[String] = None, error: Option[String] = None)

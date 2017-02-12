@@ -4,6 +4,7 @@ import cats.data.NonEmptyList
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 import com.softwaremill.quicklens._
+import controllers.routes
 
 import scala.language.postfixOps
 
@@ -191,7 +192,9 @@ object QuestionMaster {
       Answer("belltent", "Bell Tent")("belltent").next(bellTentSharing),
       Answer("offsite", "Off Site")("offsite").next(offsiteLocation)
     ), updateRsvp = (rsvp, answer) => rsvp.modify(_.accommodation).setTo(answer),
-      fromRsvp = _.accommodation)
+      fromRsvp = _.accommodation,
+      helpText = Some(s"""Details of on-site accommodation is on the <a href="${routes.KithAndKinController.accommodation}">accommodation page</a>.""")
+    )
 
     lazy val hookup: Question[Boolean] = MultipleChoice("Will you want an electrical hookup?", "hookup", List(
       Answer("yes", "Yes", price=List(Fixed("Electrical hookup", 5000)))(true).next(arrival),
@@ -239,10 +242,35 @@ object QuestionMaster {
 
     private val sunLunchCatering = PerAdult("Sunday lunch catering", 1500)
     lazy val departure: Question[String] = MultipleChoice("And when are you planning to leave?", "departure", List(
-      Answer("sunMorn", "Sunday morning")("sunMorn").next(message),
-      Answer("sunLunch", "Sunday lunchtime", List(sunLunchCatering))("sunLunch").next(message),
-      Answer("sunAft", "Sunday afternoon", List(sunLunchCatering))("sunAft").next(message)
+      Answer("sunMorn", "Sunday morning")("sunMorn").next(getInvolvedChoice),
+      Answer("sunLunch", "Sunday lunchtime", List(sunLunchCatering))("sunLunch").next(getInvolvedChoice),
+      Answer("sunAft", "Sunday afternoon", List(sunLunchCatering))("sunAft").next(getInvolvedChoice)
     ), updateRsvp = (rsvp, answer) => rsvp.modify(_.departure).setTo(answer), fromRsvp = _.departure)
+
+    lazy val getInvolvedChoice: Question[String] = MultipleChoice("Which area would you most like to get involved in?", "getInvolvedChoice", List(
+      Answer("0", "Activities")("activities").next(getInvolved),
+      Answer("1", "Music and arts")("musicAndArts").next(getInvolved),
+      Answer("2", "Kids")("kids").next(getInvolved),
+      Answer("3", "Food")("food").next(getInvolved),
+      Answer("4", "Setup & logistics")("setupAndLogistics").next(getInvolved),
+      Answer("5", "Other")("other").next(getInvolved)
+    ), updateRsvp = (rsvp, answer) => rsvp.modify(_.getInvolvedPreference).setTo(answer), fromRsvp = _.getInvolvedPreference,
+      helpText = Some(
+        s"""We'd like your participation in Kith & Kin Festival to be your gift to us. There are loads of ways for you to
+           |contribute, have a look at the <a href=\"${routes.KithAndKinController.getInvolved()}\">get involved page</a>
+           |for suggestions.
+           |""".stripMargin)
+    )
+
+    lazy val getInvolved: Text = Text("How would you like to get involved?", "getInvolved",
+      updateRsvp = (rsvp, answer) => rsvp.modify(_.getInvolved).setTo(answer),
+      fromRsvp = _.getInvolved,
+      helpText = Some(
+        s"""If you have particular roles or activities in mind from the <a href=\"${routes.KithAndKinController.getInvolved()}\">get involved page</a>,
+           |or specific skills you can offer then please let us know what they are here. Or, if you're happy
+           |for us to find you something to do then tell us what you do (or don't) want to do or get involved in.
+           |""".stripMargin)
+    ).next(message)
 
     lazy val message = Text("Send a message to Simon & Christina", "message", optional = true, updateRsvp = (rsvp, message) => rsvp.modify(_.message).setTo(message), fromRsvp = _.message,
       helpText = Some("e.g. who you want to share tents with, more precise arrival and departure times or just a wee note saying how excited you are... "))

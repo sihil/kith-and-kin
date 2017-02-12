@@ -11,7 +11,7 @@
                         festival details in the coming months and if you have any questions in the meantime, \
                         fire them over to us at <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a></p>
                     @if(total > 0) {
-                        <p>The accommodation and food choices you've made come to a total of @total.sterling.</p>
+                        <p>The accommodation and food choices you've made come to a total of @total.sterling(true).</p>
                         <p>We'd love for this to be paid ahead of the festival. <a href="@routes.Payments.home()">Pay now.</a></p>
                     }
                     <p>See you in August!</p>
@@ -22,6 +22,11 @@
                 }
 
             </div>
+        </div>
+    </section>
+    <section class="section">
+        <div class="container">
+            <img src="@routes.Assets.versioned("images/tartan.png")">
         </div>
     </section>
 }
