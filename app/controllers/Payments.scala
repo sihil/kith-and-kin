@@ -2,20 +2,23 @@ package controllers
 
 import java.util.UUID
 
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailService
 import com.softwaremill.quicklens._
 import com.stripe.exception.CardException
 import com.stripe.model.Charge
 import com.stripe.net.RequestOptions
 import db.{InviteRepository, PaymentRepository}
-import helpers.RsvpAuth
+import helpers.{Email, RsvpAuth}
 import models.{BankTransfer, Payment, QuestionMaster, StripePayment}
 import org.joda.time.DateTime
-import play.api.mvc.Controller
+import play.api.mvc.{Action, Controller}
 
 import scala.collection.JavaConverters._
+import scala.compat.Platform.EOL
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
-class Payments(val inviteRepository: InviteRepository, paymentRepository: PaymentRepository)
+class Payments(val inviteRepository: InviteRepository, paymentRepository: PaymentRepository, sesClient: AmazonSimpleEmailService)
               (implicit context: ExecutionContext) extends Controller with RsvpAuth {
   val stripeSecretKey = "***REMOVED***"
   val stripePublishableKey = "***REMOVED***"
@@ -23,7 +26,7 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
   def home = RsvpLogin { implicit request =>
     val questions = QuestionMaster.questions(request.user)
     val payments = paymentRepository.getPaymentsForInvite(request.user).toList
-    val paid = payments.map(_.amount).sum
+    val paid = payments.filter{_.stripePayment.forall(_.charged)}.map(_.amount).sum
     val response = questions.finalResponse
     response.breakdown.map { breakdown =>
       Ok(views.html.payments.paymentsHome(Some(request.user.email), breakdown, response.totalPrice, payments, paid, stripePublishableKey))
@@ -56,9 +59,18 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
               paymentRepository.putPayment(chargedPayment)
               Redirect(routes.Payments.home())
             } catch {
-              // TODO better error handling of charge failure
               case ce: CardException =>
-                BadRequest
+                // failure due to card verification
+                Email.sendAdminEmail(sesClient, "Card payment error",
+                  s"Got a $ce whilst trying to process payment.\nCode: ${ce.getCode}\nDecline: ${ce.getDeclineCode}", request.user)
+                val failedPayment = newPayment.modify(_.stripePayment.each.error).setTo(Some(s"${ce.getMessage}/${ce.getCode}"))
+                paymentRepository.putPayment(failedPayment)
+                Redirect(routes.Payments.error()).flashing("error" -> s"Stripe encountered an error whilst trying to take your card payment. \nCode: ${ce.getCode} \nDecline reason: ${ce.getDeclineCode}")
+              case NonFatal(ex) =>
+                // other failure
+                Email.sendAdminEmail(sesClient, "Card payment error",
+                  s"Got a $ex whilst trying to process payment.\n${ex.getStackTrace.mkString("", EOL, EOL)}", request.user)
+                Redirect(routes.Payments.error()).flashing("error" -> "We encountered an unexpected error whilst trying to take a card payment.")
             }
           }
         case _ =>
@@ -81,5 +93,10 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
         case _ => Future.successful(Redirect(routes.Payments.home()))
       }
     } getOrElse Future.successful(BadRequest)
+  }
+
+  def error = Action { request =>
+    val message = request.flash.get("error").getOrElse("")
+    Ok(views.html.payments.cardError(message))
   }
 }

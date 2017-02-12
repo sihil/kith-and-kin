@@ -56,7 +56,7 @@ class AppComponents(context: Context)
   val kithKinController = new KithAndKinController()
   val rsvpController = new RsvpController(inviteRepository, paymentRepository, sesClient)
   val adminController = new AdminController(wsClient, baseUrl, inviteRepository)
-  val paymentsController = new Payments(inviteRepository, paymentRepository)
+  val paymentsController = new Payments(inviteRepository, paymentRepository, sesClient)
   val assets = new Assets(httpErrorHandler)
 
   val router = new Routes(httpErrorHandler, kithKinController, rsvpController, paymentsController, adminController, assets)
