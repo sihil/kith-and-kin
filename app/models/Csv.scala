@@ -38,7 +38,7 @@ case class Csv(
         timbuktu.trim.nonEmpty,
         nonEmptyToOption(postalAddress),
         0,
-        Some(addressee),
+        nonEmptyToOption(addressee),
         adults,
         kids,
         s"$clanSize${nonEmptyToOption(note).map("\n"+_).getOrElse("")}",
