@@ -40,17 +40,18 @@ class AppComponents(context: Context)
     "DEV"
   }
 
-  val stripeKeys = if (environment.mode == Mode.Prod) {
-    StripeKeys(
-      publishable = "***REMOVED***",
-      secret = "***REMOVED***"
-    )
-  } else {
-    StripeKeys(
-      publishable = "***REMOVED***",
-      secret = "***REMOVED***"
-    )
-  }
+  val stripeKeys =
+    if (false) {//(environment.mode == Mode.Prod) {
+      StripeKeys(
+        publishable = "***REMOVED***",
+        secret = "***REMOVED***"
+      )
+    } else {
+      StripeKeys(
+        publishable = "***REMOVED***",
+        secret = "***REMOVED***"
+      )
+    }
 
   private val credentialsProviderChain = new AWSCredentialsProviderChain(
     new ProfileCredentialsProvider("kk"),
