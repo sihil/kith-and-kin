@@ -23,6 +23,9 @@
                                     @Html(address.split("\n").map(line => Html(line).toString).mkString("<br/>"))
                                 </p>
                             }
+                            <div class="has-text-right">
+                                <a class="button is-large" href="@routes.RsvpController.logout">Not you? Log out</a>
+                            </div>
                         </article>
                     </div>
                     <div class="tile is-parent">

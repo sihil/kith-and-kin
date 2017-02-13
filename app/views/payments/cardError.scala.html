@@ -1,14 +1,17 @@
-@(message: String)
+@(summary: String, message: String)
 
 @page("Card error") {
     <section class="section">
         <div class="container">
-            <h1>Oh no, something went wrong with your card payment...</h1>
+            <h1>Oh no, something went wrong with your payment...</h1>
+
+            <h2>@summary</h2>
 
             <p>@message</p>
 
-            <p>You can try again by clicking <a href="@routes.Payments.home()">here</a>. If you continue having
-                trouble then get in touch at <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a>.</p>
+            <p>We've sent a copy of this error to Simon and Christina. You might like to try your luck by having another
+                go - you can try again by clicking <a href="@routes.Payments.home()">here</a>. Alternately, get in touch
+                at <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a>.</p>
         </div>
     </section>
 }

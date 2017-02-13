@@ -37,9 +37,15 @@ trait RsvpAuth extends UserIdentifier with Results {
           case _ =>
             val updatedInvite = i.copy(lastLoggedIn = Some(now))
             // update DB and cache
-            inviteRepository.putInvite(updatedInvite)
-            RsvpAuth.lastSeenAgent.send(_ + (i.id -> now))
-            updatedInvite
+            inviteRepository.putInvite(updatedInvite) match {
+              case Right(_) =>
+                RsvpAuth.lastSeenAgent.send(_ + (i.id -> now))
+                updatedInvite
+              case Left(_) =>
+                // don't worry too much about this, will hopefully work on their next request
+                Logger.logger.warn("Couldn't update last seen")
+                i
+            }
         })
       case (Some(i), Some(auth)) =>
         Logger.logger.warn(s"Invite for ${i.email} impersonated by ${auth.email}")

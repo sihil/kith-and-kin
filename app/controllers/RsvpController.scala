@@ -28,29 +28,32 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
             // generate a new secret
             val secret = Secret.newSecret()
             val withNewSecret = invite.copy(secret = Some(secret))
-            inviteRepository.putInvite(withNewSecret)
-
-            // now send e-mail to user with magic URL
-            val message =
-              s"""
-                |Hi ${invite.giveMeAName}!
-                |
-                |We've found your invite to Kith & Kin - please use the link below to access all areas and continue with your RSVP!
-                |
-                |You can use this link as many times as you need it, but don't give it to others as anyone who has the link can change your RSVP.
-                |
-                |${routes.RsvpController.login(invite.id.toString, secret).absoluteURL(request.secure, request.host)}
-                |
-                |Much love,
-                |Simon & Christina
-              """.stripMargin
-            Email.sendEmail(sesClient, invite.email, "RSVP information", message)
-
-            // now redirect
-            Redirect(routes.RsvpController.sentMessage()).flashing("contactType" -> "e-mail address")
+            inviteRepository.putInvite(withNewSecret) match {
+              case Right(_) =>
+                // now send e-mail to user with magic URL
+                val message =
+                s"""|Hi ${invite.giveMeAName}!
+                    |
+                    |We've found your invite to Kith & Kin - please use the link below to access all areas and continue with your RSVP!
+                    |
+                    |You can use this link as many times as you need it, but don't give it to others as anyone who has the link can change your RSVP.
+                    |
+                    |${routes.RsvpController.login(invite.id.toString, secret).absoluteURL(request.secure, request.host)}
+                    |
+                    |Much love,
+                    |Simon & Christina
+                  """.stripMargin
+                Email.sendEmail(sesClient, invite.email, "RSVP information", message) // now redirect
+                Redirect(routes.RsvpController.sentMessage()).flashing("contactType" -> "e-mail address")
+              case Left(_) =>
+                Redirect(routes.RsvpController.notRight()).
+                  flashing(
+                    "title" -> "Oh no, something went wrong...",
+                    "message" -> s"Ummm, not sure what just happened, it's like I had you, but then lost you again. Can you try again?"
+                  )
+            }
           case None =>
             // invite not found - nice error
-
             Redirect(routes.RsvpController.notRight()).
               flashing(
                 "title" -> "Oh no, I can't find you...",
@@ -67,26 +70,34 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
             // generate a new secret
             val secret = Secret.newSecret()
             val withNewSecret = invite.copy(secret = Some(secret))
-            inviteRepository.putInvite(withNewSecret)
+            inviteRepository.putInvite(withNewSecret) match {
+              case Right(_) =>
+                // now send e-mail to user with magic URL
+                val message =
+                  s"""
+                    |Hi ${invite.giveMeAName}!
+                    |
+                    |We've found your invite to Kith & Kin - please use the link below to access all areas and continue with your RSVP!
+                    |
+                    |You can use this link as many times as you need it, but don't give it to others as anyone who has the link can change your RSVP.
+                    |
+                    |${routes.RsvpController.login(invite.id.toString, secret).absoluteURL(request.secure, request.host)}
+                    |
+                    |Much love,
+                    |Simon & Christina
+                  """.stripMargin
+                Email.sendEmail(sesClient, invite.email, "RSVP information", message)
 
-            // now send e-mail to user with magic URL
-            val message =
-              s"""
-                |Hi ${invite.giveMeAName}!
-                |
-                |We've found your invite to Kith & Kin - please use the link below to access all areas and continue with your RSVP!
-                |
-                |You can use this link as many times as you need it, but don't give it to others as anyone who has the link can change your RSVP.
-                |
-                |${routes.RsvpController.login(invite.id.toString, secret).absoluteURL(request.secure, request.host)}
-                |
-                |Much love,
-                |Simon & Christina
-              """.stripMargin
-            Email.sendEmail(sesClient, invite.email, "RSVP information", message)
+                // now redirect
+                Redirect(routes.RsvpController.sentMessage()).flashing("contactType" -> "e-mail address")
+              case Left(_) =>
+                Redirect(routes.RsvpController.notRight()).
+                  flashing(
+                    "title" -> "Oh no, something went wrong...",
+                    "message" -> s"Ummm, not sure what just happened, it's like I had you, but then lost you again. Can you try again?"
+                  )
+            }
 
-            // now redirect
-            Redirect(routes.RsvpController.sentMessage()).flashing("contactType" -> "e-mail address")
           case None =>
             // invite not found - nice error
 
@@ -131,6 +142,10 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
     }
   }
 
+  def logout = Action {
+    Redirect(routes.RsvpController.start()).discardingCookies(RsvpCookie.discard)
+  }
+
   def details = RsvpLogin { implicit request =>
     Ok(views.html.rsvp.details(request.user))
   }
@@ -155,16 +170,19 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
 
     val updatedQuestions = QuestionMaster.questions(updatedInvite)
 
-    inviteRepository.putInvite(updatedInvite)
-
-    val updatedQuestionJson = Some(updatedQuestions.questionJson).filterNot(_ == questions.questionJson)
-    val updatedPricesJson =
-      Some(updatedQuestions.draftResponse.jsonPrices)
+    inviteRepository.putInvite(updatedInvite) match {
+      case Right(_) =>
+        val updatedQuestionJson = Some(updatedQuestions.questionJson).filterNot(_ == questions.questionJson)
+        val updatedPricesJson =
+        Some(updatedQuestions.draftResponse.jsonPrices)
         .filterNot(_ == questions.draftResponse.jsonPrices)
         .map(json => Json.obj("prices" -> json))
-    val fields = Seq(Json.obj("result" -> "success")) ++ updatedQuestionJson ++ updatedPricesJson
+        val fields = Seq(Json.obj("result" -> "success")) ++ updatedQuestionJson ++ updatedPricesJson
+        Ok(fields.reduce(_ ++ _))
+      case Left(_) =>
+        ServiceUnavailable("Failure when updating RSVP, try again")
+    }
 
-    Ok(fields.reduce(_ ++ _))
   }
 
   def complete = RsvpLogin { implicit request =>
@@ -192,8 +210,10 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
   def reset = RsvpLogin { r =>
     // set draft back to state of final
     val invite = r.user.modify(_.draftRsvp).setTo(r.user.rsvp)
-    inviteRepository.putInvite(invite)
-    NoContent
+    inviteRepository.putInvite(invite) match {
+      case Right(_) => NoContent
+      case Left(_) => ServiceUnavailable("reset failed, try again")
+    }
   }
 
 }

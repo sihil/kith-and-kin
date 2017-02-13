@@ -12,6 +12,7 @@ POST        /rsvp/lookup                   controllers.RsvpController.lookup
 GET         /rsvp/sent                     controllers.RsvpController.sentMessage
 GET         /rsvp/notRight                 controllers.RsvpController.notRight
 GET         /rsvp/login/:id/:secret        controllers.RsvpController.login(id: String, secret: String)
+GET         /rsvp/logout                   controllers.RsvpController.logout
 
 GET         /rsvp/details                  controllers.RsvpController.details
 GET         /rsvp/rsvp                     controllers.RsvpController.rsvp
