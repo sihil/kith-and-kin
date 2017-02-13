@@ -5,6 +5,7 @@ import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder
 import controllers._
 import db.{InviteRepository, PaymentRepository}
 import filters.ForwardingFilter
+import models.StripeKeys
 import play.api.ApplicationLoader.Context
 import play.api._
 import play.api.libs.ws.ahc.AhcWSComponents
@@ -38,6 +39,18 @@ class AppComponents(context: Context)
     "DEV"
   }
 
+  val stripeKeys = if (environment.mode == Mode.Prod) {
+    StripeKeys(
+      publishable = "***REMOVED***",
+      secret = "***REMOVED***"
+    )
+  } else {
+    StripeKeys(
+      publishable = "***REMOVED***",
+      secret = "***REMOVED***"
+    )
+  }
+
   private val credentialsProviderChain = new AWSCredentialsProviderChain(
     new ProfileCredentialsProvider("kk"),
     InstanceProfileCredentialsProvider.getInstance()
@@ -56,7 +69,7 @@ class AppComponents(context: Context)
   val kithKinController = new KithAndKinController()
   val rsvpController = new RsvpController(inviteRepository, paymentRepository, sesClient)
   val adminController = new AdminController(wsClient, baseUrl, inviteRepository)
-  val paymentsController = new Payments(inviteRepository, paymentRepository, sesClient)
+  val paymentsController = new Payments(inviteRepository, paymentRepository, sesClient, stripeKeys)
   val assets = new Assets(httpErrorHandler)
 
   val router = new Routes(httpErrorHandler, kithKinController, rsvpController, paymentsController, adminController, assets)

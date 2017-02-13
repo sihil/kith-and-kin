@@ -9,7 +9,7 @@ import com.stripe.model.Charge
 import com.stripe.net.RequestOptions
 import db.{InviteRepository, PaymentRepository}
 import helpers.{Email, RsvpAuth}
-import models.{BankTransfer, Payment, QuestionMaster, StripePayment}
+import models._
 import org.joda.time.DateTime
 import play.api.mvc.{Action, Controller}
 
@@ -18,18 +18,16 @@ import scala.compat.Platform.EOL
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-class Payments(val inviteRepository: InviteRepository, paymentRepository: PaymentRepository, sesClient: AmazonSimpleEmailService)
+class Payments(val inviteRepository: InviteRepository, paymentRepository: PaymentRepository,
+               sesClient: AmazonSimpleEmailService, stripeKeys: StripeKeys)
               (implicit context: ExecutionContext) extends Controller with RsvpAuth {
-  val stripeSecretKey = "***REMOVED***"
-  val stripePublishableKey = "***REMOVED***"
-
   def home = RsvpLogin { implicit request =>
     val questions = QuestionMaster.questions(request.user)
     val payments = paymentRepository.getPaymentsForInvite(request.user).toList
     val paid = payments.filter{_.stripePayment.forall(_.charged)}.map(_.amount).sum
     val response = questions.finalResponse
     response.breakdown.map { breakdown =>
-      Ok(views.html.payments.paymentsHome(Some(request.user.email), breakdown, response.totalPrice, payments, paid, stripePublishableKey))
+      Ok(views.html.payments.paymentsHome(Some(request.user.email), breakdown, response.totalPrice, payments, paid, stripeKeys.publishable))
     } getOrElse NotFound
   }
 
@@ -42,7 +40,7 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
           val newPayment = Payment(UUID.randomUUID(), new DateTime(), 0, request.user.id, amount, Some(StripePayment(token, charged = false)))
           Future {
             paymentRepository.putPayment(newPayment)
-            val requestOptions = RequestOptions.builder.setApiKey(stripeSecretKey).build()
+            val requestOptions = RequestOptions.builder.setApiKey(stripeKeys.secret).build()
             val chargeParams: Map[String, AnyRef] = Map(
               "amount" -> new Integer(amount),
               "currency" -> "gbp",
