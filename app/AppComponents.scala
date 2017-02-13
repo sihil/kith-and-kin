@@ -41,7 +41,7 @@ class AppComponents(context: Context)
   }
 
   val stripeKeys =
-    if (false) {//(environment.mode == Mode.Prod) {
+    if (environment.mode == Mode.Prod) {
       StripeKeys(
         publishable = "***REMOVED***",
         secret = "***REMOVED***"
