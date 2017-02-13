@@ -28,7 +28,7 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
     val paid = payments.filter{_.stripePayment.forall(_.charged)}.map(_.amount).sum
     val response = questions.finalResponse
     response.breakdown.map { breakdown =>
-      Ok(views.html.payments.paymentsHome(Some(request.user.email), breakdown, response.totalPrice, payments, paid, stripeKeys.publishable))
+      Ok(views.html.payments.paymentsHome(request.user.email, breakdown, response.totalPrice, payments, paid, stripeKeys.publishable))
     } getOrElse NotFound
   }
 

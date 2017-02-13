@@ -22,51 +22,10 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
       case Some(email) if email.contains("@") =>
         // lookup e-mail in DB
         val list = inviteRepository.getInviteList
-        val maybeInvite = list.find(_.email.trim.equalsIgnoreCase(email.trim))
+        val maybeInvite = list.find(_.email.contains(email.trim.toLowerCase))
         maybeInvite match {
           case Some(invite) =>
-            // generate a new secret
-            val secret = Secret.newSecret()
-            val withNewSecret = invite.copy(secret = Some(secret))
-            inviteRepository.putInvite(withNewSecret) match {
-              case Right(_) =>
-                // now send e-mail to user with magic URL
-                val message =
-                s"""|Hi ${invite.giveMeAName}!
-                    |
-                    |We've found your invite to Kith & Kin - please use the link below to access all areas and continue with your RSVP!
-                    |
-                    |You can use this link as many times as you need it, but don't give it to others as anyone who has the link can change your RSVP.
-                    |
-                    |${routes.RsvpController.login(invite.id.toString, secret).absoluteURL(request.secure, request.host)}
-                    |
-                    |Much love,
-                    |Simon & Christina
-                  """.stripMargin
-                Email.sendEmail(sesClient, invite.email, "RSVP information", message) // now redirect
-                Redirect(routes.RsvpController.sentMessage()).flashing("contactType" -> "e-mail address")
-              case Left(_) =>
-                Redirect(routes.RsvpController.notRight()).
-                  flashing(
-                    "title" -> "Oh no, something went wrong...",
-                    "message" -> s"Ummm, not sure what just happened, it's like I had you, but then lost you again. Can you try again?"
-                  )
-            }
-          case None =>
-            // invite not found - nice error
-            Redirect(routes.RsvpController.notRight()).
-              flashing(
-                "title" -> "Oh no, I can't find you...",
-                "message" -> s"I'm sorry, I can't seem to find $email in my list of invites. Double check and try again!"
-              )
-        }
-
-      case Some(name) =>
-        // lookup name in DB
-        val list = inviteRepository.getInviteList
-        val maybeInvite = list.find{invite => invite.adults.map(_.name).contains(name)}
-        maybeInvite match {
-          case Some(invite) =>
+            val email = invite.email.get // this is safe due to the find operation above
             // generate a new secret
             val secret = Secret.newSecret()
             val withNewSecret = invite.copy(secret = Some(secret))
@@ -86,10 +45,8 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
                     |Much love,
                     |Simon & Christina
                   """.stripMargin
-                Email.sendEmail(sesClient, invite.email, "RSVP information", message)
-
-                // now redirect
-                Redirect(routes.RsvpController.sentMessage()).flashing("contactType" -> "e-mail address")
+                Email.sendEmail(sesClient, email, "RSVP information", message)
+                Redirect(routes.RsvpController.sentMessage()).flashing("emailAddress" -> email)
               case Left(_) =>
                 Redirect(routes.RsvpController.notRight()).
                   flashing(
@@ -97,6 +54,60 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
                     "message" -> s"Ummm, not sure what just happened, it's like I had you, but then lost you again. Can you try again?"
                   )
             }
+          case None =>
+            // invite not found - nice error
+            Redirect(routes.RsvpController.notRight()).
+              flashing(
+                "title" -> "Oh no, I can't find you...",
+                "message" -> s"I'm sorry, I can't seem to find $email in my list of invites. Double check and try again!"
+              )
+        }
+
+      case Some(name) =>
+        // lookup name in DB
+        val list = inviteRepository.getInviteList
+        val maybeInvite = list.find{invite => invite.adults.map(_.name.toLowerCase).contains(name.toLowerCase)}
+        maybeInvite match {
+          case Some(invite) if invite.email.nonEmpty =>
+            val email = invite.email.get // this is safe due to the pattern match guard
+            // generate a new secret
+            val secret = Secret.newSecret()
+            val withNewSecret = invite.copy(secret = Some(secret))
+            inviteRepository.putInvite(withNewSecret) match {
+              case Right(_) =>
+                // now send e-mail to user with magic URL
+                val message =
+                  s"""
+                    |Hi ${invite.giveMeAName}!
+                    |
+                    |We've found your invite to Kith & Kin - please use the link below to access all areas and continue with your RSVP!
+                    |
+                    |You can use this link as many times as you need it, but don't give it to others as anyone who has the link can change your RSVP.
+                    |
+                    |${routes.RsvpController.login(invite.id.toString, secret).absoluteURL(request.secure, request.host)}
+                    |
+                    |Much love,
+                    |Simon & Christina
+                  """.stripMargin
+                Email.sendEmail(sesClient, email, "RSVP information", message)
+
+                // now redirect
+                Redirect(routes.RsvpController.sentMessage()).flashing("emailAddress" -> email)
+              case Left(_) =>
+                Redirect(routes.RsvpController.notRight()).
+                  flashing(
+                    "title" -> "Oh no, something went wrong...",
+                    "message" -> s"Ummm, not sure what just happened, it's like I had you, but then lost you again. Can you try again?"
+                  )
+            }
+
+          case Some(invite) =>
+            // invite found, but we don't have an e-mail address
+            Redirect(routes.RsvpController.notRight()).
+              flashing(
+                "title" -> "Oh no, we don't have an e-mail address for you...",
+                "message" -> s"We've found your invite! But for some reason we don't have an e-mail address for you. Get in touch and we'll sort something out!"
+              )
 
           case None =>
             // invite not found - nice error
@@ -112,8 +123,8 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
   }
 
   def sentMessage = Action { request =>
-    val contactType = request.flash.data("contactType")
-    Ok(views.html.rsvp.sentMessage(contactType))
+    val emailAddress = request.flash.data("emailAddress")
+    Ok(views.html.rsvp.sentMessage(emailAddress))
   }
 
   def notRight = Action { request =>

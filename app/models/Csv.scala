@@ -27,27 +27,23 @@ case class Csv(
     }
   }
   def toInvite: Option[Invite] = {
-    if (email.trim.nonEmpty) {
-      val adults = (List(name.trim) ++ nonEmptyToOption(partner) ++ nonEmptyToOption(partnerWithChildren)).map(Adult.apply)
-      val kids = children.split("\n").filterNot(_.isEmpty).map(kidParse).toList
-      Some(
-        Invite(
-          UUID.randomUUID(),
-          update = 0,
-          None,
-          email.trim.toLowerCase,
-          timbuktu.trim.nonEmpty,
-          nonEmptyToOption(postalAddress),
-          0,
-          Some(addressee),
-          adults,
-          kids,
-          s"$clanSize${nonEmptyToOption(note).map("\n"+_).getOrElse("")}",
-          None
-        )
+    val adults = (List(name.trim) ++ nonEmptyToOption(partner) ++ nonEmptyToOption(partnerWithChildren)).map(Adult.apply)
+    val kids = children.split("\n").filterNot(_.isEmpty).map(kidParse).toList
+    Some(
+      Invite(
+        UUID.randomUUID(),
+        update = 0,
+        None,
+        nonEmptyToOption(email.trim.toLowerCase).filter(_.contains("@")),
+        timbuktu.trim.nonEmpty,
+        nonEmptyToOption(postalAddress),
+        0,
+        Some(addressee),
+        adults,
+        kids,
+        s"$clanSize${nonEmptyToOption(note).map("\n"+_).getOrElse("")}",
+        None
       )
-    } else {
-      None
-    }
+    )
   }
 }

@@ -37,7 +37,7 @@ case class Invite(
   id: UUID,
   update: Int = 0,
   secret: Option[String],
-  email: String,
+  email: Option[String],
   emailPreferred: Boolean,
   address: Option[String],
   priority: Int,
@@ -48,8 +48,7 @@ case class Invite(
   lastLoggedIn: Option[DateTime],
   sent: Boolean = false,
   draftRsvp: Option[Rsvp] = None,
-  rsvp: Option[Rsvp] = None,
-  payments: List[Payment] = Nil
+  rsvp: Option[Rsvp] = None
 ) {
   def firstName(name: String) = name.split(" ").head
   def firstNames: List[String] = (adults.map(_.name) ::: children.map(_.name)).map(firstName)

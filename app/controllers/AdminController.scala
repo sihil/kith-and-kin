@@ -60,7 +60,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
 
   def create = WhitelistAction { r =>
     val adult = Adult("Simon Hildrew")
-    val invite = Invite(UUID.randomUUID(), 0, None, "simon@hildrew.net", emailPreferred = false, Some("62 Allendale Close\nLondon\nSE5 8SG"), 0, None, List(adult), Nil, "just me", None)
+    val invite = Invite(UUID.randomUUID(), 0, None, Some("simon@hildrew.net"), emailPreferred = false, Some("62 Allendale Close\nLondon\nSE5 8SG"), 0, None, List(adult), Nil, "just me", None)
     inviteRepository.putInvite(invite)
     Ok("done")
   }
@@ -73,19 +73,21 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     import kantan.csv.ops._
     import kantan.csv.generic._
 
-    val existingEmails = inviteRepository.getInviteList.map(_.email).toSet
+    val currentInviteList = inviteRepository.getInviteList
+    val existingEmails = currentInviteList.map(_.email).toSet
+    val existingName = currentInviteList.map(_.adults.head.name).toSet
 
     r.body.file("csv").map { csv =>
       Logger.logger.info(s"processing file ${csv.ref.file}")
-      Logger.logger.info(Source.fromFile(csv.ref.file).getLines().take(3).mkString("\n"))
       val reader = csv.ref.file.asCsvReader[Csv](',', header = true)
       val list = reader.toList.flatMap(_.toList).flatMap(_.toInvite)
-      list.filterNot(i => existingEmails.contains(i.email)).foreach{ invite =>
-        inviteRepository.putInvite(invite)
-        // this is so that we don't breach the limit
-        //Thread.sleep(200)
+      val invitesToInsert = list.filterNot{ invite =>
+        existingEmails.contains(invite.email) || existingName.contains(invite.adults.head.name)
       }
-      Ok(s"Inserted ${list.size} invites from CSV")
+      invitesToInsert.foreach{ invite =>
+        inviteRepository.putInvite(invite)
+      }
+      Ok(s"Inserted ${invitesToInsert.size} invites from CSV (${list.size - invitesToInsert.size} filtered out)")
     }.getOrElse(UnprocessableEntity("No file"))
   }
 
