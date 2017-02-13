@@ -4,7 +4,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder
 import controllers._
 import db.{InviteRepository, PaymentRepository}
-import filters.ForwardingFilter
+import filters.{AccessLoggingFilter, ForwardingFilter}
 import models.StripeKeys
 import play.api.ApplicationLoader.Context
 import play.api._
@@ -22,6 +22,7 @@ class AppComponents(context: Context)
   with AhcWSComponents {
 
   override lazy val httpFilters = Seq(
+    new AccessLoggingFilter(),
     csrfFilter,
     gzipFilter,
     new ForwardingFilter(context.environment.mode == Mode.Prod)
