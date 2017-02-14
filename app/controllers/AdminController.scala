@@ -52,9 +52,9 @@ trait AuthActions extends Actions {
 
 case class InviteSummary(invites: List[Invite], inviteCount: Int, adultCount: Int, childCount: Int)
 object InviteSummary {
-  def apply(invites: Iterable[Invite]): InviteSummary = {
+  def apply(invites: List[Invite]): InviteSummary = {
     // TODO - deal with partial RSVPs
-    InviteSummary(invites.toList, invites.size, invites.map(_.adults.size).sum, invites.map(_.children.size).sum)
+    InviteSummary(invites, invites.size, invites.map(_.adults.size).sum, invites.map(_.children.size).sum)
   }
 }
 
@@ -65,8 +65,8 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     val invites = inviteRepository.getInviteList.toList
     val overall = InviteSummary(invites)
     val completedRsvps = invites.flatMap(i => i.rsvp.map(r => i -> r)).toMap
-    val coming = InviteSummary(completedRsvps.filter(_._2.coming.getOrElse(false)).keys)
-    val notComing = InviteSummary(completedRsvps.filterNot(_._2.coming.getOrElse(true)).keys)
+    val coming = InviteSummary(completedRsvps.filter(_._2.coming.getOrElse(false)).keys.toList)
+    val notComing = InviteSummary(completedRsvps.filterNot(_._2.coming.getOrElse(true)).keys.toList)
 
     Ok(views.html.admin.summary(overall, coming, notComing))
   }
