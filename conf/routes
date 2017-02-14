@@ -9,7 +9,7 @@ GET         /get-involved                  controllers.KithAndKinController.getI
 # rsvp
 GET         /rsvp                          controllers.RsvpController.start
 POST        /rsvp/lookup                   controllers.RsvpController.lookup
-GET         /rsvp/sent                     controllers.RsvpController.sentMessage
+GET         /rsvp/sent/:email              controllers.RsvpController.sentMessage(email: String)
 GET         /rsvp/notRight                 controllers.RsvpController.notRight
 GET         /rsvp/login/:id/:secret        controllers.RsvpController.login(id: String, secret: String)
 GET         /rsvp/logout                   controllers.RsvpController.logout

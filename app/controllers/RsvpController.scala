@@ -51,7 +51,7 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
                     |Simon & Christina
                   """.stripMargin
                 Email.sendEmail(sesClient, email, "RSVP information", message)
-                Redirect(routes.RsvpController.sentMessage()).flashing("emailAddress" -> email)
+                Redirect(routes.RsvpController.sentMessage(email))
               case Left(_) =>
                 Redirect(routes.RsvpController.notRight()).
                   flashing(
@@ -97,7 +97,7 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
                 Email.sendEmail(sesClient, email, "RSVP information", message)
 
                 // now redirect
-                Redirect(routes.RsvpController.sentMessage()).flashing("emailAddress" -> email)
+                Redirect(routes.RsvpController.sentMessage(email))
               case Left(_) =>
                 Redirect(routes.RsvpController.notRight()).
                   flashing(
@@ -127,8 +127,7 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
     }
   }
 
-  def sentMessage = Action { request =>
-    val emailAddress = request.flash.data("emailAddress")
+  def sentMessage(emailAddress: String) = Action { request =>
     Ok(views.html.rsvp.sentMessage(emailAddress))
   }
 
