@@ -1,14 +1,11 @@
-@(invitees: List[Invite])(implicit rh: RequestHeader)
+@import helpers.Auth
+@(invitees: List[Invite])(implicit request: RequestHeader)
 @import helper._
 
-@page("Admin home"){
+@admin.adminPage("Admin home"){
     <section class="section">
         <div class="container">
-            <h1 class="heading">Admin interface</h1>
-            <h2>Summary</h2>
-            <p>Adults: @invitees.map(_.adults.size).sum</p>
-            <p>Children: @invitees.map(_.children.size).sum</p>
-            <h2>The List</h2>
+            <h1 class="heading">The List</h1>
             <table class="table">
                 <thead>
                     <tr>

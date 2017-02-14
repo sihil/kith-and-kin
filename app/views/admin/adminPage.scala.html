@@ -1,0 +1,23 @@
+@import helpers.Auth
+@(title: String, reactComponent: Option[String] = None)(rsvpPageContent: Html)(implicit request: RequestHeader)
+
+@page(title, reactComponent=reactComponent, requestHeader = Some(request), bunting=false) {
+    <section class="section rsvp">
+        <div class="container">
+            <div class="menu">
+                <ul>
+                    <li>
+                        <h2 class="shrink-mobile"><a href="@routes.AdminController.index">Summary</a></h2>
+                    </li>
+                    <li>
+                        <h2 class="shrink-mobile"><a href="@routes.AdminController.list">List</a></h2>
+                    </li>
+                    @*<li>*@
+                        @*<h2 class="shrink-mobile"><a href="@routes.Payments.home">Your payments</a></h2>*@
+                    @*</li>*@
+                </ul>
+            </div>
+        </div>
+    </section>
+    @rsvpPageContent
+}

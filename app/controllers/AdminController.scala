@@ -50,12 +50,30 @@ trait AuthActions extends Actions {
   val WhitelistAction = WhitelistedActionFilter compose AuthAction
 }
 
+case class InviteSummary(inviteCount: Int, adultCount: Int, childCount: Int)
+object InviteSummary {
+  def apply(invites: Iterable[Invite]): InviteSummary = {
+    // TODO - deal with partial RSVPs
+    InviteSummary(invites.size, invites.map(_.adults.size).sum, invites.map(_.children.size).sum)
+  }
+}
+
 class AdminController(val wsClient: WSClient, val baseUrl: String, inviteRepository: InviteRepository)
   extends Controller with AuthActions {
 
   def index = WhitelistAction { implicit r =>
+    val invites = inviteRepository.getInviteList.toList
+    val overall = InviteSummary(invites)
+    val completedRsvps = invites.flatMap(i => i.rsvp.map(r => i -> r)).toMap
+    val coming = InviteSummary(completedRsvps.filter(_._2.coming.getOrElse(false)).keys)
+    val notComing = InviteSummary(completedRsvps.filterNot(_._2.coming.getOrElse(true)).keys)
+
+    Ok(views.html.admin.summary(overall, coming, notComing))
+  }
+
+  def list = WhitelistAction { implicit r =>
     val invites = inviteRepository.getInviteList
-    Ok(views.html.admin.adminHome(invites.toList))
+    Ok(views.html.admin.inviteList(invites.toList))
   }
 
   def create = WhitelistAction { r =>
