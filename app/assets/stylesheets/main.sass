@@ -84,6 +84,35 @@ ul.asterisk
       content: "*"
       padding-right: 5px
 
+section.img-ben-aan
+  background: url('/assets/images/us/ben-aan.jpg')
+  background-size: cover
+  background-position: right bottom
+  h1
+    color: rgba(255,255,255,0.8)
+    font-size: 6rem
+
+.hero
+  &.is-four-fifths-height
+    min-height: 80vh
+    .hero-body
+      +from($tablet)
+        align-items: center
+      display: flex
+      & > .container
+        flex-grow: 1
+        flex-shrink: 1
+
+.bg-right
+  right: 0
+  top: 0
+  bottom: 0
+  background: url('/assets/images/us/ceilidh.jpg')
+  background-size: cover
+  background-position: center bottom
+  position: absolute
+  width: 45%
+
 pre.is-success
   color: white
   background-color: $success
