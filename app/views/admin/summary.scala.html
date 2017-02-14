@@ -16,12 +16,22 @@
                     <p>Invites: @coming.inviteCount</p>
                     <p>Adults: @coming.adultCount</p>
                     <p>Children: @coming.childCount</p>
+                    <ul>
+                        @coming.invites.map { invite =>
+                          <li>@invite.giveMeAName</li>
+                        }
+                    </ul>
                 </div>
                 <div class="column">
                     <h2>RSVP No</h2>
                     <p>Invites: @notComing.inviteCount</p>
                     <p>Adults: @notComing.adultCount</p>
                     <p>Children: @notComing.childCount</p>
+                    <ul>
+                    @notComing.invites.map { invite =>
+                        <li>@invite.giveMeAName</li>
+                    }
+                    </ul>
                 </div>
             </div>
         </div>

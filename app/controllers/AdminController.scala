@@ -50,11 +50,11 @@ trait AuthActions extends Actions {
   val WhitelistAction = WhitelistedActionFilter compose AuthAction
 }
 
-case class InviteSummary(inviteCount: Int, adultCount: Int, childCount: Int)
+case class InviteSummary(invites: List[Invite], inviteCount: Int, adultCount: Int, childCount: Int)
 object InviteSummary {
   def apply(invites: Iterable[Invite]): InviteSummary = {
     // TODO - deal with partial RSVPs
-    InviteSummary(invites.size, invites.map(_.adults.size).sum, invites.map(_.children.size).sum)
+    InviteSummary(invites.toList, invites.size, invites.map(_.adults.size).sum, invites.map(_.children.size).sum)
   }
 }
 
