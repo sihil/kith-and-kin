@@ -241,7 +241,8 @@ object QuestionMaster {
       Answer("friMorn", "Friday morning", List(lunchCatering, eveningCatering))("friMorn").next(departure),
       Answer("friLunch", "Friday lunchtime", List(lunchCatering, eveningCatering))("friLunch").next(departure),
       Answer("friAft", "Friday afternoon", List(eveningCatering))("friAft").next(departure),
-      Answer("friEve", "Friday evening", List(eveningCatering))("friEve").next(departure)
+      Answer("friEve", "Friday evening", List(eveningCatering))("friEve").next(departure),
+      Answer("friLate", "Friday late")("friLate").next(departure)
     ), updateRsvp = (rsvp, answer) => rsvp.modify(_.arrival).setTo(answer), fromRsvp = _.arrival,
       helpText = Some("We need rough arrival times to help plan catering and activities"))
 

@@ -17,13 +17,15 @@ object RsvpAuth {
   val lastSeenAgent = Agent[Map[UUID, DateTime]](Map.empty)
 }
 
+case class Auth(invite: Invite, realUser: Boolean)
+
 trait RsvpAuth extends UserIdentifier with Results {
 
   def inviteRepository: InviteRepository
 
   override def authConfig: GoogleAuthConfig = GoogleAuthConfig.withNoDomainRestriction("","","",enforceValidity = false)
 
-  def inviteFrom(request: RequestHeader): Option[Invite] = RsvpCookie.parse(request.cookies).flatMap { rsvpId =>
+  def inviteFrom(request: RequestHeader): Option[Auth] = RsvpCookie.parse(request.cookies).flatMap { rsvpId =>
     val googleAuth = userIdentity(request).filter(user => Whitelist.users.contains(user.email))
     val invite = inviteRepository.getInvite(rsvpId.id)
     (invite, googleAuth) match {
@@ -32,7 +34,7 @@ trait RsvpAuth extends UserIdentifier with Results {
         val now = new DateTime()
         Some(RsvpAuth.lastSeenAgent().get(i.id) match {
           // seen within last 15 minutes, do nothing
-          case Some(lastSeen) if (now.getMillis - lastSeen.getMillis) < 1000 * 900 => i
+          case Some(lastSeen) if (now.getMillis - lastSeen.getMillis) < 1000 * 900 => Auth(i, realUser = true)
           // either never seen or more than 10 mins
           case _ =>
             val updatedInvite = i.copy(lastLoggedIn = Some(now))
@@ -40,19 +42,19 @@ trait RsvpAuth extends UserIdentifier with Results {
             inviteRepository.putInvite(updatedInvite) match {
               case Right(_) =>
                 RsvpAuth.lastSeenAgent.send(_ + (i.id -> now))
-                updatedInvite
+                Auth(updatedInvite, realUser = true)
               case Left(_) =>
                 // don't worry too much about this, will hopefully work on their next request
                 Logger.logger.warn("Couldn't update last seen")
-                i
+                Auth(i, realUser = true)
             }
         })
       case (Some(i), Some(auth)) =>
         Logger.logger.warn(s"Invite for ${i.email} impersonated by ${auth.email}")
-        Some(i)
+        Some(Auth(i, realUser = false))
       case _ => None
     }
   }
-  object RsvpLogin extends AuthenticatedBuilder[Invite](inviteFrom, _ => Redirect(routes.RsvpController.start()))
+  object RsvpLogin extends AuthenticatedBuilder[Auth](inviteFrom, _ => Redirect(routes.RsvpController.start()))
 
 }

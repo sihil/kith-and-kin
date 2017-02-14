@@ -7,10 +7,15 @@ import com.softwaremill.quicklens._
 import db.{InviteRepository, PaymentRepository}
 import helpers._
 import models.{QuestionMaster, Rsvp}
+import play.api.Mode
+import play.api.Mode.Mode
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
 
-class RsvpController(val inviteRepository: InviteRepository, paymentRepository: PaymentRepository, sesClient: AmazonSimpleEmailService) extends Controller with RsvpAuth {
+import scala.concurrent.{ExecutionContext, Future}
+
+class RsvpController(val inviteRepository: InviteRepository, paymentRepository: PaymentRepository,
+                     sesClient: AmazonSimpleEmailService, context: ExecutionContext, mode: Mode) extends Controller with RsvpAuth {
 
   def start = Action { request =>
     Ok(views.html.rsvp.start(request))
@@ -158,26 +163,27 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
   }
 
   def details = RsvpLogin { implicit request =>
-    Ok(views.html.rsvp.details(request.user))
+    Ok(views.html.rsvp.details(request.user.invite))
   }
 
   def rsvp = RsvpLogin { implicit request =>
     Ok(views.html.rsvp.rsvp())
   }
 
-  def update(complete: Boolean) = RsvpLogin(parse.json) { request =>
-    val questions = QuestionMaster.questions(request.user)
+  def update(complete: Boolean) = RsvpLogin(parse.json) { implicit request =>
+    val invite = request.user.invite
+    val questions = QuestionMaster.questions(invite)
     val updateMap = request.body.as[Map[String, JsValue]]
-    val maybeRsvp = if (complete) request.user.rsvp else request.user.draftRsvp
+    val maybeRsvp = if (complete) invite.rsvp else invite.draftRsvp
     val updatedRsvp = updateMap.foldLeft(maybeRsvp.getOrElse(Rsvp())) { case (rsvp, (question, answer)) =>
       questions.allQuestions.find(_.key==question).map { q =>
         q.update(rsvp, answer)
       }.getOrElse(rsvp)
     }
     val updatedInvite = if (complete)
-      request.user.modify(_.draftRsvp).setTo(Some(updatedRsvp)).modify(_.rsvp).setTo(Some(updatedRsvp))
+      invite.modify(_.draftRsvp).setTo(Some(updatedRsvp)).modify(_.rsvp).setTo(Some(updatedRsvp))
     else
-      request.user.modify(_.draftRsvp).setTo(Some(updatedRsvp))
+      invite.modify(_.draftRsvp).setTo(Some(updatedRsvp))
 
     val updatedQuestions = QuestionMaster.questions(updatedInvite)
 
@@ -189,6 +195,14 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
         .filterNot(_ == questions.draftResponse.jsonPrices)
         .map(json => Json.obj("prices" -> json))
         val fields = Seq(Json.obj("result" -> "success")) ++ updatedQuestionJson ++ updatedPricesJson
+        if (invite.rsvp.isEmpty && complete && request.user.realUser) {
+          Future{
+            val payments = paymentRepository.getPaymentsForInvite(invite).toList
+            val paid = payments.map(_.amount).sum
+            val total = questions.finalResponse.totalPrice
+            Email.sendRsvpSummary(sesClient, updatedInvite, total, math.max(total-paid, 0))
+          }(context)
+        }
         Ok(fields.reduce(_ ++ _))
       case Left(_) =>
         ServiceUnavailable("Failure when updating RSVP, try again")
@@ -197,17 +211,19 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
   }
 
   def complete = RsvpLogin { implicit request =>
-    val questions = QuestionMaster.questions(request.user)
-    val payments = paymentRepository.getPaymentsForInvite(request.user).toList
+    val invite = request.user.invite
+    val questions = QuestionMaster.questions(invite)
+    val payments = paymentRepository.getPaymentsForInvite(invite).toList
     val paid = payments.map(_.amount).sum
     val total = questions.finalResponse.totalPrice
-    Ok(views.html.rsvp.thanks(request.user.rsvp.flatMap(_.coming).get, total, math.abs(total-paid)))
+    Ok(views.html.rsvp.thanks(invite.rsvp.flatMap(_.coming).get, total, math.max(total-paid, 0)))
   }
 
   def questions = RsvpLogin { r =>
-    val unsent = r.user.rsvp.isEmpty
-    val modified = r.user.draftRsvp != r.user.rsvp
-    val questions = QuestionMaster.questions(r.user)
+    val invite = r.user.invite
+    val unsent = invite.rsvp.isEmpty
+    val modified = invite.draftRsvp != invite.rsvp
+    val questions = QuestionMaster.questions(invite)
     val answers = questions.draftResponse.answers
     val submittedAnswers = questions.finalResponse.answers
     val prices = questions.draftResponse.jsonPrices
@@ -220,7 +236,7 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
 
   def reset = RsvpLogin { r =>
     // set draft back to state of final
-    val invite = r.user.modify(_.draftRsvp).setTo(r.user.rsvp)
+    val invite = r.user.invite.modify(_.draftRsvp).setTo(r.user.invite.rsvp)
     inviteRepository.putInvite(invite) match {
       case Right(_) => NoContent
       case Left(_) => ServiceUnavailable("reset failed, try again")

@@ -1,4 +1,5 @@
-@()(implicit request: Security.AuthenticatedRequest[_, Invite])
+@import helpers.Auth
+@()(implicit request: Security.AuthenticatedRequest[_, Auth])
 
     @views.html.rsvp.rsvpPage("RSVP", reactComponent = Some("rsvp")) {
         <section class="section">

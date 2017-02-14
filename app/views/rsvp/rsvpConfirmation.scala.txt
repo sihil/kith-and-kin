@@ -1,0 +1,19 @@
+@(invite: Invite, total: Int, outstanding: Int)(implicit rh: RequestHeader)
+@import helpers._
+
+Hi @invite.giveMeAName,
+
+Thanks for RSVPing for Kith & Kin.
+@if(invite.rsvp.flatMap(_.coming).contains(true)) {
+We're excited that you'll be able to make it to Inverness this summer and look forward to seeing you there
+
+If you made a mistake or want to change your RSVP then you can do that - you can head back at any time by following this link: @routes.RsvpController.rsvp().absoluteURL()
+@if(outstanding > 0) {
+You've made accommodation and food choices that come to a total of @total.sterling(true) and we'd love for this to be paid as soon as you feel able. You can do so by following this link at any time: @routes.Payments.home().absoluteURL()
+}
+Keep your eyes open for more festival details in the coming months and if you have any questions in the meantime, get in touch at info@@kithandkin.wedding.
+} else {
+We're sorry that you won't be able to make it, but thanks for letting us know and we hope to see you soon.}
+
+Much love,
+Simon and Christina xx

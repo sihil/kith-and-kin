@@ -1,4 +1,5 @@
-@(title: String, reactComponent: Option[String] = None)(rsvpPageContent: Html)(implicit request: Security.AuthenticatedRequest[_, Invite])
+@import helpers.Auth
+@(title: String, reactComponent: Option[String] = None)(rsvpPageContent: Html)(implicit request: Security.AuthenticatedRequest[_, Auth])
 
 @page(title, reactComponent=reactComponent, requestHeader = Some(request), buntingSectionClass = Some("rsvp")) {
     <section class="section rsvp">
@@ -12,7 +13,7 @@
                     <li@if(request.path.contains(routes.RsvpController.rsvp.url)){ class="is-active"}>
                         <h2 class="shrink-mobile"><a href="@routes.RsvpController.rsvp">Your RSVP</a></h2>
                     </li>
-                    @if(request.user.rsvp.nonEmpty) {
+                    @if(request.user.invite.rsvp.nonEmpty) {
                         <h2>&gt;</h2>
                         <li
                         @if(request.path.contains(routes.Payments.home.url)) { class="is-active"}

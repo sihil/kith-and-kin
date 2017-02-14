@@ -23,12 +23,13 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
                sesClient: AmazonSimpleEmailService, stripeKeys: StripeKeys)
               (implicit context: ExecutionContext) extends Controller with RsvpAuth {
   def home = RsvpLogin { implicit request =>
-    val questions = QuestionMaster.questions(request.user)
-    val payments = paymentRepository.getPaymentsForInvite(request.user).toList
+    val invite = request.user.invite
+    val questions = QuestionMaster.questions(invite)
+    val payments = paymentRepository.getPaymentsForInvite(invite).toList
     val paid = payments.filter{_.stripePayment.forall(_.charged)}.map(_.amount).sum
     val response = questions.finalResponse
     response.breakdown.map { breakdown =>
-      Ok(views.html.payments.paymentsHome(request.user.email, breakdown, response.totalPrice, payments, paid, stripeKeys.publishable))
+      Ok(views.html.payments.paymentsHome(invite.email, breakdown, response.totalPrice, payments, paid, stripeKeys.publishable))
     } getOrElse NotFound
   }
 
@@ -40,16 +41,17 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
   }
 
   def stripeForm = RsvpLogin.async { request =>
+    val invite = request.user.invite
     request.body.asFormUrlEncoded.map { formData =>
       val maybeToken = formData.get("stripeToken").flatMap(_.headOption)
       val maybeAmount = formData.get("amount").flatMap(_.headOption.map(_.toInt))
       (maybeToken, maybeAmount) match {
         case (Some(token), Some(amount)) =>
-          val newPayment = Payment(UUID.randomUUID(), new DateTime(), 0, request.user.id, amount, Some(StripePayment(token, charged = false)))
+          val newPayment = Payment(UUID.randomUUID(), new DateTime(), 0, invite.id, amount, Some(StripePayment(token, charged = false)))
           Future {
             paymentRepository.putPayment(newPayment) match {
               case Left(_) =>
-                fatalError("Storing payment failed", "Something went badly wrong whilst saving your payment", request.user,
+                fatalError("Storing payment failed", "Something went badly wrong whilst saving your payment", invite,
                   Some(s"stripe payment ID $token for $amount")){}
               case Right(_) =>
                 val requestOptions = RequestOptions.builder.setApiKey(stripeKeys.secret).build()
@@ -70,7 +72,7 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
                     case Right(_) => Redirect(routes.Payments.home())
                     case Left(_) =>
                       fatalError("Storing payment failed", "Something went badly wrong whilst saving the fact that your payment succeeded",
-                        request.user, Some(s"stripe payment ID $token for $amount")){}
+                        invite, Some(s"stripe payment ID $token for $amount")){}
                   }
                 } catch {
                   case ce: CardException =>
@@ -78,7 +80,7 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
                     fatalError(
                       summary = "Card payment error",
                       message = s"Stripe encountered an error ($ce) whilst trying to process your payment.\nCode: ${ce.getCode}\nDecline reason: ${ce.getDeclineCode}",
-                      invite = request.user,
+                      invite = invite,
                       adminOnlyMessage = Some(s"stripe payment ID $token for $amount")
                     ) {
                       val failedPayment = newPayment.modify(_.stripePayment.each.error).setTo(Some(s"${ce.getMessage}/${ce.getCode}"))
@@ -89,7 +91,7 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
                     fatalError(
                       summary = "Card payment error",
                       message = s"Got a $ex whilst trying to process payment.\n${ex.getStackTrace.mkString("", EOL, EOL)}",
-                      invite = request.user,
+                      invite = invite,
                       adminOnlyMessage = Some(s"stripe payment ID $token for $amount")
                     ){}
                 }
@@ -103,19 +105,20 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
   }
 
   def bankTransfer = RsvpLogin.async { request =>
+    val invite = request.user.invite
     request.body.asFormUrlEncoded.map { formData =>
       val maybeReference = formData.get("reference").flatMap(_.headOption)
       val maybeAmount = formData.get("amount").flatMap(_.headOption.map(_.toInt))
       (maybeReference, maybeAmount) match {
         case (Some(reference), Some(amount)) =>
           Future {
-            val newPayment = Payment(UUID.randomUUID(), new DateTime(), 0, request.user.id, amount, bankTransfer = Some(BankTransfer(reference, false)))
+            val newPayment = Payment(UUID.randomUUID(), new DateTime(), 0, invite.id, amount, bankTransfer = Some(BankTransfer(reference, false)))
             paymentRepository.putPayment(newPayment) match {
               case Right(_) => Redirect(routes.Payments.home())
               case Left(_) => fatalError(
                 summary = "Bank transfer save failed",
                 message = "We had a problem storing the bank transfer reference, please try again",
-                invite = request.user
+                invite = invite
               ){}
             }
           }

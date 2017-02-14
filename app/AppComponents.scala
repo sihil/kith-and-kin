@@ -69,7 +69,7 @@ class AppComponents(context: Context)
   val paymentRepository = new PaymentRepository(dynamoClient, stage)
 
   val kithKinController = new KithAndKinController()
-  val rsvpController = new RsvpController(inviteRepository, paymentRepository, sesClient)
+  val rsvpController = new RsvpController(inviteRepository, paymentRepository, sesClient, operationContext, environment.mode)
   val adminController = new AdminController(wsClient, baseUrl, inviteRepository)
   val paymentsController = new Payments(inviteRepository, paymentRepository, sesClient, stripeKeys)
   val assets = new Assets(httpErrorHandler)

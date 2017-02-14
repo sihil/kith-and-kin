@@ -2,7 +2,7 @@
 @import helpers._
 @import helper._
 @import org.joda.time.format.DateTimeFormat
-@(email: Option[String], breakdown: NonEmptyList[PriceBreakdown], total: Int, payments: List[Payment], paid: Int, publishableKey: String)(implicit request: Security.AuthenticatedRequest[_, Invite])
+@(email: Option[String], breakdown: NonEmptyList[PriceBreakdown], total: Int, payments: List[Payment], paid: Int, publishableKey: String)(implicit request: Security.AuthenticatedRequest[_, Auth])
 
 @views.html.rsvp.rsvpPage("Your payments") {
     <section class="section">

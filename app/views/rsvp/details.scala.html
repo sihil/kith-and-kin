@@ -1,4 +1,5 @@
-@(invite: Invite)(implicit request: Security.AuthenticatedRequest[_, Invite])
+@import helpers.Auth
+@(invite: Invite)(implicit request: Security.AuthenticatedRequest[_, Auth])
 
     @rsvp.rsvpPage("RSVP") {
         <section class="section">
@@ -6,7 +7,7 @@
                 <div class="columns">
                     <div class="column"><p>We hope we have these details right - if you spot mistakes or want to change anything please shoot
                         us an e-mail at <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a>.</p></div>
-                    @if(request.user.rsvp.isEmpty) {
+                    @if(request.user.invite.rsvp.isEmpty) {
                         <div class="column is-one-third has-text-right"><a class="button is-large is-danger" href="@routes.RsvpController.rsvp">
                             Ready to RSVP? Click here</a></div>
                     }

@@ -1,5 +1,5 @@
-@(coming: Boolean, total: Int, outstanding: Int)(implicit request: Security.AuthenticatedRequest[_, Invite])
 @import helpers._
+@(coming: Boolean, total: Int, outstanding: Int)(implicit request: Security.AuthenticatedRequest[_, Auth])
 
 @views.html.rsvp.rsvpPage("Thanks for RSVPing") {
     <section class="section">
@@ -24,7 +24,7 @@
                     }
                     <h2>What next?</h2>
                     <p>Keep your eyes open for more festival details in the coming months and if you have any questions
-                        in the meantime, fire them over to us at <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a></p>
+                        in the meantime, send them over to us at <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a></p>
                     <p>See you in August!</p>
                     <p class="margin-bottom"><strong>Simon and Christina xx</strong></p>
                     <p/>
