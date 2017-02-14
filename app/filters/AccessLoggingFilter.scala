@@ -15,7 +15,7 @@ class AccessLoggingFilter()(implicit val mat: Materializer) extends Filter {
   def apply(next: (RequestHeader) => Future[Result])(request: RequestHeader): Future[Result] = {
     val resultFuture = next(request)
 
-    if (!request.uri.startsWith("/assets/")) {
+    if (!request.uri.startsWith("/assets/") && request.uri != "/healthcheck") {
       val rsvpId = RsvpCookie.parse(request.cookies).map(id => s""" rsvpId=${id.id}""").getOrElse("")
       resultFuture.foreach(result => {
         val ua = request.headers.get(HttpConstants.USER_AGENT).map(header => s""" ua="$header"""").getOrElse("")
