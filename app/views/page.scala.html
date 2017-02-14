@@ -30,25 +30,35 @@
                 </div>
                 <div class="menu">
                     <ul>
-                        <li><h2 class="shrink-mobile"><a href="@routes.KithAndKinController.index.withFragment("festival")">Festival?</a></h2></li>
-                        <li><h2 class="shrink-mobile"><a href="@routes.KithAndKinController.accommodation">Accommodation & Food</a></h2></li>
+                        <li><h2 class="shrink-mobile"><a href="@routes.KithAndKinController.index.withFragment("festival")">
+                            Festival?</a></h2></li>
+                        <li><h2 class="shrink-mobile"><a href="@routes.KithAndKinController.accommodation">
+                            Accommodation & Food</a></h2></li>
                     </ul>
                     <div class="center is-hidden-mobile">
                         <a href="@routes.KithAndKinController.index"><img class="menu-logo" src="@routes.Assets.versioned("images/kith-kin.png")"></a>
                     </div>
                     <ul>
-                        <li><h2 class="shrink-mobile"><a href="@routes.KithAndKinController.getInvolved">Get Involved</a></h2></li>
+                        <li><h2 class="shrink-mobile"><a href="@routes.KithAndKinController.getInvolved">
+                            Get Involved</a></h2></li>
                         <li><h2 class="shrink-mobile"><a href="@routes.RsvpController.details">RSVP</a></h2></li>
                     </ul>
                 </div>
             </section>
         }
         @if(menu && bunting) {
-            <section @buntingSectionClass.map{bsc => class="@bsc"}>
+            <section @buntingSectionClass.map { bsc => class="@bsc" }>
                 <img src="@routes.Assets.versioned("images/bunting.png")">
             </section>
         }
         @body
+        <section class="footer">
+            <div class="footer-container">
+                <p>
+                Website made with love by Simon Hildrew with <a href="https://www.playframework.com">Play</a>,
+                <a href="http://bulma.io/">Bulma.io</a>
+                (ish), React, Stripe and lots of lovely illustrations from <a href="http://www.gabifroden.com/">Gabi Froden</a></p>
+            </div>        </section>
         @reactComponent.map { compName =>
             <script src="@routes.Assets.versioned(s"build/$compName.js")"></script>
         }
