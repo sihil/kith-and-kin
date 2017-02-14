@@ -12,7 +12,6 @@ import play.api.mvc.Security.AuthenticatedRequest
 import play.api.mvc._
 
 import scala.concurrent.Future
-import scala.io.Source
 import scala.language.reflectiveCalls
 
 object HttpResults extends Results
