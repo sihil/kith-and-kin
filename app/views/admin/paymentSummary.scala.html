@@ -1,13 +1,16 @@
 @import helpers._
 @import org.joda.time.format.DateTimeFormat
-@(total: Int, confirmed: Int, paymentList: List[(Payment, Invite)])(implicit request: RequestHeader)
+@(owed: Int, total: Int, confirmed: Int, paymentList: List[(Payment, Invite)], inviteStatus: List[InvitePaymentStatus])(implicit request: RequestHeader)
 
 @admin.adminPage("Payments") {
     <section class="section">
         <div class="container">
-            <h1>Payments</h1>
-            <p>Total: @total.sterling(true)</p>
-            <p>Confirmed: @confirmed.sterling(true)</p>
+            <h1 class="heading">Payments</h1>
+            <div class="columns">
+                <div class="column"><p>Owed: @owed.sterling(true)</p></div>
+                <div class="column"><p>All payments: @total.sterling(true)</p></div>
+                <div class="column"><p>Confirmed payments: @confirmed.sterling(true)</p></div>
+            </div>
             <table class="table">
                 <thead>
                     <tr>
@@ -15,7 +18,7 @@
                         <th>Invite</th>
                         <th>Type</th>
                         <th>Confirmed</th>
-                        <th>Amount</th>
+                        <th class="align-right">Amount</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -25,9 +28,30 @@
                             <td>@invite.giveMeAName</td>
                             <td>@payment.paymentType</td>
                             <td>@if(payment.confirmed){Confirmed}else{Unconfirmed}</td>
-                            <td>@payment.amount.sterling</td>
+                            <td class="align-right">@payment.amount.sterling</td>
                         </tr>
                     }
+                </tbody>
+            </table>
+            <h2 class="heading">Invite status</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Invite</th>
+                        <th class="align-right">Owed</th>
+                        <th class="align-right">Paid</th>
+                        <th class="align-right">Confirmed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @inviteStatus.sortBy(_.invite.giveMeAName).map { status =>
+                <tr>
+                    <td>@status.invite.giveMeAName</td>
+                    <td class="align-right">@status.total.sterling</td>
+                    <td class="align-right">@status.paid.sterling</td>
+                    <td class="align-right">@status.confirmed.sterling</td>
+                </tr>
+                }
                 </tbody>
             </table>
         </div>

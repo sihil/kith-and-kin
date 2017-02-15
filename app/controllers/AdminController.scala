@@ -5,7 +5,7 @@ import java.util.UUID
 import com.gu.googleauth.{Actions, GoogleAuthConfig, UserIdentity}
 import db.{InviteRepository, PaymentRepository}
 import helpers.{RsvpCookie, RsvpId}
-import models.{Adult, Csv, Invite}
+import models.{Adult, Csv, Invite, QuestionMaster}
 import org.joda.time.DateTime
 import play.api.Logger
 import play.api.libs.ws.WSClient
@@ -58,6 +58,8 @@ object InviteSummary {
   }
 }
 
+case class InvitePaymentStatus(invite: Invite, total: Int, paid: Int, confirmed: Int)
+
 class AdminController(val wsClient: WSClient, val baseUrl: String, inviteRepository: InviteRepository, paymentRepository: PaymentRepository)
   extends Controller with AuthActions {
 
@@ -82,7 +84,17 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     val total = payments.map(_.amount).sum
     val confirmed = payments.filter(_.confirmed).map(_.amount).sum
     val paymentList = payments.flatMap { payment => invites.get(payment.inviteId).map(invite => (payment, invite)) }
-    Ok(views.html.admin.paymentSummary(total, confirmed, paymentList))
+    val inviteStatusList = invites.map { case (id, invite) =>
+      val questions = QuestionMaster.questions(invite)
+      val totalForInvite = questions.finalResponse.totalPrice
+      val paymentsForInvite = payments.filter(_.inviteId == id)
+      val paidForInvite = paymentsForInvite.map(_.amount).sum
+      val confirmedForInvite = paymentsForInvite.filter(_.confirmed).map(_.amount).sum
+      InvitePaymentStatus(invite, totalForInvite, paidForInvite, confirmedForInvite)
+    }
+    val owed = inviteStatusList.map(_.total).sum
+    val outstandingInvitesStatusList = inviteStatusList.filter{status => status.total != status.paid || status.total != status.confirmed}
+    Ok(views.html.admin.paymentSummary(owed, total, confirmed, paymentList, outstandingInvitesStatusList.toList))
   }
 
   def create = WhitelistAction { r =>
