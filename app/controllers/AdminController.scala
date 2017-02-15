@@ -121,7 +121,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
       case Some((id, "toggleInviteSent")) =>
         inviteRepository.getInvite(id).map { invite =>
           inviteRepository.putInvite(invite.copy(sent = !invite.sent))
-          Redirect(routes.AdminController.index())
+          Redirect(routes.AdminController.list())
         }.getOrElse(NotFound(s"Invite $id not found"))
       case unknown =>
         NotFound(s"Unknown id/action: $unknown")

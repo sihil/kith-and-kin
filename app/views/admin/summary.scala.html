@@ -34,6 +34,14 @@
                     </ul>
                 </div>
             </div>
+            <h2 class="heading">Last logins</h2>
+            <div>
+                <ul>
+                    @overall.invites.filter(_.lastLoggedIn.nonEmpty).sortBy(_.lastLoggedIn.map(-_.getMillis)).take(10).map { invite =>
+                      <li>@invite.giveMeAName</li>
+                    }
+                </ul>
+            </div>
         </div>
     </section>
 }
