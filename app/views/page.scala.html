@@ -47,7 +47,7 @@
             </section>
         }
         @if(menu && bunting) {
-            <section @buntingSectionClass.map { bsc => class="@bsc" }>
+            <section class="@buntingSectionClass.map { bsc => @bsc } bunting">
                 <img src="@routes.Assets.versioned("images/bunting.png")">
             </section>
         }

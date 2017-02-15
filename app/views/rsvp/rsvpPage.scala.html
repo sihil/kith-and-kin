@@ -1,8 +1,8 @@
 @import helpers.Auth
 @(title: String, reactComponent: Option[String] = None)(rsvpPageContent: Html)(implicit request: Security.AuthenticatedRequest[_, Auth])
 
-@page(title, reactComponent=reactComponent, requestHeader = Some(request), buntingSectionClass = Some("rsvp")) {
-    <section class="section rsvp">
+@page(title, reactComponent=reactComponent, requestHeader = Some(request), buntingSectionClass = Some("rsvp-colour")) {
+    <section class="section rsvp-colour small-padding">
         <div class="container">
             <div class="menu">
                 <ul>
