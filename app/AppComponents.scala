@@ -70,7 +70,7 @@ class AppComponents(context: Context)
 
   val kithKinController = new KithAndKinController()
   val rsvpController = new RsvpController(inviteRepository, paymentRepository, sesClient, operationContext, environment.mode)
-  val adminController = new AdminController(wsClient, baseUrl, inviteRepository)
+  val adminController = new AdminController(wsClient, baseUrl, inviteRepository, paymentRepository)
   val paymentsController = new Payments(inviteRepository, paymentRepository, sesClient, stripeKeys)
   val assets = new Assets(httpErrorHandler)
 

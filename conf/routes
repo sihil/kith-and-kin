@@ -30,6 +30,7 @@ GET         /payments/error                controllers.Payments.error
 #admin
 GET         /admin                         controllers.AdminController.index
 GET         /admin/list                    controllers.AdminController.list
+GET         /admin/payments                controllers.AdminController.payments
 GET         /admin/test/create             controllers.AdminController.create
 GET         /admin/loginAction             controllers.AdminController.loginAction
 GET         /oauthCallback                 controllers.AdminController.oauth2Callback

@@ -1,0 +1,35 @@
+@import helpers._
+@import org.joda.time.format.DateTimeFormat
+@(total: Int, confirmed: Int, paymentList: List[(Payment, Invite)])(implicit request: RequestHeader)
+
+@admin.adminPage("Payments") {
+    <section class="section">
+        <div class="container">
+            <h1>Payments</h1>
+            <p>Total: @total.sterling(true)</p>
+            <p>Confirmed: @confirmed.sterling(true)</p>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Invite</th>
+                        <th>Type</th>
+                        <th>Confirmed</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @paymentList.sortBy(-_._1.date.getMillis).map { case (payment, invite) =>
+                        <tr>
+                            <td>@DateTimeFormat.mediumDateTime().print(payment.date)</td>
+                            <td>@invite.giveMeAName</td>
+                            <td>@payment.paymentType</td>
+                            <td>@if(payment.confirmed){Confirmed}else{Unconfirmed}</td>
+                            <td>@payment.amount.sterling</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}

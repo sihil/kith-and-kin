@@ -3,9 +3,10 @@ package controllers
 import java.util.UUID
 
 import com.gu.googleauth.{Actions, GoogleAuthConfig, UserIdentity}
-import db.InviteRepository
+import db.{InviteRepository, PaymentRepository}
 import helpers.{RsvpCookie, RsvpId}
 import models.{Adult, Csv, Invite}
+import org.joda.time.DateTime
 import play.api.Logger
 import play.api.libs.ws.WSClient
 import play.api.mvc.Security.AuthenticatedRequest
@@ -57,7 +58,7 @@ object InviteSummary {
   }
 }
 
-class AdminController(val wsClient: WSClient, val baseUrl: String, inviteRepository: InviteRepository)
+class AdminController(val wsClient: WSClient, val baseUrl: String, inviteRepository: InviteRepository, paymentRepository: PaymentRepository)
   extends Controller with AuthActions {
 
   def index = WhitelistAction { implicit r =>
@@ -73,6 +74,15 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
   def list = WhitelistAction { implicit r =>
     val invites = inviteRepository.getInviteList
     Ok(views.html.admin.inviteList(invites.toList))
+  }
+
+  def payments = WhitelistAction { implicit r =>
+    val invites = inviteRepository.getInviteList.map(i => i.id -> i).toMap
+    val payments = paymentRepository.getPaymentList.toList
+    val total = payments.map(_.amount).sum
+    val confirmed = payments.filter(_.confirmed).map(_.amount).sum
+    val paymentList = payments.flatMap { payment => invites.get(payment.inviteId).map(invite => (payment, invite)) }
+    Ok(views.html.admin.paymentSummary(total, confirmed, paymentList))
   }
 
   def create = WhitelistAction { r =>

@@ -26,8 +26,8 @@ case class Rsvp(
 case class StripePayment(stripeToken: String, charged: Boolean, stripeId: Option[String] = None, error: Option[String] = None)
 case class BankTransfer(reference: String, received: Boolean)
 case class Payment(id: UUID, date: DateTime, update: Int = 0, inviteId: UUID, amount: Int, stripePayment: Option[StripePayment] = None, bankTransfer: Option[BankTransfer] = None){
-  val paymentType = if (stripePayment.nonEmpty) "Card" else if (bankTransfer.nonEmpty) "Bank transfer" else "Unknown"
-  val confirmed = stripePayment.map(_.charged).orElse(bankTransfer.map(_.received)).getOrElse(false)
+  val paymentType: String = if (stripePayment.nonEmpty) "Card" else if (bankTransfer.nonEmpty) "Bank transfer" else "Unknown"
+  val confirmed: Boolean = stripePayment.map(_.charged).orElse(bankTransfer.map(_.received)).getOrElse(false)
 }
 
 
