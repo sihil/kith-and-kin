@@ -102,7 +102,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     val total = payments.map(_.amount).sum
     val confirmed = payments.filter(_.confirmed).map(_.amount).sum
     val paymentList = payments.flatMap { payment => invites.get(payment.inviteId).map(invite => (payment, invite)) }
-    val inviteStatusList = invites.map { case (id, invite) =>
+    val inviteStatusList = invites.filter(_._2.rsvp.nonEmpty).map { case (id, invite) =>
       val questions = QuestionMaster.questions(invite)
       val totalForInvite = questions.finalResponse.totalPrice
       val paymentsForInvite = payments.filter(_.inviteId == id)
