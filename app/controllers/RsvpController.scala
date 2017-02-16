@@ -7,7 +7,6 @@ import com.softwaremill.quicklens._
 import db.{InviteRepository, PaymentRepository}
 import helpers._
 import models.{QuestionMaster, Rsvp}
-import play.api.Mode
 import play.api.Mode.Mode
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
@@ -15,7 +14,7 @@ import play.api.mvc.{Action, Controller}
 import scala.concurrent.{ExecutionContext, Future}
 
 class RsvpController(val inviteRepository: InviteRepository, paymentRepository: PaymentRepository,
-                     sesClient: AmazonSimpleEmailService, context: ExecutionContext, mode: Mode) extends Controller with RsvpAuth {
+                     sesClient: AmazonSimpleEmailService, context: ExecutionContext, mode: Mode, listCache: ListCache) extends Controller with RsvpAuth {
 
   def start = Action { request =>
     Ok(views.html.rsvp.start(request))
@@ -26,7 +25,7 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
     contact match {
       case Some(email) if email.contains("@") =>
         // lookup e-mail in DB
-        val list = inviteRepository.getInviteList
+        val list = listCache.getInvites
         val maybeInvite = list.find(_.email.contains(email.trim.toLowerCase))
         maybeInvite match {
           case Some(invite) =>
@@ -70,7 +69,7 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
 
       case Some(name) =>
         // lookup name in DB
-        val list = inviteRepository.getInviteList
+        val list = listCache.getInvites
         val maybeInvite = list.find{invite => invite.adults.map(_.name.toLowerCase).contains(name.toLowerCase)}
         maybeInvite match {
           case Some(invite) if invite.email.nonEmpty =>

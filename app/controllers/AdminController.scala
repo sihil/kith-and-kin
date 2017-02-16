@@ -4,16 +4,15 @@ import java.util.UUID
 
 import com.gu.googleauth.{Actions, GoogleAuthConfig, UserIdentity}
 import db.{InviteRepository, PaymentRepository}
-import helpers.{RsvpCookie, RsvpId}
-import models.{Adult, Csv, Invite, QuestionMaster}
-import org.joda.time.DateTime
+import helpers.{ListCache, RsvpCookie, RsvpId}
+import models._
 import play.api.Logger
 import play.api.libs.ws.WSClient
 import play.api.mvc.Security.AuthenticatedRequest
 import play.api.mvc._
 
 import scala.concurrent.Future
-import scala.language.reflectiveCalls
+import scala.language.{postfixOps, reflectiveCalls}
 
 object HttpResults extends Results
 
@@ -50,37 +49,56 @@ trait AuthActions extends Actions {
   val WhitelistAction = WhitelistedActionFilter compose AuthAction
 }
 
-case class InviteSummary(invites: List[Invite], inviteCount: Int, adultCount: Int, childCount: Int)
+case class InviteSummary(invites: List[Invite],
+                         adultCount: Int,
+                         childCount: Int)
 object InviteSummary {
   def apply(invites: List[Invite]): InviteSummary = {
-    // TODO - deal with partial RSVPs
-    InviteSummary(invites, invites.size, invites.map(_.adults.size).sum, invites.map(_.children.size).sum)
+    InviteSummary(
+      invites,
+      invites.map(_.adults.size).sum,
+      invites.map(_.children.size).sum
+    )
   }
 }
 
 case class InvitePaymentStatus(invite: Invite, total: Int, paid: Int, confirmed: Int)
 
-class AdminController(val wsClient: WSClient, val baseUrl: String, inviteRepository: InviteRepository, paymentRepository: PaymentRepository)
+class AdminController(val wsClient: WSClient, val baseUrl: String, inviteRepository: InviteRepository,
+                      paymentRepository: PaymentRepository, listCache: ListCache)
   extends Controller with AuthActions {
 
+  def clear() = WhitelistAction {
+    listCache.clear()
+    Ok("Cleared")
+  }
+
   def index = WhitelistAction { implicit r =>
-    val invites = inviteRepository.getInviteList.toList
+    def comingSummary(invites: List[Invite]): InviteSummary = {
+      // find all invites that are marked as coming
+      val yes = invites.filter(_.rsvp.flatMap(_.coming).getOrElse(false))
+      InviteSummary(yes, yes.map(_.adultsComing.size).sum, yes.map(_.childrenComing.size).sum)
+    }
+    def notComingSummary(invites: List[Invite]): InviteSummary = {
+      val no = invites.filter(i => i.adultsNotComing.nonEmpty || i.childrenNotComing.nonEmpty)
+      InviteSummary(no, no.map(_.adultsNotComing.size).sum, no.map(_.adultsNotComing.size).sum)
+    }
+    val invites = listCache.getInvites
     val overall = InviteSummary(invites)
-    val completedRsvps = invites.flatMap(i => i.rsvp.map(r => i -> r)).toMap
-    val coming = InviteSummary(completedRsvps.filter(_._2.coming.getOrElse(false)).keys.toList)
-    val notComing = InviteSummary(completedRsvps.filterNot(_._2.coming.getOrElse(true)).keys.toList)
+    val coming = comingSummary(invites)
+    val notComing = notComingSummary(invites)
 
     Ok(views.html.admin.summary(overall, coming, notComing))
   }
 
   def list = WhitelistAction { implicit r =>
-    val invites = inviteRepository.getInviteList
-    Ok(views.html.admin.inviteList(invites.toList))
+    val invites = listCache.getInvites
+    Ok(views.html.admin.inviteList(invites))
   }
 
   def payments = WhitelistAction { implicit r =>
-    val invites = inviteRepository.getInviteList.map(i => i.id -> i).toMap
-    val payments = paymentRepository.getPaymentList.toList
+    val invites = listCache.getInvites.map(i => i.id -> i).toMap
+    val payments = listCache.getPayments
     val total = payments.map(_.amount).sum
     val confirmed = payments.filter(_.confirmed).map(_.amount).sum
     val paymentList = payments.flatMap { payment => invites.get(payment.inviteId).map(invite => (payment, invite)) }
@@ -97,7 +115,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok(views.html.admin.paymentSummary(owed, total, confirmed, paymentList, outstandingInvitesStatusList.toList))
   }
 
-  def create = WhitelistAction { r =>
+  def create = WhitelistAction {
     val adult = Adult("Simon Hildrew")
     val invite = Invite(UUID.randomUUID(), 0, None, Some("simon@hildrew.net"), emailPreferred = false, Some("62 Allendale Close\nLondon\nSE5 8SG"), 0, None, List(adult), Nil, "just me", None)
     inviteRepository.putInvite(invite)

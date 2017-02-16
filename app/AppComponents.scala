@@ -5,9 +5,11 @@ import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder
 import controllers._
 import db.{InviteRepository, PaymentRepository}
 import filters.{AccessLoggingFilter, ForwardingFilter}
+import helpers.ListCache
 import models.StripeKeys
 import play.api.ApplicationLoader.Context
 import play.api._
+import play.api.cache.EhCacheComponents
 import play.api.libs.ws.ahc.AhcWSComponents
 import play.filters.csrf.CSRFComponents
 import play.filters.gzip.GzipFilterComponents
@@ -19,7 +21,8 @@ class AppComponents(context: Context)
   extends BuiltInComponentsFromContext(context)
   with CSRFComponents
   with GzipFilterComponents
-  with AhcWSComponents {
+  with AhcWSComponents
+  with EhCacheComponents {
 
   override lazy val httpFilters = Seq(
     new AccessLoggingFilter(),
@@ -67,10 +70,11 @@ class AppComponents(context: Context)
 
   val inviteRepository = new InviteRepository(dynamoClient, stage)
   val paymentRepository = new PaymentRepository(dynamoClient, stage)
+  val listCache = new ListCache(defaultCacheApi, inviteRepository, paymentRepository)
 
   val kithKinController = new KithAndKinController()
-  val rsvpController = new RsvpController(inviteRepository, paymentRepository, sesClient, operationContext, environment.mode)
-  val adminController = new AdminController(wsClient, baseUrl, inviteRepository, paymentRepository)
+  val rsvpController = new RsvpController(inviteRepository, paymentRepository, sesClient, operationContext, environment.mode, listCache)
+  val adminController = new AdminController(wsClient, baseUrl, inviteRepository, paymentRepository, listCache)
   val paymentsController = new Payments(inviteRepository, paymentRepository, sesClient, stripeKeys)
   val assets = new Assets(httpErrorHandler)
 

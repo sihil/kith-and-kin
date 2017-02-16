@@ -27,7 +27,8 @@ libraryDependencies ++= Seq(
   "com.stripe" % "stripe-java" % "3.9.0",
   // play framework
   filters,
-  ws
+  ws,
+  cache
 )
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala, JDebPackaging, SbtWeb).settings(

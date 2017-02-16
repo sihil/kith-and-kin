@@ -7,29 +7,29 @@
             <div class="columns">
                 <div class="column">
                     <h2>Sent</h2>
-                    <p>Invites: @overall.inviteCount</p>
+                    <p>Invites: @overall.invites.size</p>
                     <p>Adults: @overall.adultCount</p>
                     <p>Children: @overall.childCount</p>
                 </div>
                 <div class="column">
                     <h2>RSVP Yes</h2>
-                    <p>Invites: @coming.inviteCount</p>
+                    <p>Invites: @coming.invites.size</p>
                     <p>Adults: @coming.adultCount</p>
                     <p>Children: @coming.childCount</p>
                     <ul>
                         @coming.invites.map { invite =>
-                          <li>@invite.giveMeAName</li>
+                          <li>@invite.giveMeAName (@{invite.adultsComing.size}A + @{invite.childrenComing.size}C)</li>
                         }
                     </ul>
                 </div>
                 <div class="column">
                     <h2>RSVP No</h2>
-                    <p>Invites: @notComing.inviteCount</p>
+                    <p>Invites: @notComing.invites.size</p>
                     <p>Adults: @notComing.adultCount</p>
                     <p>Children: @notComing.childCount</p>
                     <ul>
                     @notComing.invites.map { invite =>
-                        <li>@invite.giveMeAName</li>
+                        <li>@invite.giveMeAName (@{invite.adultsNotComing.size}A + @{invite.childrenNotComing.size}C)</li>
                     }
                     </ul>
                 </div>

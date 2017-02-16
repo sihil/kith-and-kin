@@ -56,5 +56,14 @@ case class Invite(
   def giveMeAName = addressee.getOrElse(stringifyList(firstNames))
   def number = adults.size + children.size
   def numberOfAdults = adults.size
+
+  private val cantMakeIt: String => Boolean = rsvp.toList.flatMap(_.cantMakeIt).contains _
+  private def maybeComing: List[Boolean] = rsvp.flatMap(_.coming).toList
+  def coming[A](as: List[A])(name: A => String): List[A] = maybeComing.flatMap { coming => if (coming) as.filterNot(a => cantMakeIt(name(a))) else Nil }
+  def adultsComing = coming(adults)(_.name)
+  def childrenComing = coming(children)(_.name)
+  def notComing[A](as: List[A])(name: A => String): List[A] = maybeComing.flatMap { coming => if (!coming) as else as.filter(a => cantMakeIt(name(a))) }
+  def adultsNotComing = notComing(adults)(_.name)
+  def childrenNotComing = notComing(children)(_.name)
 }
 

@@ -29,6 +29,7 @@ GET         /payments/error                controllers.Payments.error
 
 #admin
 GET         /admin                         controllers.AdminController.index
+GET         /admin/clear                   controllers.AdminController.clear
 GET         /admin/list                    controllers.AdminController.list
 GET         /admin/payments                controllers.AdminController.payments
 GET         /admin/test/create             controllers.AdminController.create
