@@ -5,7 +5,6 @@ import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder
 import controllers._
 import db.{InviteRepository, PaymentRepository}
 import filters.{AccessLoggingFilter, ForwardingFilter}
-import helpers.ListCache
 import models.StripeKeys
 import play.api.ApplicationLoader.Context
 import play.api._
@@ -70,11 +69,10 @@ class AppComponents(context: Context)
 
   val inviteRepository = new InviteRepository(dynamoClient, stage)
   val paymentRepository = new PaymentRepository(dynamoClient, stage)
-  val listCache = new ListCache(defaultCacheApi, inviteRepository, paymentRepository)
 
   val kithKinController = new KithAndKinController()
-  val rsvpController = new RsvpController(inviteRepository, paymentRepository, sesClient, operationContext, environment.mode, listCache)
-  val adminController = new AdminController(wsClient, baseUrl, inviteRepository, paymentRepository, listCache)
+  val rsvpController = new RsvpController(inviteRepository, paymentRepository, sesClient, operationContext, environment.mode)
+  val adminController = new AdminController(wsClient, baseUrl, inviteRepository, paymentRepository)
   val paymentsController = new Payments(inviteRepository, paymentRepository, sesClient, stripeKeys)
   val assets = new Assets(httpErrorHandler)
 

@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.gu.googleauth.{Actions, GoogleAuthConfig, UserIdentity}
 import db.{InviteRepository, PaymentRepository}
-import helpers.{ListCache, RsvpCookie, RsvpId}
+import helpers.{RsvpCookie, RsvpId}
 import models._
 import play.api.Logger
 import play.api.libs.ws.WSClient
@@ -67,13 +67,8 @@ object InviteSummary {
 case class InvitePaymentStatus(invite: Invite, total: Int, paid: Int, confirmed: Int)
 
 class AdminController(val wsClient: WSClient, val baseUrl: String, inviteRepository: InviteRepository,
-                      paymentRepository: PaymentRepository, listCache: ListCache)
+                      paymentRepository: PaymentRepository)
   extends Controller with AuthActions {
-
-  def clear() = WhitelistAction {
-    listCache.clear()
-    Ok("Cleared")
-  }
 
   def index = WhitelistAction { implicit r =>
     def comingSummary(invites: List[Invite]): InviteSummary = {
@@ -85,7 +80,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
       val no = invites.filter(i => i.adultsNotComing.nonEmpty || i.childrenNotComing.nonEmpty)
       InviteSummary(no, no.map(_.adultsNotComing.size).sum, no.map(_.adultsNotComing.size).sum)
     }
-    val invites = listCache.getInvites
+    val invites = inviteRepository.getInviteList.toList
     val overall = InviteSummary(invites)
     val coming = comingSummary(invites)
     val notComing = notComingSummary(invites)
@@ -94,13 +89,13 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
   }
 
   def list = WhitelistAction { implicit r =>
-    val invites = listCache.getInvites
+    val invites = inviteRepository.getInviteList.toList
     Ok(views.html.admin.inviteList(invites))
   }
 
   def payments = WhitelistAction { implicit r =>
-    val invites = listCache.getInvites.map(i => i.id -> i).toMap
-    val payments = listCache.getPayments
+    val invites = inviteRepository.getInviteList.toList.map(i => i.id -> i).toMap
+    val payments = paymentRepository.getPaymentList.toList
     val total = payments.map(_.amount).sum
     val confirmed = payments.filter(_.confirmed).map(_.amount).sum
     val paymentList = payments.flatMap { payment => invites.get(payment.inviteId).map(invite => (payment, invite)) }
@@ -118,7 +113,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
   }
 
   def accommodation = WhitelistAction { implicit r =>
-    val invites = listCache.getInvites
+    val invites = inviteRepository.getInviteList.toList
     val inviteRsvps = invites.flatMap(i => i.rsvp.map(r => i -> r)).groupBy(_._2.accommodation)
     def find[A](accomType: String)(include: Rsvp => A): List[(Invite, A)] = {
       invites.filter(_.rsvp.flatMap(_.accommodation).contains(accomType)).map{ invite => invite -> include(invite.rsvp.get) }
