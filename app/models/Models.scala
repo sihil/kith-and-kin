@@ -4,6 +4,14 @@ import java.util.UUID
 
 import org.joda.time.{DateTime, LocalDate}
 
+object Accommodation {
+  val OWN_TENT = "ownTent"
+  val CAMPER = "camper"
+  val CARAVAN = "caravan"
+  val BELL_TENT = "belltent"
+  val OFF_SITE = "offsite"
+}
+
 case class Rsvp(
   coming: Option[Boolean] = None,
   everyone: Option[Boolean] = None,
@@ -65,5 +73,6 @@ case class Invite(
   def notComing[A](as: List[A])(name: A => String): List[A] = maybeComing.flatMap { coming => if (!coming) as else as.filter(a => cantMakeIt(name(a))) }
   def adultsNotComing = notComing(adults)(_.name)
   def childrenNotComing = notComing(children)(_.name)
+
 }
 

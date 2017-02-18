@@ -14,6 +14,8 @@ import play.api.mvc._
 import scala.concurrent.Future
 import scala.language.{postfixOps, reflectiveCalls}
 
+import cats.syntax.apply._
+
 object HttpResults extends Results
 
 object Whitelist {
@@ -113,6 +115,20 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     val owed = inviteStatusList.map(_.total).sum
     val outstandingInvitesStatusList = inviteStatusList.filter{status => status.total != status.paid || status.total != status.confirmed}
     Ok(views.html.admin.paymentSummary(owed, total, confirmed, paymentList, outstandingInvitesStatusList.toList))
+  }
+
+  def accommodation = WhitelistAction { implicit r =>
+    val invites = listCache.getInvites
+    val inviteRsvps = invites.flatMap(i => i.rsvp.map(r => i -> r)).groupBy(_._2.accommodation)
+    def find[A](accomType: String)(include: Rsvp => A): List[(Invite, A)] = {
+      invites.filter(_.rsvp.flatMap(_.accommodation).contains(accomType)).map{ invite => invite -> include(invite.rsvp.get) }
+    }
+    val ownTent = find(Accommodation.OWN_TENT)(_ => ()).map(_._1)
+    val camper = find(Accommodation.CAMPER)(_.hookup.get)
+    val caravan = find(Accommodation.CARAVAN)(_.hookup.get)
+    val bellTent = find(Accommodation.BELL_TENT)(rsvp => (rsvp.bellTentSharing.get, rsvp.bellTentBedding.get))
+    val offSite = find(Accommodation.OFF_SITE)(_.offSiteLocation.get)
+    Ok(views.html.admin.accommodation(ownTent, camper, caravan, bellTent, offSite))
   }
 
   def create = WhitelistAction {

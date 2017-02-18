@@ -191,11 +191,11 @@ object QuestionMaster {
     ).next(accommodation)
 
     lazy val accommodation: Question[String] = MultipleChoice("Where are you planning to stay?", "accommodation", List(
-      Answer("ownTent", "Own tent", price=List(PerAdult("Pitch and breakfast", 2500)))("ownTent").next(arrival),
-      Answer("camper", "Own Campervan", price=List(PerAdult("Pitch and breakfast", 2500)))("camper").next(hookup),
-      Answer("caravan", "Own Caravan", price=List(PerAdult("Pitch and breakfast", 2500)))("caravan").next(hookup),
-      Answer("belltent", "Bell Tent")("belltent").next(bellTentSharing),
-      Answer("offsite", "Off Site")("offsite").next(offsiteLocation)
+      Answer("ownTent", "Own tent", price=List(PerAdult("Pitch and breakfast", 2500)))(Accommodation.OWN_TENT).next(arrival),
+      Answer("camper", "Own Campervan", price=List(PerAdult("Pitch and breakfast", 2500)))(Accommodation.CAMPER).next(hookup),
+      Answer("caravan", "Own Caravan", price=List(PerAdult("Pitch and breakfast", 2500)))(Accommodation.CARAVAN).next(hookup),
+      Answer("belltent", "Bell Tent")(Accommodation.BELL_TENT).next(bellTentSharing),
+      Answer("offsite", "Off Site")(Accommodation.OFF_SITE).next(offsiteLocation)
     ), updateRsvp = (rsvp, answer) => rsvp.modify(_.accommodation).setTo(answer),
       fromRsvp = _.accommodation,
       helpText = Some(s"""Details of on-site accommodation is on the <a href="${routes.KithAndKinController.accommodation}">accommodation page</a>.""")

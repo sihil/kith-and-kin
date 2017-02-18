@@ -32,6 +32,7 @@ GET         /admin                         controllers.AdminController.index
 GET         /admin/clear                   controllers.AdminController.clear
 GET         /admin/list                    controllers.AdminController.list
 GET         /admin/payments                controllers.AdminController.payments
+GET         /admin/accommodation           controllers.AdminController.accommodation
 GET         /admin/test/create             controllers.AdminController.create
 GET         /admin/loginAction             controllers.AdminController.loginAction
 GET         /oauthCallback                 controllers.AdminController.oauth2Callback
