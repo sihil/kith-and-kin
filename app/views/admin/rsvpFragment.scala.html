@@ -1,0 +1,23 @@
+@import helpers._
+@(questions: Questions)
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Question</th>
+            <th>Answer</th>
+            <th class="align-right">Cost</th>
+        </tr>
+    </thead>
+@questions.prices.map { case (questionKey, prices) =>
+    @defining(questions.allQuestions.find(_.key == questionKey)) { maybeQuestion =>
+      @maybeQuestion.map { question =>
+      <tr>
+          <th>@question.question</th>
+          <td>@question.humanAnswer(questions.rsvpFacet)</td>
+          <td class="align-right">@Item.total(prices, questions.numberComing, questions.numberAdultsComing).sterling</td>
+      </tr>
+      }
+    }
+}
+</table>

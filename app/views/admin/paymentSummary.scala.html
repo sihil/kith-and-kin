@@ -25,7 +25,7 @@
                     @paymentList.sortBy(-_._1.date.getMillis).map { case (payment, invite) =>
                         <tr>
                             <td>@DateTimeFormat.mediumDateTime().print(payment.date)</td>
-                            <td>@invite.giveMeAName</td>
+                            <td><a href="@routes.AdminController.details(invite.id.toString)">@invite.giveMeAName</a></td>
                             <td>@payment.paymentType</td>
                             <td>@if(payment.confirmed){Confirmed}else{Unconfirmed}</td>
                             <td class="align-right">@payment.amount.sterling</td>
@@ -46,7 +46,7 @@
                 <tbody>
                 @inviteStatus.sortBy(_.invite.giveMeAName).map { status =>
                 <tr>
-                    <td>@status.invite.giveMeAName</td>
+                    <td><a href="@routes.AdminController.details(status.invite.id.toString)">@status.invite.giveMeAName</a></td>
                     <td class="align-right">@status.total.sterling</td>
                     <td class="align-right">@status.paid.sterling</td>
                     <td class="align-right">@status.confirmed.sterling</td>

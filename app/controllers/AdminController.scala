@@ -13,7 +13,6 @@ import play.api.mvc._
 
 import scala.concurrent.Future
 import scala.language.{postfixOps, reflectiveCalls}
-
 import cats.syntax.apply._
 
 object HttpResults extends Results
@@ -51,15 +50,15 @@ trait AuthActions extends Actions {
   val WhitelistAction = WhitelistedActionFilter compose AuthAction
 }
 
-case class InviteSummary(invites: List[Invite],
+case class InviteSummary(questionsList: List[Questions],
                          adultCount: Int,
                          childCount: Int)
 object InviteSummary {
-  def apply(invites: List[Invite]): InviteSummary = {
+  def apply(questionsList: List[Questions]): InviteSummary = {
     InviteSummary(
-      invites,
-      invites.map(_.adults.size).sum,
-      invites.map(_.children.size).sum
+      questionsList,
+      questionsList.map(_.invite.adults.size).sum,
+      questionsList.map(_.invite.children.size).sum
     )
   }
 }
@@ -71,19 +70,21 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
   extends Controller with AuthActions {
 
   def index = WhitelistAction { implicit r =>
-    def comingSummary(invites: List[Invite]): InviteSummary = {
+    def comingSummary(questions: List[Questions]): InviteSummary = {
       // find all invites that are marked as coming
-      val yes = invites.filter(_.rsvp.flatMap(_.coming).getOrElse(false))
-      InviteSummary(yes, yes.map(_.adultsComing.size).sum, yes.map(_.childrenComing.size).sum)
+      val yes = questions.filter(_.rsvpFacet.coming.getOrElse(false))
+      InviteSummary(yes, yes.map(_.numberAdultsComing).sum, yes.map(_.numberChildrenComing).sum)
     }
-    def notComingSummary(invites: List[Invite]): InviteSummary = {
-      val no = invites.filter(i => i.adultsNotComing.nonEmpty || i.childrenNotComing.nonEmpty)
+    def notComingSummary(questions: List[Questions]): InviteSummary = {
+      val no = questions.filter(q => q.adultsNotComing.nonEmpty || q.childrenNotComing.nonEmpty)
       InviteSummary(no, no.map(_.adultsNotComing.size).sum, no.map(_.adultsNotComing.size).sum)
     }
     val invites = inviteRepository.getInviteList.toList
-    val overall = InviteSummary(invites)
-    val coming = comingSummary(invites)
-    val notComing = notComingSummary(invites)
+    val questionList = invites.map(i => QuestionMaster.questions(i, _.rsvp))
+
+    val overall = InviteSummary(questionList)
+    val coming = comingSummary(questionList)
+    val notComing = notComingSummary(questionList)
 
     Ok(views.html.admin.summary(overall, coming, notComing))
   }
@@ -100,8 +101,8 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     val confirmed = payments.filter(_.confirmed).map(_.amount).sum
     val paymentList = payments.flatMap { payment => invites.get(payment.inviteId).map(invite => (payment, invite)) }
     val inviteStatusList = invites.filter(_._2.rsvp.nonEmpty).map { case (id, invite) =>
-      val questions = QuestionMaster.questions(invite)
-      val totalForInvite = questions.finalResponse.totalPrice
+      val questions = QuestionMaster.questions(invite, _.rsvp)
+      val totalForInvite = questions.totalPrice
       val paymentsForInvite = payments.filter(_.inviteId == id)
       val paidForInvite = paymentsForInvite.map(_.amount).sum
       val confirmedForInvite = paymentsForInvite.filter(_.confirmed).map(_.amount).sum
@@ -114,9 +115,9 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
 
   def accommodation = WhitelistAction { implicit r =>
     val invites = inviteRepository.getInviteList.toList
-    val inviteRsvps = invites.flatMap(i => i.rsvp.map(r => i -> r)).groupBy(_._2.accommodation)
-    def find[A](accomType: String)(include: Rsvp => A): List[(Invite, A)] = {
-      invites.filter(_.rsvp.flatMap(_.accommodation).contains(accomType)).map{ invite => invite -> include(invite.rsvp.get) }
+    val questionsList = invites.map(i => QuestionMaster.questions(i, _.rsvp)).filter(_.coming.nonEmpty)
+    def find[A](accomType: String)(include: Rsvp => A): List[(Questions, A)] = {
+      questionsList.filter(_.rsvpFacet.accommodation.contains(accomType)).map{ questions => questions -> include(questions.rsvpFacet) }
     }
     val ownTent = find(Accommodation.OWN_TENT)(_ => ()).map(_._1)
     val camper = find(Accommodation.CAMPER)(_.hookup.get)
@@ -124,6 +125,29 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     val bellTent = find(Accommodation.BELL_TENT)(rsvp => (rsvp.bellTentSharing.get, rsvp.bellTentBedding.get))
     val offSite = find(Accommodation.OFF_SITE)(_.offSiteLocation.get)
     Ok(views.html.admin.accommodation(ownTent, camper, caravan, bellTent, offSite))
+  }
+
+  def getInvolved = WhitelistAction { implicit r =>
+    val invites = inviteRepository.getInviteList.toList
+    val choices: Seq[(Invite, GetInvolvedChoice, String)] =
+      for {
+        invite <- invites
+        rsvp <- invite.rsvp
+        getInvolvedChoiceStr <- rsvp.getInvolvedPreference
+        getInvolvedChoice <- GetInvolvedChoice.values.find(_.key == getInvolvedChoiceStr)
+        getInvolved <- rsvp.getInvolved
+      } yield (invite, getInvolvedChoice, getInvolved)
+    val sortedChoices = choices.sortBy(choice => GetInvolvedChoice.values.indexOf(choice._2))
+    Ok(views.html.admin.getInvolved(sortedChoices))
+  }
+
+  def details(inviteId: String) = WhitelistAction { implicit r =>
+    val maybeInvite = inviteRepository.getInvite(UUID.fromString(inviteId))
+    maybeInvite.map { invite =>
+      val questions = QuestionMaster.questions(invite, _.rsvp)
+      val draftQuestions = QuestionMaster.questions(invite, _.draftRsvp)
+      Ok(views.html.admin.details(questions, draftQuestions))
+    }.getOrElse(NotFound)
   }
 
   def create = WhitelistAction {

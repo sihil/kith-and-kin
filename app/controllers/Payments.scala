@@ -24,12 +24,11 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
               (implicit context: ExecutionContext) extends Controller with RsvpAuth {
   def home = RsvpLogin { implicit request =>
     val invite = request.user.invite
-    val questions = QuestionMaster.questions(invite)
+    val questions = QuestionMaster.questions(invite, _.rsvp)
     val payments = paymentRepository.getPaymentsForInvite(invite).toList
     val paid = payments.filter{_.stripePayment.forall(_.charged)}.map(_.amount).sum
-    val response = questions.finalResponse
-    response.breakdown.map { breakdown =>
-      Ok(views.html.payments.paymentsHome(invite.email, breakdown, response.totalPrice, payments, paid, stripeKeys.publishable))
+    questions.breakdown.map { breakdown =>
+      Ok(views.html.payments.paymentsHome(invite.email, breakdown, questions.totalPrice, payments, paid, stripeKeys.publishable))
     } getOrElse NotFound
   }
 

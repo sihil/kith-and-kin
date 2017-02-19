@@ -1,10 +1,10 @@
 package models
 
 import cats.data.NonEmptyList
-import play.api.libs.json.Json.JsValueWrapper
-import play.api.libs.json._
 import com.softwaremill.quicklens._
 import controllers.routes
+import play.api.libs.json.Json.JsValueWrapper
+import play.api.libs.json._
 
 import scala.language.postfixOps
 
@@ -39,6 +39,8 @@ trait QuestionReference {
   def jsonQuestion: JsonQuestion
   /* Used to get a client answer for this question from the Rsvp */
   def answer: Rsvp => Option[JsValue]
+  /* Used to get a plain text answer for display */
+  def humanAnswer: Rsvp => Option[String]
   /* Used to apply an update to an Rsvp given the client answer */
   def update(rsvp: Rsvp, choice: JsValue): Rsvp
   /* Price */
@@ -64,6 +66,7 @@ case class MultipleChoice[T](question: String, key: String, answers: List[Answer
       answer <- answers.find(_.internalValue == answerValue)
     } yield answer
   def answer = (rsvp: Rsvp) => answerT(rsvp).map(a => JsString(a.key))
+  override def humanAnswer = (rsvp: Rsvp) => answerT(rsvp).map(a => a.text)
   override lazy val allOnwardQuestions: List[QuestionReference] = answers.flatMap(_.nextQuestion)
   override def calculatePrice = (rsvp: Rsvp) => answerT(rsvp).toList.flatMap(_.price)
   override def selectedOnwardQuestion = (rsvp: Rsvp) => answerT(rsvp).flatMap(_.nextQuestion)
@@ -73,6 +76,7 @@ case class Text(question: String, key: String, helpText: Option[String] = None, 
                 nextQuestion: Option[QuestionReference] = None, calculatePrice: (Rsvp) => List[Item] = _ => Nil) extends Question[String] {
   override lazy val jsonQuestion: JsonQuestion = JsonQuestion(question, helpText, key, "text", optional = Some(optional), nextQuestion = nextQuestion.map(_.key))
   override def answer = rsvp => fromRsvp(rsvp).map(a => JsString(a))
+  override def humanAnswer = rsvp => fromRsvp(rsvp)
   override def update(rsvp: Rsvp, choice: JsValue): Rsvp = updateRsvp(rsvp, choice.asOpt[String])
   def next(question: QuestionReference): Text = this.copy(nextQuestion = Some(question))
   override lazy val allOnwardQuestions: List[QuestionReference] = nextQuestion.toList
@@ -95,6 +99,18 @@ case class Selection[T](question: String, key: String, answers: List[Answer[T]],
     }
     Some(Json.toJson(selectedMap.toMap))
   }
+
+  /* Used to get a plain text answer for display */
+  override def humanAnswer = (rsvp: Rsvp) => {
+    val selectedMap = for {
+      (answerValue, selected) <- fromRsvp(rsvp).toList.flatten
+      answer <- answers.find(_.internalValue == answerValue)
+    } yield {
+      answer -> selected
+    }
+    Some(selectedMap.filter(_._2).map(_._1).map(_.text).mkString(", "))
+  }
+
   override def update(rsvp: Rsvp, choice: JsValue): Rsvp = {
     val selected = choice.asOpt[Map[String, Boolean]].map { selectedMap =>
       for {
@@ -120,7 +136,25 @@ object JsonQuestion {
 
 case class PriceBreakdown(desc: String, itemAmount: Int, subTotal: Int)
 
-trait Response {
+trait Questions {
+  def invite: Invite
+  def rsvpFacet: Rsvp
+  def allQuestions: Seq[QuestionReference]
+  def jsonQuestions: Seq[JsonQuestion]
+  def questionMap: Map[String, JsonQuestion]
+  def questionJson: JsObject
+
+  def adultsComing: List[Adult]
+  def childrenComing: List[Child]
+  def coming: List[Person]
+  def adultsNotComing: List[Adult]
+  def childrenNotComing: List[Child]
+  def notComing: List[Person]
+  def numberAdultsComing: Int
+  def numberChildrenComing: Int
+  def numberComing: Int
+
+  def visibleQuestions: Set[String]
   def answers: Map[String, JsValue]
   def prices: List[(String, List[Item])]
   def breakdown: Option[NonEmptyList[PriceBreakdown]]
@@ -128,24 +162,35 @@ trait Response {
   def jsonPrices: JsObject
 }
 
-trait Questions {
-  def allQuestions: Seq[QuestionReference]
-  def jsonQuestions: Seq[JsonQuestion]
-  def questionMap: Map[String, JsonQuestion]
-  def questionJson: JsObject
-  def draftResponse: Response
-  def finalResponse: Response
-}
-
 object QuestionMaster {
   val numbersToWords = Map(1 -> "one", 2 -> "both", 3 -> "all three", 4 -> "all four", 5 -> "all five", 6 -> "all six")
 
-  def questions(invite: Invite): Questions = new Questions {
-    lazy val cantMakeIt = invite.draftRsvp.toList.flatMap(_.cantMakeIt)
+  def questions(inviteForQuestions: Invite, rsvpFromInvite: Invite => Option[Rsvp]): Questions = new Questions {
+    override lazy val invite = inviteForQuestions
+    override lazy val rsvpFacet = rsvpFromInvite(invite).getOrElse(Rsvp())
+    lazy val comingStatus = for {
+      rsvpComing <- rsvpFacet.coming
+      everyone = rsvpFacet.everyone.getOrElse(true)
+    } yield (rsvpComing, everyone, rsvpFacet.cantMakeIt)
+    lazy val isComing = (p: Person) => comingStatus.map { case (rsvpComing, everyone, cantMakeIt) =>
+      rsvpComing && (everyone || !cantMakeIt.contains(p.name))
+    }
     lazy val pluralInvited = invite.number > 1
-    lazy val numberComing = invite.number - cantMakeIt.size
-    lazy val adultsComing = invite.adults.filterNot(adult => cantMakeIt.contains(adult.name)).size
+
+    def coming[A <: Person](as: List[A]): List[A] = as.filter(a => isComing(a).getOrElse(false))
+    override lazy val adultsComing: List[Adult] = coming(invite.adults)
+    override lazy val childrenComing: List[Child] = coming(invite.children)
+    override lazy val coming = adultsComing ++ childrenComing
+    def notComing[A <: Person](as: List[A]): List[A] = as.filterNot(a => isComing(a).getOrElse(true))
+    override lazy val adultsNotComing: List[Adult] = notComing(invite.adults)
+    override lazy val childrenNotComing: List[Child] = notComing(invite.children)
+    override lazy val notComing = adultsNotComing ++ childrenNotComing
+
+    lazy val numberComing = coming.size
+    lazy val numberAdultsComing = adultsComing.size
+    lazy val numberChildrenComing = childrenComing.size
     lazy val pluralComing = numberComing > 1
+
     def cond(plural: Boolean, singleAnswer: String, pluralAnswer: String): String = if (plural) pluralAnswer else singleAnswer
 
     lazy val startPage = areYouComing
@@ -253,14 +298,11 @@ object QuestionMaster {
       Answer("sunAft", "Sunday afternoon", List(sunLunchCatering))("sunAft").next(getInvolvedChoice)
     ), updateRsvp = (rsvp, answer) => rsvp.modify(_.departure).setTo(answer), fromRsvp = _.departure)
 
-    lazy val getInvolvedChoice: Question[String] = MultipleChoice("Which area would you most like to get involved in?", "getInvolvedChoice", List(
-      Answer("0", "Activities")("activities").next(getInvolved),
-      Answer("1", "Music and arts")("musicAndArts").next(getInvolved),
-      Answer("2", "Kids")("kids").next(getInvolved),
-      Answer("3", "Food")("food").next(getInvolved),
-      Answer("4", "Setup & logistics")("setupAndLogistics").next(getInvolved),
-      Answer("5", "Other")("other").next(getInvolved)
-    ), updateRsvp = (rsvp, answer) => rsvp.modify(_.getInvolvedPreference).setTo(answer), fromRsvp = _.getInvolvedPreference,
+    lazy val getInvolvedChoice: Question[String] = MultipleChoice("Which area would you most like to get involved in?", "getInvolvedChoice",
+      GetInvolvedChoice.values.zipWithIndex.map { case (choice, i) =>
+        Answer(i.toString, choice.name)(choice.key).next(getInvolved)
+      },
+      updateRsvp = (rsvp, answer) => rsvp.modify(_.getInvolvedPreference).setTo(answer), fromRsvp = _.getInvolvedPreference,
       helpText = Some(
         s"""We'd like your participation in Kith & Kin Festival to be your gift to us. There are loads of ways for you to
            |contribute, have a look at the <a href=\"${routes.KithAndKinController.getInvolved()}\">get involved page</a>
@@ -295,45 +337,38 @@ object QuestionMaster {
       "startPage" -> startPage.key
     )
 
+    override lazy val answers = allQuestions.flatMap(q => q.answer(rsvpFacet).map(q.key ->)).toMap
 
-    override def draftResponse = buildResponse(invite.draftRsvp)
-    override def finalResponse = buildResponse(invite.rsvp)
-
-    def buildResponse(maybeRsvp: Option[Rsvp]): Response = {
-      val rsvp = maybeRsvp.getOrElse(Rsvp())
-      new Response {
-        override lazy val answers = allQuestions.flatMap(q => q.answer(rsvp).map(q.key ->)).toMap
-
-        override lazy val prices = {
-          def rec(questionReference: Option[QuestionReference], acc: List[(String, List[Item])] = Nil): List[(String, List[Item])] = {
-            questionReference match {
-              case None => acc
-              case Some(ref) =>
-                val questionReferencePrice = ref.key -> ref.calculatePrice(rsvp)
-                val maybeNextQuestion = ref.selectedOnwardQuestion(rsvp)
-                rec(maybeNextQuestion, questionReferencePrice :: acc)
-            }
-          }
-          rec(Some(startPage)).reverse
-        }
-
-        override lazy val breakdown = {
-          NonEmptyList.fromList(prices.flatMap(_._2).map { price =>
-            val desc = price.desc + price.english.map(e => s" - $e").getOrElse("")
-            PriceBreakdown(desc, price.amount, Item.subTotal(price, numberComing, adultsComing))
-          })
-        }
-
-        override lazy val totalPrice = Item.total(prices.flatMap{case(_, priceList)=>priceList}, numberComing, adultsComing)
-
-        override lazy val jsonPrices = {
-          implicit val priceWrites = Item.writes(numberComing, adultsComing)
-          Json.obj(
-            "total" -> totalPrice,
-            "breakdown" -> Json.toJson(prices.toMap)
-          )
+    override lazy val prices = {
+      def rec(questionReference: Option[QuestionReference], acc: List[(String, List[Item])] = Nil): List[(String, List[Item])] = {
+        questionReference match {
+          case None => acc
+          case Some(ref) =>
+            val questionReferencePrice = ref.key -> ref.calculatePrice(rsvpFacet)
+            val maybeNextQuestion = ref.selectedOnwardQuestion(rsvpFacet)
+            rec(maybeNextQuestion, questionReferencePrice :: acc)
         }
       }
+      rec(Some(startPage)).reverse
     }
+
+    override lazy val breakdown = {
+      NonEmptyList.fromList(prices.flatMap(_._2).map { price =>
+        val desc = price.desc + price.english.map(e => s" - $e").getOrElse("")
+        PriceBreakdown(desc, price.amount, Item.subTotal(price, numberComing, numberAdultsComing))
+      })
+    }
+
+    override lazy val totalPrice = Item.total(prices.flatMap{case(_, priceList)=>priceList}, numberComing, numberAdultsComing)
+
+    override lazy val jsonPrices = {
+      implicit val priceWrites = Item.writes(numberComing, numberAdultsComing)
+      Json.obj(
+        "total" -> totalPrice,
+        "breakdown" -> Json.toJson(prices.toMap)
+      )
+    }
+
+    override lazy val visibleQuestions = prices.map(_._1).toSet
   }
 }

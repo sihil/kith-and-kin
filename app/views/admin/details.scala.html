@@ -1,0 +1,30 @@
+@import org.joda.time.format.DateTimeFormat
+@(questions: Questions, draftQuestions: Questions)(implicit request: RequestHeader)
+
+@admin.adminPage(s"Details for ${questions.invite.giveMeAName}") {
+    <section class="section">
+        <div class="container">
+            <h1>Details for @questions.invite.giveMeAName</h1>
+            <p>Last logged in: @questions.invite.lastLoggedIn.map(DateTimeFormat.mediumDateTime().print).getOrElse("never")</p>
+            <p>Adults: @questions.invite.adults.map(_.name).mkString(", ")</p>
+            @if(questions.invite.children.nonEmpty) {
+                <p>Children: @questions.invite.children.map(_.name).mkString(", ")</p>
+            }
+            <h2 class="heading">RSVP</h2>
+            @if(questions.rsvpFacet != draftQuestions.rsvpFacet) {
+                <div class="notification is-danger">
+                    NOTE: This invite has unsaved RSVP changes, see the draft RSVP below for details.
+                </div>
+            }
+            @if(questions.invite.rsvp.isEmpty) {
+                <p>Not yet RSVPed</p>
+            } else {
+                @admin.rsvpFragment(questions)
+            }
+            @if(questions.rsvpFacet != draftQuestions.rsvpFacet) {
+                <h2 class="heading">Draft RSVP</h2>
+                @admin.rsvpFragment(draftQuestions)
+            }
+        </div>
+    </section>
+}

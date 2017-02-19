@@ -4,12 +4,49 @@ import java.util.UUID
 
 import org.joda.time.{DateTime, LocalDate}
 
+import ca.mrvisser.sealerate
+
 object Accommodation {
   val OWN_TENT = "ownTent"
   val CAMPER = "camper"
   val CARAVAN = "caravan"
   val BELL_TENT = "belltent"
   val OFF_SITE = "offsite"
+  val all = Seq(OWN_TENT, CAMPER, CARAVAN, BELL_TENT, OFF_SITE)
+}
+
+sealed trait GetInvolvedChoice {
+  def key: String
+  def name: String
+}
+object GetInvolvedChoice {
+  case object Activites extends GetInvolvedChoice {
+    val key = "activities"
+    val name = "Activities"
+  }
+  case object MusicAndArts extends GetInvolvedChoice {
+    val key = "musicAndArts"
+    val name = "Music and arts"
+  }
+  case object Kids extends GetInvolvedChoice {
+    val key = "kids"
+    val name = "Kids"
+  }
+  case object Food extends GetInvolvedChoice {
+    val key = "food"
+    val name = "Food"
+  }
+  case object SetupAndLogistics extends GetInvolvedChoice {
+    val key = "setupAndLogistics"
+    val name = "Setup & logistics"
+  }
+  case object Other extends GetInvolvedChoice {
+    val key = "other"
+    val name = "Other"
+  }
+  def values: List[GetInvolvedChoice] = List(Activites, MusicAndArts, Kids, Food, SetupAndLogistics, Other)
+  def allValues: Set[GetInvolvedChoice] = sealerate.values[GetInvolvedChoice]
+  assert(values.toSet == allValues, "Not all case objects in values list")
 }
 
 case class Rsvp(
@@ -38,9 +75,11 @@ case class Payment(id: UUID, date: DateTime, update: Int = 0, inviteId: UUID, am
   val confirmed: Boolean = stripePayment.map(_.charged).orElse(bankTransfer.map(_.received)).getOrElse(false)
 }
 
-
-case class Adult(name: String)
-case class Child(name: String, dob: LocalDate)
+sealed trait Person {
+  def name:String
+}
+case class Adult(name: String) extends Person
+case class Child(name: String, dob: LocalDate) extends Person
 case class Invite(
   id: UUID,
   update: Int = 0,
@@ -59,20 +98,10 @@ case class Invite(
   rsvp: Option[Rsvp] = None
 ) {
   def firstName(name: String) = name.split(" ").head
-  def firstNames: List[String] = (adults.map(_.name) ::: children.map(_.name)).map(firstName)
+  def firstNames(as: List[Adult], cs: List[Child]): List[String] = (as.map(_.name) ::: cs.map(_.name)).map(firstName)
   def stringifyList(list: List[String]) = if (list.size <= 1) list.mkString(", ") else s"${list.init.mkString(", ")} and ${list.last}"
-  def giveMeAName = addressee.getOrElse(stringifyList(firstNames))
+  def giveMeAName = addressee.getOrElse(stringifyList(firstNames(adults, children)))
   def number = adults.size + children.size
   def numberOfAdults = adults.size
-
-  private val cantMakeIt: String => Boolean = rsvp.toList.flatMap(_.cantMakeIt).contains _
-  private def maybeComing: List[Boolean] = rsvp.flatMap(_.coming).toList
-  def coming[A](as: List[A])(name: A => String): List[A] = maybeComing.flatMap { coming => if (coming) as.filterNot(a => cantMakeIt(name(a))) else Nil }
-  def adultsComing = coming(adults)(_.name)
-  def childrenComing = coming(children)(_.name)
-  def notComing[A](as: List[A])(name: A => String): List[A] = maybeComing.flatMap { coming => if (!coming) as else as.filter(a => cantMakeIt(name(a))) }
-  def adultsNotComing = notComing(adults)(_.name)
-  def childrenNotComing = notComing(children)(_.name)
-
 }
 

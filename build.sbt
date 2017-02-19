@@ -25,6 +25,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" % "akka-agent_2.11" % "2.4.12",
   // stripe
   "com.stripe" % "stripe-java" % "3.9.0",
+  // enum macro
+  "ca.mrvisser" %% "sealerate" % "0.0.5",
   // play framework
   filters,
   ws,

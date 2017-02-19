@@ -1,0 +1,27 @@
+@import scala.language.postfixOps
+@(choices: Seq[(Invite, GetInvolvedChoice, String)])(implicit request: RequestHeader)
+
+@admin.adminPage("Get Involved report") {
+    <section class="section">
+        <div class="container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Preference</th>
+                        <th>Who</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @choices.map { case (invite, choice, detail) =>
+                        <tr>
+                            <td>@choice.name</td>
+                            <td><a href="@routes.AdminController.details(invite.id.toString)">@invite.giveMeAName</a></td>
+                            <td>@detail</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}

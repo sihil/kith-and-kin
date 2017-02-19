@@ -169,11 +169,11 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
   }
 
   def update(complete: Boolean) = RsvpLogin(parse.json) { implicit request =>
-    val invite = request.user.invite
-    val questions = QuestionMaster.questions(invite)
     val updateMap = request.body.as[Map[String, JsValue]]
-    val maybeRsvp = if (complete) invite.rsvp else invite.draftRsvp
-    val updatedRsvp = updateMap.foldLeft(maybeRsvp.getOrElse(Rsvp())) { case (rsvp, (question, answer)) =>
+    val invite = request.user.invite
+    val currentRsvp = invite.draftRsvp.getOrElse(Rsvp())
+    val questions = QuestionMaster.questions(invite, _.draftRsvp)
+    val updatedRsvp = updateMap.foldLeft(currentRsvp) { case (rsvp, (question, answer)) =>
       questions.allQuestions.find(_.key==question).map { q =>
         q.update(rsvp, answer)
       }.getOrElse(rsvp)
@@ -183,21 +183,20 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
     else
       invite.modify(_.draftRsvp).setTo(Some(updatedRsvp))
 
-    val updatedQuestions = QuestionMaster.questions(updatedInvite)
 
     inviteRepository.putInvite(updatedInvite) match {
       case Right(_) =>
-        val updatedQuestionJson = Some(updatedQuestions.questionJson).filterNot(_ == questions.questionJson)
-        val updatedPricesJson =
-        Some(updatedQuestions.draftResponse.jsonPrices)
-        .filterNot(_ == questions.draftResponse.jsonPrices)
-        .map(json => Json.obj("prices" -> json))
+        val updatedDraftQuestions = QuestionMaster.questions(updatedInvite, _.draftRsvp)
+        val updatedQuestionJson = Some(updatedDraftQuestions.questionJson).filterNot(_ == questions.questionJson)
+        val updatedPricesJson = Some(updatedDraftQuestions.jsonPrices)
+                                  .filterNot(_ == questions.jsonPrices)
+                                  .map(json => Json.obj("prices" -> json))
         val fields = Seq(Json.obj("result" -> "success")) ++ updatedQuestionJson ++ updatedPricesJson
         if (invite.rsvp.isEmpty && complete && request.user.realUser) {
           Future{
             val payments = paymentRepository.getPaymentsForInvite(invite).toList
             val paid = payments.map(_.amount).sum
-            val total = questions.finalResponse.totalPrice
+            val total = updatedDraftQuestions.totalPrice // since we just copied the RSVP into both places we can use the draft questions
             Email.sendRsvpSummary(sesClient, updatedInvite, total, math.max(total-paid, 0))
           }(context)
         }
@@ -210,10 +209,10 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
 
   def complete = RsvpLogin { implicit request =>
     val invite = request.user.invite
-    val questions = QuestionMaster.questions(invite)
+    val questions = QuestionMaster.questions(invite, _.rsvp)
     val payments = paymentRepository.getPaymentsForInvite(invite).toList
     val paid = payments.map(_.amount).sum
-    val total = questions.finalResponse.totalPrice
+    val total = questions.totalPrice
     Ok(views.html.rsvp.thanks(invite.rsvp.flatMap(_.coming).get, total, math.max(total-paid, 0)))
   }
 
@@ -221,15 +220,18 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
     val invite = r.user.invite
     val unsent = invite.rsvp.isEmpty
     val modified = invite.draftRsvp != invite.rsvp
-    val questions = QuestionMaster.questions(invite)
-    val answers = questions.draftResponse.answers
-    val submittedAnswers = questions.finalResponse.answers
-    val prices = questions.draftResponse.jsonPrices
+
+    val questions = QuestionMaster.questions(invite, _.rsvp)
+    val submittedAnswers = questions.answers
+
+    val draftQuestions = QuestionMaster.questions(invite, _.draftRsvp)
+    val answers = draftQuestions.answers
+    val prices = draftQuestions.jsonPrices
     val answerJson = Json.obj(
       "answers" -> answers, "submittedAnswers" -> submittedAnswers,
       "unsent" -> unsent, "modified" -> modified, "prices" -> prices
     )
-    Ok(questions.questionJson ++ answerJson)
+    Ok(draftQuestions.questionJson ++ answerJson)
   }
 
   def reset = RsvpLogin { r =>

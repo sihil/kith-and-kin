@@ -1,4 +1,5 @@
 @import helpers.Auth
+@import org.joda.time.format.DateTimeFormat
 @(invitees: List[Invite])(implicit request: RequestHeader)
 @import helper._
 
@@ -20,11 +21,11 @@
                 <tbody>
                     @invitees.sortBy(_.adults.head.name).map { invitee =>
                         <tr>
-                            <td>@invitee.giveMeAName</td>
+                            <td><a href="@routes.AdminController.details(invitee.id.toString)">@invitee.giveMeAName</a></td>
                             <td>@invitee.email@if(invitee.emailPreferred){ <strong>(preferred)</strong>}</td>
                             <td>@invitee.children.map(_.name).mkString(", ")</td>
                             <td>@if(invitee.address.nonEmpty){yes}else{<strong>missing</strong>}</td>
-                            <td>@invitee.lastLoggedIn.map(_.toString).getOrElse("never")</td>
+                            <td>@invitee.lastLoggedIn.map(DateTimeFormat.mediumDateTime().print).getOrElse("never")</td>
                             <td>
                                 @form(CSRF(routes.AdminController.action), 'class -> "inline") {
                                     <input type="hidden" name="id" value="@invitee.id.toString">

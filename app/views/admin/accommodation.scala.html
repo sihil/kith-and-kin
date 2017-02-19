@@ -1,6 +1,7 @@
 @import scala.language.postfixOps
-@(ownTent: List[Invite], camper: List[(Invite, Boolean)], caravan: List[(Invite, Boolean)],
-        bellTent: List[(Invite, (Int, Int))], offSite: List[(Invite, String)])(implicit request: RequestHeader)
+@import helpers._
+@(ownTent: List[Questions], camper: List[(Questions, Boolean)], caravan: List[(Questions, Boolean)],
+        bellTent: List[(Questions, (Int, Int))], offSite: List[(Questions, String)])(implicit request: RequestHeader)
 
 @admin.adminPage("Accommodation report") {
     <section class="section">
@@ -11,8 +12,8 @@
                     <div>
                         <p>Total: @ownTent.map(_.adultsComing.size).sum adults and @ownTent.map(_.childrenComing.size).sum children</p>
                         <ul>
-                        @ownTent.map { invite =>
-                            <li>@invite.giveMeAName</li>
+                        @ownTent.map { questions =>
+                            <li><a href="@routes.AdminController.details(questions.invite.id.toString)">@questions.coming.firstNames</a></li>
                         }
                         </ul>
                     </div>
@@ -23,8 +24,9 @@
                         <p>Total: @camper.map(_._1.adultsComing.size).sum adults and @camper.map(_._1.childrenComing.size).sum children</p>
                         <p>Hookups: @camper.map(_._2).count(true ==)</p>
                         <ul>
-                        @camper.map { case (invite, hookup) =>
-                        <li>@invite.giveMeAName @if(hookup) {with hookup} else {without hookup}</li>
+                        @camper.map { case (questions, hookup) =>
+                        <li><a href="@routes.AdminController.details(questions.invite.id.toString)">@questions.coming.firstNames</a>
+                            @if(hookup) {with hookup} else {without hookup}</li>
                         }
                         </ul>
                     </div>
@@ -35,8 +37,9 @@
                         <p>Total: @caravan.map(_._1.adultsComing.size).sum adults and @caravan.map(_._1.childrenComing.size).sum children</p>
                         <p>Hookups: @caravan.map(_._2).count(true ==)</p>
                         <ul>
-                        @caravan.map { case (invite, hookup) =>
-                        <li>@invite.giveMeAName @if(hookup) {with hookup} else {without hookup}</li>
+                        @caravan.map { case (questions, hookup) =>
+                        <li><a href="@routes.AdminController.details(questions.invite.id.toString)">@questions.coming.firstNames</a>
+                            @if(hookup) {with hookup} else {without hookup}</li>
                         }
                         </ul>
                     </div>
@@ -49,8 +52,9 @@
                         <p>Total: @bellTent.map(_._1.adultsComing.size).sum adults and @bellTent.map(_._1.childrenComing.size).sum children</p>
                         <p>Total bedding: @bellTent.map(_._2._2).sum</p>
                         <ul>
-                        @bellTent.map { case (invite, (sharing, bedding)) =>
-                        <li>@invite.giveMeAName - sharing with @sharing and want @bedding sets of bedding</li>
+                        @bellTent.map { case (questions, (sharing, bedding)) =>
+                        <li><a href="@routes.AdminController.details(questions.invite.id.toString)">@questions.coming.firstNames</a>
+                            - sharing with @sharing and want @bedding sets of bedding</li>
                         }
                         </ul>
                     </div>
@@ -60,8 +64,9 @@
                     <div>
                         <p>Total: @offSite.map(_._1.adultsComing.size).sum adults and @offSite.map(_._1.childrenComing.size).sum children</p>
                         <ul>
-                        @offSite.map { case (invite, location) =>
-                        <li>@invite.giveMeAName staying at @location</li>
+                        @offSite.map { case (questions, location) =>
+                        <li><a href="@routes.AdminController.details(questions.invite.id.toString)">@questions.coming.firstNames</a>
+                            staying at @location</li>
                         }
                         </ul>
                     </div>
