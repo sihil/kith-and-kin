@@ -77,7 +77,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     }
     def notComingSummary(questions: List[Questions]): InviteSummary = {
       val no = questions.filter(q => q.adultsNotComing.nonEmpty || q.childrenNotComing.nonEmpty)
-      InviteSummary(no, no.map(_.adultsNotComing.size).sum, no.map(_.adultsNotComing.size).sum)
+      InviteSummary(no, no.map(_.adultsNotComing.size).sum, no.map(_.childrenNotComing.size).sum)
     }
     val invites = inviteRepository.getInviteList.toList
     val questionList = invites.map(i => QuestionMaster.questions(i, _.rsvp))
