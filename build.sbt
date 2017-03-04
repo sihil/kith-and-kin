@@ -27,6 +27,8 @@ libraryDependencies ++= Seq(
   "com.stripe" % "stripe-java" % "3.9.0",
   // enum macro
   "ca.mrvisser" %% "sealerate" % "0.0.5",
+  // detect IE
+  "org.uaparser" %% "uap-scala" % "0.1.0",
   // play framework
   filters,
   ws,

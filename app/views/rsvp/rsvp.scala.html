@@ -1,8 +1,16 @@
 @import helpers.Auth
-@()(implicit request: Security.AuthenticatedRequest[_, Auth])
+@(isOldBrowser: Boolean)(implicit request: Security.AuthenticatedRequest[_, Auth])
 
     @views.html.rsvp.rsvpPage("RSVP", reactComponent = Some("rsvp")) {
         <section class="section">
+            @if(isOldBrowser) {
+                <div class="notification is-danger">
+                    <p>You seem to be running an old browser (Internet Explorer or something along those lines).</p>
+                    <p>We've really tried to make this work on as many devices as possible, but if you are
+                    experiencing issues we recommend that you try a modern browser such as Chrome, Firefox or Edge.</p>
+                    <p>If you continue to have problems please let us know at <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a></p>
+                </div>
+            }
             <div class="container">
                 <p>We've got a bunch of questions to ask you about whether you can come, where you'll be staying and what
                 you'll be eating. If you haven't already done so, it's worth reading through the

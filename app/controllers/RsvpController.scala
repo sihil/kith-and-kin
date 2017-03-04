@@ -7,6 +7,7 @@ import com.softwaremill.quicklens._
 import db.{InviteRepository, PaymentRepository}
 import helpers._
 import models.{QuestionMaster, Rsvp}
+import org.uaparser.scala.Parser
 import play.api.Mode.Mode
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
@@ -165,7 +166,10 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
   }
 
   def rsvp = RsvpLogin { implicit request =>
-    Ok(views.html.rsvp.rsvp())
+    val ua = request.headers(USER_AGENT)
+    val client = Parser.get.parse(ua)
+    val isOldBrowser = client.userAgent.family == "IE"
+    Ok(views.html.rsvp.rsvp(isOldBrowser))
   }
 
   def update(complete: Boolean) = RsvpLogin(parse.json) { implicit request =>
