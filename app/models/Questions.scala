@@ -138,6 +138,7 @@ case class PriceBreakdown(desc: String, itemAmount: Int, subTotal: Int)
 
 trait Questions {
   def invite: Invite
+  def maybeRsvpFacet: Option[Rsvp]
   def rsvpFacet: Rsvp
   def allQuestions: Seq[QuestionReference]
   def jsonQuestions: Seq[JsonQuestion]
@@ -167,7 +168,8 @@ object QuestionMaster {
 
   def questions(inviteForQuestions: Invite, rsvpFromInvite: Invite => Option[Rsvp]): Questions = new Questions {
     override lazy val invite = inviteForQuestions
-    override lazy val rsvpFacet = rsvpFromInvite(invite).getOrElse(Rsvp())
+    override lazy val maybeRsvpFacet = rsvpFromInvite(invite)
+    override lazy val rsvpFacet = maybeRsvpFacet.getOrElse(Rsvp())
     lazy val comingStatus = for {
       rsvpComing <- rsvpFacet.coming
       everyone = rsvpFacet.everyone.getOrElse(true)

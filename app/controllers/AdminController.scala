@@ -13,7 +13,6 @@ import play.api.mvc._
 
 import scala.concurrent.Future
 import scala.language.{postfixOps, reflectiveCalls}
-import cats.syntax.apply._
 
 object HttpResults extends Results
 
