@@ -22,7 +22,7 @@ trait EmailTemplate {
 }
 
 object ReminderEmailTemplate extends EmailTemplate {
-  override def name = "Reminder"
+  override def name = "Gentle reminder"
   override def subject(invite: Invite) = "Reminder to RSVP for Kith & Kin festival"
   override def text(invite: Invite)(implicit request: RequestHeader) = html(invite).map(HtmlToPlainText.convert).get
   override def html(invite: Invite)(implicit request: RequestHeader) = Some(views.html.email.reminder(invite).body)

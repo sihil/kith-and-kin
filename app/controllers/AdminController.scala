@@ -171,7 +171,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
       val invites = inviteRepository.getInviteList.toSeq
       if (invites.forall(template.preSendCheck)) {
         val emailsToSend = AWSEmail.fromTemplate(template, invites)
-        Ok(views.html.admin.emailPreviews(emailsToSend))
+        Ok(views.html.admin.emailPreviews(template, emailsToSend))
       } else {
         InternalServerError(s"The pre-send checks for email template '${template.name}' did not pass")
       }

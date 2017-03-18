@@ -1,5 +1,6 @@
 @import helpers.AWSEmail
-@(emails: Seq[AWSEmail])(implicit request: RequestHeader)
+@import helper._
+@(template: EmailTemplate, emails: Seq[AWSEmail])(implicit request: RequestHeader)
 
 @admin.adminPage("Email Previews") {
     <script type="text/javascript">
@@ -10,7 +11,13 @@
     </script>
     <section class="section">
         <div class="container">
-            <h1>Preview</h1>
+            <h1 class="heading">Preview of @template.name</h1>
+            <div class="notification is-danger">
+                Ready to send out these emails? Click this button...
+            @form(CSRF(routes.AdminController.sendEmail(template.name)), 'class -> "inline") {
+                <button class="button is-large" name="action" value="send">Send now</button>
+            }
+            </div>
             <p>@emails.size emails</p>
             @emails.map { email =>
                 <h2>Details</h2>
