@@ -29,6 +29,8 @@ libraryDependencies ++= Seq(
   "ca.mrvisser" %% "sealerate" % "0.0.5",
   // detect IE
   "org.uaparser" %% "uap-scala" % "0.1.0",
+  // rewriting html e-mail
+  "org.jsoup" % "jsoup" % "1.10.2",
   // play framework
   filters,
   ws,

@@ -1,4 +1,6 @@
-import models.Person
+import controllers.routes
+import models.{Invite, Person}
+import play.api.mvc.Call
 
 package object helpers {
   val currency = "£"
@@ -19,6 +21,15 @@ package object helpers {
     def firstNames: String = {
       val names = persons.map(_.name.split(" ").head)
       if (names.size <= 1) names.mkString(", ") else s"${names.init.mkString(", ")} and ${names.last}"
+    }
+  }
+  implicit class RichInvite(invite: Invite) {
+    def rsvpLink: Call = {
+      invite.secret.map { secretCode =>
+        routes.RsvpController.login(invite.id.toString, secretCode)
+      } getOrElse {
+        routes.RsvpController.start()
+      }
     }
   }
 }

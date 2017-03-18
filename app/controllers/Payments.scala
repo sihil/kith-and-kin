@@ -2,13 +2,12 @@ package controllers
 
 import java.util.UUID
 
-import com.amazonaws.services.simpleemail.AmazonSimpleEmailService
 import com.softwaremill.quicklens._
 import com.stripe.exception.CardException
 import com.stripe.model.Charge
 import com.stripe.net.RequestOptions
 import db.{InviteRepository, PaymentRepository}
-import helpers.{Email, RsvpAuth}
+import helpers.{EmailService, RsvpAuth}
 import models._
 import org.joda.time.DateTime
 import play.api.Logger
@@ -20,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 class Payments(val inviteRepository: InviteRepository, paymentRepository: PaymentRepository,
-               sesClient: AmazonSimpleEmailService, stripeKeys: StripeKeys)
+               emailService: EmailService, stripeKeys: StripeKeys)
               (implicit context: ExecutionContext) extends Controller with RsvpAuth {
   def home = RsvpLogin { implicit request =>
     val invite = request.user.invite
@@ -33,7 +32,7 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
   }
 
   def fatalError[T](summary: String, message: String, invite: Invite, adminOnlyMessage: Option[String] = None)(recovery: => T) = {
-    Email.sendAdminEmail(sesClient, summary, message + adminOnlyMessage.map("\n"+_).getOrElse(""), invite)
+    emailService.sendAdminEmail(summary, message + adminOnlyMessage.map("\n"+_).getOrElse(""), invite)
     Logger.logger.warn(s"Logging fatal error. Summary: $summary Message: $message ID: ${invite.id}")
     try { recovery } catch { case NonFatal(e) => Logger.logger.error("Unexpected exception whilst logging error", e) }
     Redirect(routes.Payments.error()).flashing("summary" -> summary, "message" -> message)

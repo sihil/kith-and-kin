@@ -1,0 +1,62 @@
+@import helpers._
+@import helper._
+@(templates: Seq[EmailTemplate], emails: Seq[Email], invites: Seq[Invite])(implicit request: RequestHeader)
+
+@admin.adminPage("Email Dashboard") {
+    <section class="section">
+        <div class="container">
+            <h1 class="heading">Email</h1>
+
+            <h2 class="heading">Send email</h2>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Template</th>
+                        <th>Applies to</th>
+                        <th>Controls</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @templates.map { template =>
+                    <tr>
+                        <td>@template.name</td>
+                        <td>@invites.count(template.recipientSelector) of @invites.size</td>
+                        <td>
+                        @form(CSRF(routes.AdminController.sendEmail(template.name)), 'class -> "inline") {
+                            <a class="button is-small" href="@routes.AdminController.previewEmail(template.name)">Preview</a>
+                            <button class="button is-small is-danger" name="action" value="send">Send now</button>
+                        }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+
+            <h2 class="heading">Past Runs</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Email run</th>
+                        <th>Sent</th>
+                        <th>Recipients</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @emails.sortBy(-_.sentDate.getMillis).map { email =>
+                    <tr>
+                        <td>@email.template</td>
+                        <td>@email.sentDate</td>
+                        <td>@email.sentTo.size</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+
+            <h2 class="heading">Dark magic</h2>
+            @form(CSRF(routes.AdminController.setAllSecrets), 'class -> "inline") {
+                <button class="button is-small" name="action" value="setAllSecrets">Set all missing secrets</button>
+            }
+        </div>
+    </section>
+}

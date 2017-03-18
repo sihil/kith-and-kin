@@ -3,9 +3,10 @@ package controllers
 import java.util.UUID
 
 import com.gu.googleauth.{Actions, GoogleAuthConfig, UserIdentity}
-import db.{InviteRepository, PaymentRepository}
-import helpers.{RsvpCookie, RsvpId}
+import db.{EmailRepository, InviteRepository, PaymentRepository}
+import helpers.{AWSEmail, EmailService, RsvpCookie, RsvpId, Secret}
 import models._
+import org.joda.time.DateTime
 import play.api.Logger
 import play.api.libs.ws.WSClient
 import play.api.mvc.Security.AuthenticatedRequest
@@ -65,7 +66,7 @@ object InviteSummary {
 case class InvitePaymentStatus(invite: Invite, total: Int, paid: Int, confirmed: Int)
 
 class AdminController(val wsClient: WSClient, val baseUrl: String, inviteRepository: InviteRepository,
-                      paymentRepository: PaymentRepository)
+                      paymentRepository: PaymentRepository, emailService: EmailService, emailRepository: EmailRepository)
   extends Controller with AuthActions {
 
   def index = WhitelistAction { implicit r =>
@@ -108,7 +109,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
       InvitePaymentStatus(invite, totalForInvite, paidForInvite, confirmedForInvite)
     }
     val owed = inviteStatusList.map(_.total).sum
-    val outstandingInvitesStatusList = inviteStatusList.filter{status => status.total != status.paid || status.total != status.confirmed}
+    val outstandingInvitesStatusList = inviteStatusList.filter { status => status.total != status.paid || status.total != status.confirmed }
     Ok(views.html.admin.paymentSummary(owed, total, confirmed, paymentList, outstandingInvitesStatusList.toList))
   }
 
@@ -116,7 +117,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     val invites = inviteRepository.getInviteList.toList
     val questionsList = invites.map(i => QuestionMaster.questions(i, _.rsvp)).filter(_.coming.nonEmpty)
     def find[A](accomType: String)(include: Rsvp => A): List[(Questions, A)] = {
-      questionsList.filter(_.rsvpFacet.accommodation.contains(accomType)).map{ questions => questions -> include(questions.rsvpFacet) }
+      questionsList.filter(_.rsvpFacet.accommodation.contains(accomType)).map { questions => questions -> include(questions.rsvpFacet) }
     }
     val ownTent = find(Accommodation.OWN_TENT)(_ => ()).map(_._1)
     val camper = find(Accommodation.CAMPER)(_.hookup.get)
@@ -156,13 +157,70 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok("done")
   }
 
+  def emailDashboard = WhitelistAction { implicit request =>
+    Ok(views.html.admin.emailDashboard(
+      EmailTemplate.allTemplates,
+      emailRepository.getEmailList.toSeq,
+      inviteRepository.getInviteList.toSeq
+    ))
+  }
+
+  def previewEmail(templateName: String) = WhitelistAction { implicit request =>
+    val maybeTemplate = EmailTemplate.allTemplates.find(_.name == templateName)
+    maybeTemplate.map { template =>
+      val invites = inviteRepository.getInviteList.toSeq
+      if (invites.forall(template.preSendCheck)) {
+        val emailsToSend = AWSEmail.fromTemplate(template, invites)
+        Ok(views.html.admin.emailPreviews(emailsToSend))
+      } else {
+        InternalServerError(s"The pre-send checks for email template '${template.name}' did not pass")
+      }
+    }.getOrElse(NotFound(s"No template called $templateName"))
+  }
+
+  def sendEmail(templateName: String) = WhitelistAction { implicit request =>
+    val maybeTemplate = EmailTemplate.allTemplates.find(_.name == templateName)
+    maybeTemplate.map { template =>
+      val email = Email(
+        id = UUID.randomUUID(),
+        template = template.name,
+        sentDate = new DateTime()
+      )
+
+      val invites = inviteRepository.getInviteList.toSeq
+
+      if (invites.forall(template.preSendCheck)) {
+        emailRepository.putEmail(email) match {
+          case Left(_) =>
+            InternalServerError("Problem recording email in database")
+          case Right(_) =>
+            val emailsToSend = AWSEmail.fromTemplate(template, invites)
+            val results = emailsToSend.flatMap(email => emailService.sendEmail(email).map(email.to ->))
+            emailRepository.putEmail(email.copy(sentTo = results.map(_._1).toList))
+            Redirect(routes.AdminController.emailDashboard())
+        }
+      } else {
+        InternalServerError(s"The pre-send checks for email template '${template.name}' did not pass")
+      }
+    }.getOrElse(NotFound(s"No template called $templateName"))
+  }
+
+  def setAllSecrets = WhitelistAction { request =>
+    inviteRepository.getInviteList.foreach { invite =>
+      if (invite.secret.isEmpty) {
+        inviteRepository.putInvite(invite.copy(secret = Some(Secret.newSecret())))
+      }
+    }
+    Ok("All secrets set!")
+  }
+
   def loginAction = Action.async { implicit request =>
     startGoogleLogin()
   }
 
   def uploadCsv = WhitelistAction(parse.multipartFormData) { r =>
-    import kantan.csv.ops._
     import kantan.csv.generic._
+    import kantan.csv.ops._
 
     val currentInviteList = inviteRepository.getInviteList
     val existingEmails = currentInviteList.map(_.email).toSet
@@ -172,10 +230,10 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
       Logger.logger.info(s"processing file ${csv.ref.file}")
       val reader = csv.ref.file.asCsvReader[Csv](',', header = true)
       val list = reader.toList.flatMap(_.toList).flatMap(_.toInvite)
-      val invitesToInsert = list.filterNot{ invite =>
+      val invitesToInsert = list.filterNot { invite =>
         existingEmails.contains(invite.email) || existingName.contains(invite.adults.head.name)
       }
-      invitesToInsert.foreach{ invite =>
+      invitesToInsert.foreach { invite =>
         inviteRepository.putInvite(invite)
       }
       Ok(s"Inserted ${invitesToInsert.size} invites from CSV (${list.size - invitesToInsert.size} filtered out)")

@@ -2,7 +2,6 @@ package controllers
 
 import java.util.UUID
 
-import com.amazonaws.services.simpleemail.AmazonSimpleEmailService
 import com.softwaremill.quicklens._
 import db.{InviteRepository, PaymentRepository}
 import helpers._
@@ -15,7 +14,7 @@ import play.api.mvc.{Action, Controller}
 import scala.concurrent.{ExecutionContext, Future}
 
 class RsvpController(val inviteRepository: InviteRepository, paymentRepository: PaymentRepository,
-                     sesClient: AmazonSimpleEmailService, context: ExecutionContext, mode: Mode) extends Controller with RsvpAuth {
+                     emailService: EmailService, context: ExecutionContext, mode: Mode) extends Controller with RsvpAuth {
 
   def start = Action { request =>
     Ok(views.html.rsvp.start(request))
@@ -50,7 +49,7 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
                     |Much love,
                     |Simon & Christina
                   """.stripMargin
-                Email.sendEmail(sesClient, email, "RSVP information", message)
+                emailService.sendEmail(AWSEmail(email, "RSVP information", message))
                 Redirect(routes.RsvpController.sentMessage(email))
               case Left(_) =>
                 Redirect(routes.RsvpController.notRight()).
@@ -94,7 +93,7 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
                     |Much love,
                     |Simon & Christina
                   """.stripMargin
-                Email.sendEmail(sesClient, email, "RSVP information", message)
+                emailService.sendEmail(AWSEmail(email, "RSVP information", message))
 
                 // now redirect
                 Redirect(routes.RsvpController.sentMessage(email))
@@ -201,7 +200,7 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
             val payments = paymentRepository.getPaymentsForInvite(invite).toList
             val paid = payments.map(_.amount).sum
             val total = updatedDraftQuestions.totalPrice // since we just copied the RSVP into both places we can use the draft questions
-            Email.sendRsvpSummary(sesClient, updatedInvite, total, math.max(total-paid, 0))
+            emailService.sendRsvpSummary(updatedInvite, total, math.max(total-paid, 0))
           }(context)
         }
         Ok(fields.reduce(_ ++ _))

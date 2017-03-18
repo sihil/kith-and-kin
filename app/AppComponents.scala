@@ -3,8 +3,9 @@ import com.amazonaws.auth.{AWSCredentialsProviderChain, InstanceProfileCredentia
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder
 import controllers._
-import db.{InviteRepository, PaymentRepository}
+import db.{EmailRepository, InviteRepository, PaymentRepository}
 import filters.{AccessLoggingFilter, ForwardingFilter}
+import helpers.EmailService
 import models.StripeKeys
 import play.api.ApplicationLoader.Context
 import play.api._
@@ -62,18 +63,21 @@ class AppComponents(context: Context)
   val dynamoClient = AmazonDynamoDBClientBuilder.standard().
     withCredentials(credentialsProviderChain).withRegion("eu-west-2").build()
 
+  /* note that this is eu-west-1 as SES isn't in London */
   val sesClient = AmazonSimpleEmailServiceClientBuilder.standard().
     withCredentials(credentialsProviderChain).withRegion("eu-west-1").build()
+  val emailService = new EmailService(sesClient, stage)
 
   implicit val operationContext: ExecutionContext = actorSystem.dispatchers.lookup("operation-context")
 
   val inviteRepository = new InviteRepository(dynamoClient, stage)
   val paymentRepository = new PaymentRepository(dynamoClient, stage)
+  val emailRepository = new EmailRepository(dynamoClient, stage)
 
   val kithKinController = new KithAndKinController()
-  val rsvpController = new RsvpController(inviteRepository, paymentRepository, sesClient, operationContext, environment.mode)
-  val adminController = new AdminController(wsClient, baseUrl, inviteRepository, paymentRepository)
-  val paymentsController = new Payments(inviteRepository, paymentRepository, sesClient, stripeKeys)
+  val rsvpController = new RsvpController(inviteRepository, paymentRepository, emailService, operationContext, environment.mode)
+  val adminController = new AdminController(wsClient, baseUrl, inviteRepository, paymentRepository, emailService, emailRepository)
+  val paymentsController = new Payments(inviteRepository, paymentRepository, emailService, stripeKeys)
   val assets = new Assets(httpErrorHandler)
 
   val router = new Routes(httpErrorHandler, kithKinController, rsvpController, paymentsController, adminController, assets)

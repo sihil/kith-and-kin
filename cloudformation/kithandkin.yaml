@@ -152,6 +152,28 @@ Resources:
       - {AttributeName: id, KeyType: HASH}
       ProvisionedThroughput: {ReadCapacityUnits: 5, WriteCapacityUnits: 5}
 
+  DevEmailDynamoTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub kk-email-DEV
+      AttributeDefinitions:
+      - {AttributeName: id, AttributeType: S}
+      KeySchema:
+      - {AttributeName: id, KeyType: HASH}
+      ProvisionedThroughput: {ReadCapacityUnits: 1, WriteCapacityUnits: 1}
+
+  EmailDynamoTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub kk-email-PROD
+      AttributeDefinitions:
+      - {AttributeName: id, AttributeType: S}
+      KeySchema:
+      - {AttributeName: id, KeyType: HASH}
+      ProvisionedThroughput: {ReadCapacityUnits: 1, WriteCapacityUnits: 1}
+
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -202,11 +224,18 @@ Resources:
           add-apt-repository -y ppa:openjdk-r/ppa
           apt-get -y update
           apt-get -y upgrade
-          apt-get -y install openjdk-8-jre-headless ntp awscli
+          apt-get -y install openjdk-8-jre-headless ntp awscli python-minimal
+          # setup logging
+          aws --region eu-west-2 s3 cp s3://kithandkin/config/awslogs.conf /tmp/awslogs.conf
+          wget https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py
+          python awslogs-agent-setup.py -n -r eu-west-2 -c /tmp/awslogs.conf
+          aws --region eu-west-2 s3 cp s3://kithandkin/config/awslogs.service /etc/systemd/system/awslogs.service
+          systemctl enable awslogs.service
+          systemctl start awslogs.service
           # setup kithandkin
           adduser --system --home /kithkin --disabled-password kithkin
           aws --region eu-west-2 s3 cp s3://kithandkin/application/kith-and-kin_1.0_all.deb /kithkin
-          dpkg -i /kithkin/kithandkin_1.0_all.deb
+          dpkg -i /kithkin/kith-and-kin_1.0_all.deb
 
   AutoscalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -218,8 +247,7 @@ Resources:
       LaunchConfigurationName:
         Ref: LaunchConfig
       MinSize: 1
-      MaxSize: 1
-      DesiredCapacity: 1
+      MaxSize: 2
       HealthCheckType: ELB
       HealthCheckGracePeriod: 120
       LoadBalancerNames:

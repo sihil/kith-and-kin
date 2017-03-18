@@ -1,0 +1,37 @@
+@import helpers.AWSEmail
+@(emails: Seq[AWSEmail])(implicit request: RequestHeader)
+
+@admin.adminPage("Email Previews") {
+    <script type="text/javascript">
+      function resizeIframe(obj){
+         obj.style.height = 0;
+         obj.style.height = obj.contentWindow.document.body.scrollHeight + 'px';
+      }
+    </script>
+    <section class="section">
+        <div class="container">
+            <h1>Preview</h1>
+            <p>@emails.size emails</p>
+            @emails.map { email =>
+                <h2>Details</h2>
+                <ul>
+                    <li>To: @email.to</li>
+                    <li>Subject: @email.subject</li>
+                </ul>
+                <h2>Text</h2>
+                <div>
+                    <pre>
+                    @email.message
+                    </pre>
+                </div>
+            @email.htmlMessage.map { htmlMsg =>
+                <h2>HTML</h2>
+                <div>
+                    <iframe width="800" srcdoc="@htmlMsg" onload="resizeIframe(this)"></iframe>
+                </div>
+            }
+            }
+        </div>
+    </section>
+}
+
