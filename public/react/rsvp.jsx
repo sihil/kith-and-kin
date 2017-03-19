@@ -34,9 +34,10 @@ class Textbox extends React.Component {
     }
 
     render() {
+        const placeholder = this.props.optional ? "" : "Type an answer to continue...";
         return (
             <div>
-                <textarea className="textarea" value={this.state.value} onChange={this.handleChange} />
+                <textarea className="textarea" value={this.state.value} onChange={this.handleChange} placeholder={placeholder}/>
             </div>
         );
     }
@@ -141,7 +142,7 @@ class Question extends React.Component {
                 });
             case "text":
                 return (
-                    <Textbox text={this.props.answer} onClick={(newAnswer) => this.props.onAnswer(newAnswer)}/>
+                    <Textbox text={this.props.answer} optional={this.props.question.optional} onClick={(newAnswer) => this.props.onAnswer(newAnswer)}/>
                 );
             case "selection":
                 return (
