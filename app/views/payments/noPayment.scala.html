@@ -1,0 +1,17 @@
+@import helpers._
+@(onTheHouse: Boolean)(implicit request: Security.AuthenticatedRequest[_, Auth])
+
+@views.html.rsvp.rsvpPage("Your payments") {
+    <section class="section">
+        <div class="container">
+            <div>
+                <h1>Paying for accommodation and food</h1>
+                @if(onTheHouse) {
+                    <p>Your accommodation and food are on the house because we think you're especially lovely.</p>
+                } else {
+                    <p>You've not chosen any options that requirement payment!</p>
+                }
+            </div>
+        </div>
+    </section>
+}

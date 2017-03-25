@@ -28,7 +28,7 @@ class Payments(val inviteRepository: InviteRepository, paymentRepository: Paymen
     val paid = payments.filter{_.stripePayment.forall(_.charged)}.map(_.amount).sum
     questions.breakdown.map { breakdown =>
       Ok(views.html.payments.paymentsHome(invite.email, breakdown, questions.totalPrice, payments, paid, stripeKeys.publishable))
-    } getOrElse NotFound
+    } getOrElse Ok(views.html.payments.noPayment(invite.onTheHouse.contains(true)))
   }
 
   def fatalError[T](summary: String, message: String, invite: Invite, adminOnlyMessage: Option[String] = None)(recovery: => T) = {

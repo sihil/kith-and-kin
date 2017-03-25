@@ -95,7 +95,8 @@ case class Invite(
   lastLoggedIn: Option[DateTime],
   sent: Boolean = false,
   draftRsvp: Option[Rsvp] = None,
-  rsvp: Option[Rsvp] = None
+  rsvp: Option[Rsvp] = None,
+  onTheHouse: Option[Boolean] = None
 ) {
   def firstName(name: String) = name.split(" ").head
   def firstNames(as: List[Adult], cs: List[Child]): List[String] = (as.map(_.name) ::: cs.map(_.name)).map(firstName)

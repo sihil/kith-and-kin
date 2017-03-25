@@ -342,11 +342,12 @@ object QuestionMaster {
     override lazy val answers = allQuestions.flatMap(q => q.answer(rsvpFacet).map(q.key ->)).toMap
 
     override lazy val prices = {
+      val isFree = invite.onTheHouse.contains(true)
       def rec(questionReference: Option[QuestionReference], acc: List[(String, List[Item])] = Nil): List[(String, List[Item])] = {
         questionReference match {
           case None => acc
           case Some(ref) =>
-            val questionReferencePrice = ref.key -> ref.calculatePrice(rsvpFacet)
+            val questionReferencePrice = ref.key -> (if (isFree) Nil else ref.calculatePrice(rsvpFacet))
             val maybeNextQuestion = ref.selectedOnwardQuestion(rsvpFacet)
             rec(maybeNextQuestion, questionReferencePrice :: acc)
         }

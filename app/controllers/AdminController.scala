@@ -85,8 +85,9 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     val overall = InviteSummary(questionList)
     val coming = comingSummary(questionList)
     val notComing = notComingSummary(questionList)
+    val yetToRsvp = InviteSummary(questionList.filter(_.maybeRsvpFacet.isEmpty))
 
-    Ok(views.html.admin.summary(overall, coming, notComing))
+    Ok(views.html.admin.summary(overall, coming, notComing, yetToRsvp))
   }
 
   def list = WhitelistAction { implicit r =>

@@ -1,61 +1,95 @@
 @import helpers._
-@(overall: InviteSummary, coming: InviteSummary, notComing: InviteSummary)(implicit request: RequestHeader)
+@(overall: InviteSummary, coming: InviteSummary, notComing: InviteSummary, yetToRsvp: InviteSummary)(implicit request: RequestHeader)
 
-@admin.adminPage("Admin dashboard") {
-    <section class="section">
-        <div class="container">
-            <h1 class="heading">Summary Dashboard</h1>
-            <div class="columns">
-                <div class="column">
-                    <h2>Sent</h2>
-                    <p>Invites: @overall.questionsList.size</p>
-                    <p>Adults: @overall.adultCount</p>
-                    <p>Children: @overall.childCount</p>
-                    <h2>Outstanding</h2>
-                    <p>Invites: @{overall.questionsList.count(_.maybeRsvpFacet.isEmpty)}</p>
-                    <h2>Possible attendees (sent minus declines)</h2>
-                    <p>Adults: @{overall.adultCount - notComing.adultCount}</p>
-                    <p>Children: @{overall.childCount - notComing.childCount}</p>
-                </div>
-                <div class="column">
-                    <h2>Yes</h2>
-                    <p>Invites: @coming.questionsList.size</p>
-                    <p>Adults: @coming.adultCount</p>
-                    <p>Children: @coming.childCount</p>
-                    <ul>
+    @admin.adminPage("Admin dashboard") {
+        <section class="section">
+            <div class="container">
+                <h1 class="heading">Summary Dashboard</h1>
+                <div class="columns">
+                    <div class="column">
+                        <h2>Sent</h2>
+                        <p>Invites: @overall.questionsList.size</p>
+                        <p>Adults: @overall.adultCount</p>
+                        <p>Children: @overall.childCount</p>
+                        <h2>Outstanding</h2>
+                        <p>Invites: @{
+                            overall.questionsList.count(_.maybeRsvpFacet.isEmpty)
+                        }</p>
+                        <h2>Possible attendees (sent minus declines)</h2>
+                        <p>Adults: @{
+                            overall.adultCount - notComing.adultCount
+                        }</p>
+                        <p>Children: @{
+                            overall.childCount - notComing.childCount
+                        }</p>
+                    </div>
+                    <div class="column">
+                        <h2>Yes</h2>
+                        <p>Invites: @coming.questionsList.size</p>
+                        <p>Adults: @coming.adultCount</p>
+                        <p>Children: @coming.childCount</p>
+                        <ul>
                         @coming.questionsList.map { questions =>
-                          <li>
-                              <a href="@routes.AdminController.details(questions.invite.id.toString)">@questions.coming.firstNames</a>
-                              (@{questions.adultsComing.size}A + @{questions.childrenComing.size}C)
-                          </li>
+                            <li>
+                                <a href="@routes.AdminController.details(questions.invite.id.toString)">@questions.coming.firstNames</a>
+                                (@{
+                                questions.adultsComing.size
+                            }A + @{
+                                questions.childrenComing.size
+                            }C)
+                            </li>
                         }
-                    </ul>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <h2>No</h2>
+                        <p>Invites: @notComing.questionsList.size</p>
+                        <p>Adults: @notComing.adultCount</p>
+                        <p>Children: @notComing.childCount</p>
+                        <ul>
+                        @notComing.questionsList.map { questions =>
+                            <li>
+                                <a href="@routes.AdminController.details(questions.invite.id.toString)">@questions.notComing.firstNames</a>
+                                (@{
+                                questions.adultsNotComing.size
+                            }A + @{
+                                questions.childrenNotComing.size
+                            }C)
+                            </li>
+                        }
+                        </ul>
+                    </div>
                 </div>
-                <div class="column">
-                    <h2>No</h2>
-                    <p>Invites: @notComing.questionsList.size</p>
-                    <p>Adults: @notComing.adultCount</p>
-                    <p>Children: @notComing.childCount</p>
-                    <ul>
-                    @notComing.questionsList.map { questions =>
-                        <li>
-                            <a href="@routes.AdminController.details(questions.invite.id.toString)">@questions.notComing.firstNames</a>
-                            (@{questions.adultsNotComing.size}A + @{questions.childrenNotComing.size}C)
-                        </li>
-                    }
-                    </ul>
+                <div class="columns">
+                    <div class="column">
+                        <h2 class="heading">Last logins</h2>
+                        <ul>
+                        @overall.questionsList.map(_.invite).filter(_.lastLoggedIn.nonEmpty).sortBy(_.lastLoggedIn.map(-_.getMillis)).take(10).map { invite =>
+                            <li>
+                                <a href="@routes.AdminController.details(invite.id.toString)">@invite.giveMeAName</a>
+                            </li>
+                        }
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <h2 class="heading">Yet to RSVP</h2>
+                        <p>Invites: @yetToRsvp.questionsList.size</p>
+                        <p>Adults: @yetToRsvp.adultCount</p>
+                        <p>Children: @yetToRsvp.childCount</p>
+                        <ul>
+                        @yetToRsvp.questionsList.map { questions =>
+                            <li>
+                                <a href="@routes.AdminController.details(questions.invite.id.toString)">@questions.invite.giveMeFirstNames</a>
+                                (@{
+                                questions.invite.adults.size
+                            }A + @{
+                                questions.invite.children.size
+                            }C)
+                            </li>
+                        }
+                        </ul>
+                    </div>
                 </div>
             </div>
-            <h2 class="heading">Last logins</h2>
-            <div>
-                <ul>
-                    @overall.questionsList.map(_.invite).filter(_.lastLoggedIn.nonEmpty).sortBy(_.lastLoggedIn.map(-_.getMillis)).take(10).map { invite =>
-                      <li>
-                          <a href="@routes.AdminController.details(invite.id.toString)">@invite.giveMeAName</a>
-                      </li>
-                    }
-                </ul>
-            </div>
-        </div>
-    </section>
-}
+        </section>
+    }
