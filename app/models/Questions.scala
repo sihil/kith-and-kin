@@ -173,9 +173,11 @@ object QuestionMaster {
     lazy val comingStatus = for {
       rsvpComing <- rsvpFacet.coming
       everyone = rsvpFacet.everyone.getOrElse(true)
+      // NOTE: cantMakeIt is badly named - due to a bug it contains the list of those that CAN make it
     } yield (rsvpComing, everyone, rsvpFacet.cantMakeIt)
-    lazy val isComing = (p: Person) => comingStatus.map { case (rsvpComing, everyone, cantMakeIt) =>
-      rsvpComing && (everyone || !cantMakeIt.contains(p.name))
+
+    lazy val isComing = (p: Person) => comingStatus.map { case (rsvpComing, everyone, canMakeIt) =>
+      rsvpComing && (everyone || canMakeIt.contains(p.name))
     }
     lazy val pluralInvited = invite.number > 1
 
@@ -210,7 +212,8 @@ object QuestionMaster {
 
     lazy val names = invite.adults.map(_.name) ::: invite.children.map(_.name)
     private val nameAnswers = names.zipWithIndex.map { case (name, index) => Answer(index.toString, name)(internalValue = name) }
-    lazy val whoCannaeCome = Selection[String]("Oh no! Tell us who :(", "whoCannaeCome",
+    /* The logic below is basically wrong - it inverts the list so persists a list of who CAN come instead... */
+    lazy val whoCannaeCome = Selection[String]("Oh no! Tell us who can't make it :(", "whoCannaeCome",
       nameAnswers,
       updateRsvp = (rsvp, maybeAnswer) => {
         val thoseWhoCannaeCome = maybeAnswer.map { answer =>

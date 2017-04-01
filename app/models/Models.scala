@@ -52,6 +52,7 @@ object GetInvolvedChoice {
 case class Rsvp(
   coming: Option[Boolean] = None,
   everyone: Option[Boolean] = None,
+  /* This is badly named, due to a bug this is actually the list of those who CAN come */
   cantMakeIt: List[String] = Nil,
   haveDietaryRequirements: Option[Boolean] = None,
   dietaryDetails: Option[String] = None,

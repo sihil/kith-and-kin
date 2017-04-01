@@ -72,11 +72,11 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
   def index = WhitelistAction { implicit r =>
     def comingSummary(questions: List[Questions]): InviteSummary = {
       // find all invites that are marked as coming
-      val yes = questions.filter(_.rsvpFacet.coming.getOrElse(false))
+      val yes = questions.filter(_.coming.nonEmpty)
       InviteSummary(yes, yes.map(_.numberAdultsComing).sum, yes.map(_.numberChildrenComing).sum)
     }
     def notComingSummary(questions: List[Questions]): InviteSummary = {
-      val no = questions.filter(q => q.adultsNotComing.nonEmpty || q.childrenNotComing.nonEmpty)
+      val no = questions.filter(_.notComing.nonEmpty)
       InviteSummary(no, no.map(_.adultsNotComing.size).sum, no.map(_.childrenNotComing.size).sum)
     }
     val invites = inviteRepository.getInviteList.toList
