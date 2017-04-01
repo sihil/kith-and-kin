@@ -123,7 +123,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     val ownTent = find(Accommodation.OWN_TENT)(_ => ()).map(_._1)
     val camper = find(Accommodation.CAMPER)(_.hookup.get)
     val caravan = find(Accommodation.CARAVAN)(_.hookup.get)
-    val bellTent = find(Accommodation.BELL_TENT)(rsvp => (rsvp.bellTentSharing.get, rsvp.bellTentBedding.get))
+    val bellTent = find(Accommodation.BELL_TENT) { rsvp => (rsvp.bellTentSharing, rsvp.bellTentBedding) }
     val offSite = find(Accommodation.OFF_SITE)(_.offSiteLocation.get)
     Ok(views.html.admin.accommodation(ownTent, camper, caravan, bellTent, offSite))
   }

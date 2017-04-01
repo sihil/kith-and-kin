@@ -1,7 +1,7 @@
 @import scala.language.postfixOps
 @import helpers._
 @(ownTent: List[Questions], camper: List[(Questions, Boolean)], caravan: List[(Questions, Boolean)],
-        bellTent: List[(Questions, (Int, Int))], offSite: List[(Questions, String)])(implicit request: RequestHeader)
+        bellTent: List[(Questions, (Option[Int], Option[Int]))], offSite: List[(Questions, String)])(implicit request: RequestHeader)
 
 @admin.adminPage("Accommodation report") {
     <section class="section">
@@ -50,11 +50,11 @@
                     <h2 class="heading">Bell Tents</h2>
                     <div>
                         <p>Total: @bellTent.map(_._1.adultsComing.size).sum adults and @bellTent.map(_._1.childrenComing.size).sum children</p>
-                        <p>Total bedding: @bellTent.map(_._2._2).sum</p>
+                        <p>Total bedding: @bellTent.flatMap(_._2._2).sum</p>
                         <ul>
                         @bellTent.map { case (questions, (sharing, bedding)) =>
                         <li><a href="@routes.AdminController.details(questions.invite.id.toString)">@questions.coming.firstNames</a>
-                            - sharing with @sharing and want @bedding sets of bedding</li>
+                            - sharing with @sharing.getOrElse("???") and want @bedding.getOrElse("???") sets of bedding</li>
                         }
                         </ul>
                     </div>
