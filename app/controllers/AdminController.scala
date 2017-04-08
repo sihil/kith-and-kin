@@ -182,7 +182,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
   def sendEmail(templateName: String) = WhitelistAction { implicit request =>
     val maybeTemplate = EmailTemplate.allTemplates.find(_.name == templateName)
     maybeTemplate.map { template =>
-      val email = Email(
+      val emailRecord = Email(
         id = UUID.randomUUID(),
         template = template.name,
         sentDate = new DateTime()
@@ -191,13 +191,17 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
       val invites = inviteRepository.getInviteList.toSeq
 
       if (invites.forall(template.preSendCheck)) {
-        emailRepository.putEmail(email) match {
+        emailRepository.putEmail(emailRecord) match {
           case Left(_) =>
             InternalServerError("Problem recording email in database")
           case Right(_) =>
             val emailsToSend = AWSEmail.fromTemplate(template, invites)
-            val results = emailsToSend.flatMap(email => emailService.sendEmail(email).map(email.to ->))
-            emailRepository.putEmail(email.copy(sentTo = results.map(_._1).toList))
+            val results = emailsToSend.flatMap { case (invite, email) =>
+              val result = emailService.sendEmail(email).map(email.to ->)
+              template.postSendUpdate.flatMap(_(invite)).foreach(inviteRepository.putInvite)
+              result
+            }
+            emailRepository.putEmail(emailRecord.copy(sentTo = results.map(_._1).toList))
             Redirect(routes.AdminController.emailDashboard())
         }
       } else {

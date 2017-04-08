@@ -12,11 +12,11 @@ import scala.language.postfixOps
 case class AWSEmail(to: String, subject: String, message: String, htmlMessage: Option[String] = None)
 
 object AWSEmail {
-  def fromTemplate(template: EmailTemplate, invites: Seq[Invite])(implicit requestHeader: RequestHeader): Seq[AWSEmail] = {
+  def fromTemplate(template: EmailTemplate, invites: Seq[Invite])(implicit requestHeader: RequestHeader): Seq[(Invite, AWSEmail)] = {
     val recipients = invites.filter(template.recipientSelector)
     recipients.flatMap{ invite =>
       invite.email.map { hasEmail =>
-        AWSEmail(hasEmail, template.subject(invite), template.text(invite), template.html(invite))
+        invite -> AWSEmail(hasEmail, template.subject(invite), template.text(invite), template.html(invite))
       }
     }
   }

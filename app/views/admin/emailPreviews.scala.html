@@ -1,6 +1,6 @@
 @import helpers.AWSEmail
 @import helper._
-@(template: EmailTemplate, emails: Seq[AWSEmail])(implicit request: RequestHeader)
+@(template: EmailTemplate, emails: Seq[(Invite, AWSEmail)])(implicit request: RequestHeader)
 
 @admin.adminPage("Email Previews") {
     <script type="text/javascript">
@@ -19,7 +19,7 @@
             }
             </div>
             <p>@emails.size emails</p>
-            @emails.map { email =>
+            @for((invite, email) <- emails) {
                 <h2>Details</h2>
                 <ul>
                     <li>To: @email.to</li>
