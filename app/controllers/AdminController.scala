@@ -18,7 +18,11 @@ import scala.language.{postfixOps, reflectiveCalls}
 object HttpResults extends Results
 
 object Whitelist {
-  val users = Set("simon@hildrew.net", "c.l.kelling@gmail.com", "c.l.kelling@googlemail.com")
+  val users = Set(
+    "simon@hildrew.net",
+    "c.l.kelling@gmail.com", "c.l.kelling@googlemail.com",
+    "fionakelling@googlemail.com", "fionakelling@gmail.com"
+  )
 }
 
 trait AuthActions extends Actions {
