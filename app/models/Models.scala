@@ -67,7 +67,10 @@ case class Rsvp(
   offSiteHavingBreakfast: Option[Boolean] = None,
   getInvolvedPreference: Option[String] = None,
   getInvolved: Option[String] = None
-)
+) {
+  lazy val onsite: Boolean = accommodation.nonEmpty && !accommodation.contains("offsite")
+  lazy val breakfast: Boolean = onsite || offSiteHavingBreakfast.contains(true)
+}
 
 case class StripePayment(stripeToken: String, charged: Boolean, stripeId: Option[String] = None, error: Option[String] = None)
 case class BankTransfer(reference: String, received: Boolean)

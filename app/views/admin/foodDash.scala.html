@@ -1,0 +1,47 @@
+@import scala.language.postfixOps
+@(meals: Seq[(String, (Int, Int))], diets: Seq[(String, String, String, String)])(implicit request: RequestHeader)
+
+@admin.adminPage("Food report") {
+    <section class="section">
+        <div class="container">
+            <h1 class="heading">Expected meal numbers</h1>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Meal</th>
+                        <th>Adults</th>
+                        <th>Children</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @meals.map { case (meal, (adults, children)) =>
+                <tr>
+                    <td>@meal</td>
+                    <td>@adults</td>
+                    <td>@children</td>
+                </tr>
+                }
+                </tbody>
+            </table>
+            <h1 class="heading">Dietary requirements</h1>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Who</th>
+                        <th>Description</th>
+                        <th>Context</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @diets.map { case (id, who, desc, context) =>
+                        <tr>
+                            <td><a href="@routes.AdminController.details(id)">@who</a></td>
+                            <td>@desc</td>
+                            <td>@context</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}

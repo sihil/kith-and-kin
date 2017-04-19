@@ -146,6 +146,37 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok(views.html.admin.getInvolved(sortedChoices))
   }
 
+  def foodDash = WhitelistAction { implicit r =>
+    val invites = inviteRepository.getInviteList.toList
+    val questionsList = invites.map(i => QuestionMaster.questions(i, _.rsvp)).filter(_.coming.nonEmpty)
+    def count(p: Rsvp => Boolean): (Int, Int) = {
+      val toCount = questionsList.filter(q => p(q.rsvpFacet))
+      val adults = toCount.map(_.numberAdultsComing).sum
+      val children = toCount.map(_.numberChildrenComing).sum
+      adults -> children
+    }
+    val arrival = Seq("thursEve", "friMorn", "friLunch", "friAft", "friEve", "friLate")
+    val meals = Seq(
+      "Thursday night" -> count(_.arrival.exists(arrival.take(1).contains)),
+      "Friday breakfast" -> count { rsvp =>
+        rsvp.breakfast && rsvp.arrival.exists(arrival.take(1).contains)
+      },
+      "Friday lunch" -> count(_.arrival.exists(arrival.take(3).contains)),
+      "Friday dinner" -> count(_.arrival.exists(arrival.take(5).contains)),
+      "Saturday breakfast" -> count(_.breakfast),
+      "Saturday wedding feast" -> count(_ => true),
+      "Saturday evening" -> count(_ => true),
+      "Sunday breakfast" -> count(_.breakfast),
+      "Sunday lunch" -> count(_.departure.exists(Set("sunLunch", "sunAft").contains))
+    )
+    val diets = questionsList.sortBy(_.invite.giveMeFirstNames).flatMap{ questions =>
+      questions.rsvpFacet.dietaryDetails.map { diet =>
+        (questions.invite.id.toString, questions.invite.giveMeFirstNames, diet, "")
+      }
+    }
+    Ok(views.html.admin.foodDash(meals, diets))
+  }
+
   def details(inviteId: String) = WhitelistAction { implicit r =>
     val maybeInvite = inviteRepository.getInvite(UUID.fromString(inviteId))
     maybeInvite.map { invite =>
