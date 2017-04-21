@@ -72,6 +72,22 @@
                         }
                         </tbody>
                     </table>
+
+                    @defining(payments.filter(_.bankTransfer.nonEmpty).filterNot(_.bankTransfer.get.received)) { unconfirmedBankTransfers =>
+                        @if(unconfirmedBankTransfers.nonEmpty) {
+                            <p>You have said that you will make a bank transfer that we have yet to receive:</p>
+
+                            <ul>
+                            @unconfirmedBankTransfers.map { payment =>
+                                <li>A payment of @payment.amount.sterling(true) with a reference of "@{payment.bankTransfer.get.reference}"</li>
+                            }
+                            </ul>
+
+                            <p>&nbsp;</p>
+                            <p>A reminder of our bank details are:</p>
+                            <pre class="is-success">Simon Hildrew<br/>The Co-operative Bank<br/>s/c: 08-91-03<br/>a/c: 14152119</pre>
+                        }
+                    }
                 }
 
                 @if(paid > total) {
