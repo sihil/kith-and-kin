@@ -1,5 +1,6 @@
 @import scala.language.postfixOps
-@(meals: Seq[(String, (Int, Int))], diets: Seq[(String, String, String, String)])(implicit request: RequestHeader)
+@import helpers._
+@(meals: Seq[(String, (List[Adult], List[Child]))], diets: Seq[(String, String, String, String)])(implicit request: RequestHeader)
 
 @admin.adminPage("Food report") {
     <section class="section">
@@ -17,8 +18,8 @@
                 @meals.map { case (meal, (adults, children)) =>
                 <tr>
                     <td>@meal</td>
-                    <td>@adults</td>
-                    <td>@children</td>
+                    <td>@adults.length</td>
+                    <td>@children.length <small>(@children.ageList)</small></td>
                 </tr>
                 }
                 </tbody>

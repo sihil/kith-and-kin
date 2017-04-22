@@ -2,8 +2,7 @@ package models
 
 import java.util.UUID
 
-import org.joda.time.{DateTime, LocalDate}
-
+import org.joda.time.{DateTime, LocalDate, Period}
 import ca.mrvisser.sealerate
 
 object Accommodation {
@@ -83,7 +82,9 @@ sealed trait Person {
   def name:String
 }
 case class Adult(name: String) extends Person
-case class Child(name: String, dob: LocalDate) extends Person
+case class Child(name: String, dob: LocalDate) extends Person {
+  val age: Int = Period.fieldDifference(dob, LocalDate.now()).getYears
+}
 case class Invite(
   id: UUID,
   update: Int = 0,

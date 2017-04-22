@@ -288,6 +288,7 @@ object QuestionMaster {
     private val eveningCatering = PerAdult("Friday evening catering", 2000)
     lazy val arrival: Question[String] = MultipleChoice("When are you planning to arrive?", "arrival", List(
       Answer("thursEve", "Thursday evening", List(lunchCatering, eveningCatering))("thursEve").next(departure),
+      Answer("thursLate", "Thursday late (after 8)", List(lunchCatering, eveningCatering))("thursLate").next(departure),
       Answer("friMorn", "Friday morning", List(lunchCatering, eveningCatering))("friMorn").next(departure),
       Answer("friLunch", "Friday lunchtime", List(lunchCatering, eveningCatering))("friLunch").next(departure),
       Answer("friAft", "Friday afternoon", List(eveningCatering))("friAft").next(departure),

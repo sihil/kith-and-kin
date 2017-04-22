@@ -1,5 +1,5 @@
 import controllers.routes
-import models.{Invite, Person}
+import models.{Child, Invite, Person}
 import play.api.mvc.Call
 
 package object helpers {
@@ -30,6 +30,11 @@ package object helpers {
       } getOrElse {
         routes.RsvpController.start()
       }
+    }
+  }
+  implicit class RichChildren(children: Seq[Child]) {
+    def ageList: String = {
+      children.groupBy(_.age).toList.sortBy(-_._1).map{ case (age, children) => s"${children.length}x${age}yr"}.mkString("|")
     }
   }
 }

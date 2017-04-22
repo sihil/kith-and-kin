@@ -149,10 +149,10 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
   def foodDash = WhitelistAction { implicit r =>
     val invites = inviteRepository.getInviteList.toList
     val questionsList = invites.map(i => QuestionMaster.questions(i, _.rsvp)).filter(_.coming.nonEmpty)
-    def count(p: Rsvp => Boolean): (Int, Int) = {
+    def count(p: Rsvp => Boolean): (List[Adult], List[Child]) = {
       val toCount = questionsList.filter(q => p(q.rsvpFacet))
-      val adults = toCount.map(_.numberAdultsComing).sum
-      val children = toCount.map(_.numberChildrenComing).sum
+      val adults = toCount.flatMap(_.adultsComing)
+      val children = toCount.flatMap(_.childrenComing)
       adults -> children
     }
     val arrival = Seq("thursEve", "friMorn", "friLunch", "friAft", "friEve", "friLate")
