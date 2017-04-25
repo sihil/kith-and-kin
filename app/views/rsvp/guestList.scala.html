@@ -1,0 +1,37 @@
+@import helpers.Auth
+@(adultsGroup: List[String], children: Map[Int, Int])(implicit request: Security.AuthenticatedRequest[_, Auth])
+
+@views.html.rsvp.rsvpPage("The Guestlist") {
+    <section class="section">
+        <div class="container">
+            <h1 class="heading">The Guestlist</h1>
+            <h2>Grown ups</h2>
+            <p>Many of you will know other people who are coming to Kith & Kin. Here's the list so you can get in
+                touch, share transport or co-ordinate anything else.</p>
+
+            <ul class="asterisk li-spacing">
+            @adultsGroup.map { names =>
+                <li><strong>@names</strong></li>
+            }
+            </ul>
+            <h2>Kids</h2>
+            <p>We've got @children.values.sum kids coming to Kith & Kin. The range of ages are below:</p>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Age</th>
+                        <th>How many</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @children.toList.sortBy(_._1).map{ case (age, count) =>
+                        <tr>
+                            <td>@age</td>
+                            <td>@count</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}

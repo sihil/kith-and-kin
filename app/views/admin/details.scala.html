@@ -1,5 +1,6 @@
 @import org.joda.time.format.DateTimeFormat
 @import helper._
+@import helpers._
 @(questions: Questions, draftQuestions: Questions)(implicit request: RequestHeader)
 
 @admin.adminPage(s"Details for ${questions.invite.giveMeAName}") {
@@ -10,7 +11,17 @@
                 <input type="hidden" name="id" value="@questions.invite.id.toString">
                 <button class="button is-small is-danger" name="action" value="impersonate">Impersonate</button>
             }</p>
+            <div class="notification">Magic login links for this invite (don't use these yourself, use the impersonate
+                button above):
+                <ul>
+                    <li>Main page: <small>@questions.invite.rsvpLink.absoluteURL()</small></li>
+                    @rsvpPages.map { case (name, call) =>
+                        @questions.invite.rsvpLink(call).map{ link => <li>@name: <small>@link.absoluteURL()</small></li> }
+                    }
+                </ul>
+            </div>
             <p>Last logged in: @questions.invite.lastLoggedIn.map(DateTimeFormat.mediumDateTime().print).getOrElse("never")</p>
+            <p>Invite e-mail: @questions.invite.email.getOrElse("No e-mail for this invite")</p>
             <p>Adults: @questions.invite.adults.map(_.name).mkString(", ")</p>
             @if(questions.invite.children.nonEmpty) {
                 <p>Children: @questions.invite.children.map(_.name).mkString(", ")</p>

@@ -6,11 +6,11 @@
         <div class="container">
             <div class="menu">
                 <ul>
-                    <li@if(request.path.contains(routes.RsvpController.details.url)){ class="is-active"}>
+                    <li @if(request.path.contains(routes.RsvpController.details.url)){ class="is-active"}>
                         <h2 class="shrink-mobile"><a href="@routes.RsvpController.details">Your invite</a></h2>
                     </li>
                     <h2>&gt;</h2>
-                    <li@if(request.path.contains(routes.RsvpController.rsvp.url)){ class="is-active"}>
+                    <li @if(request.path.contains(routes.RsvpController.rsvp.url)){ class="is-active"}>
                         <h2 class="shrink-mobile"><a href="@routes.RsvpController.rsvp">Your RSVP</a></h2>
                     </li>
                     @if(request.user.invite.rsvp.nonEmpty) {
@@ -21,6 +21,10 @@
                         <h2 class="shrink-mobile"><a href="@routes.Payments.home">Your payments</a></h2>
                         </li>
                     }
+                    <h2>&gt;</h2>
+                    <li @if(request.path.contains(routes.RsvpController.guestList.url)){ class="is-active"}>
+                    <h2 class="shrink-mobile"><a href="@routes.RsvpController.guestList">The Guestlist</a></h2>
+                    </li>
                 </ul>
             </div>
         </div>

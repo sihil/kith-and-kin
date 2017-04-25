@@ -11,7 +11,8 @@ GET         /rsvp                          controllers.RsvpController.start
 POST        /rsvp/lookup                   controllers.RsvpController.lookup
 GET         /rsvp/sent/:email              controllers.RsvpController.sentMessage(email: String)
 GET         /rsvp/notRight                 controllers.RsvpController.notRight
-GET         /rsvp/login/:id/:secret        controllers.RsvpController.login(id: String, secret: String)
+GET         /rsvp/login/:id/:secret        controllers.RsvpController.loginDefault(id: String, secret: String)
+GET         /rsvp/login/:id/:secret/:dest  controllers.RsvpController.loginDest(id: String, secret: String, dest: String)
 GET         /rsvp/logout                   controllers.RsvpController.logout
 
 GET         /rsvp/details                  controllers.RsvpController.details
@@ -20,6 +21,7 @@ POST        /rsvp/update                   controllers.RsvpController.update(com
 GET         /rsvp/complete                 controllers.RsvpController.complete
 GET         /rsvp/questions                controllers.RsvpController.questions
 POST        /rsvp/reset                    controllers.RsvpController.reset
+GET         /rsvp/guestList                controllers.RsvpController.guestList
 
 # payments
 GET         /payments/home                 controllers.Payments.home

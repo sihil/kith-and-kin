@@ -22,19 +22,37 @@ package object helpers {
       val names = persons.map(_.name.split(" ").head)
       if (names.size <= 1) names.mkString(", ") else s"${names.init.mkString(", ")} and ${names.last}"
     }
+    def fullNames: String = {
+      val names = persons.map(_.name)
+      if (names.size <= 1) names.mkString(", ") else s"${names.init.mkString(", ")} and ${names.last}"
+    }
   }
+  val rsvpPages = Map(
+    "RSVP" -> routes.RsvpController.rsvp(),
+    "Payments" -> routes.Payments.home(),
+    "Guestlist" -> routes.RsvpController.guestList()
+  )
   implicit class RichInvite(invite: Invite) {
     def rsvpLink: Call = {
       invite.secret.map { secretCode =>
-        routes.RsvpController.login(invite.id.toString, secretCode)
+        routes.RsvpController.loginDefault(invite.id.toString, secretCode)
       } getOrElse {
         routes.RsvpController.start()
       }
     }
+    def rsvpLink(dest: Call): Option[Call] = {
+      invite.secret.flatMap { secretCode =>
+        if (dest.method == "GET") {
+          Some(routes.RsvpController.loginDest(invite.id.toString, secretCode, dest.url))
+        } else None
+      }
+    }
   }
-  implicit class RichChildren(children: Seq[Child]) {
+  implicit class RichChildren(children: Iterable[Child]) {
+    def agesBreakdown: Map[Int, Int] = children.toSeq.groupBy(_.age).mapValues(_.length)
+
     def ageList: String = {
-      children.groupBy(_.age).toList.sortBy(-_._1).map{ case (age, children) => s"${children.length}x${age}yr"}.mkString("|")
+      agesBreakdown.toList.sortBy(-_._1).map{ case (age, number) => s"${number}x${age}yr"}.mkString(",")
     }
   }
 }

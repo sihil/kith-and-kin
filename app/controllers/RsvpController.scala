@@ -8,8 +8,8 @@ import helpers._
 import models.{QuestionMaster, Rsvp}
 import org.uaparser.scala.Parser
 import play.api.Mode.Mode
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, Controller}
+import play.api.libs.json.{Json, JsValue}
+import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -44,7 +44,7 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
                     |
                     |You can use this link as many times as you need it, but don't give it to others as anyone who has the link can change your RSVP.
                     |
-                    |${routes.RsvpController.login(invite.id.toString, secret).absoluteURL(request.secure, request.host)}
+                    |${routes.RsvpController.loginDefault(invite.id.toString, secret).absoluteURL(request.secure, request.host)}
                     |
                     |Much love,
                     |Simon & Christina
@@ -88,7 +88,7 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
                     |
                     |You can use this link as many times as you need it, but don't give it to others as anyone who has the link can change your RSVP.
                     |
-                    |${routes.RsvpController.login(invite.id.toString, secret).absoluteURL(request.secure, request.host)}
+                    |${routes.RsvpController.loginDefault(invite.id.toString, secret).absoluteURL(request.secure, request.host)}
                     |
                     |Much love,
                     |Simon & Christina
@@ -136,16 +136,24 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
     Ok(views.html.rsvp.notRight(title, message))
   }
 
-  def login(idString: String, secret: String) = Action { request =>
+  def loginDefault(idString: String, secret: String) = Action { request =>
+    login(idString, secret, Redirect(routes.RsvpController.details()), request)
+  }
+
+  def loginDest(idString: String, secret: String, dest: String) = Action { request =>
+    login(idString, secret, Redirect(dest), request)
+  }
+
+  private def login(idString: String, secret: String, loggedInResult: Result, request: RequestHeader): Result = {
     val id = UUID.fromString(idString)
     inviteRepository.getInvite(id) match {
       // the ID and secret passed in match one from the DB
       case Some(invite) if invite.secret.contains(secret) =>
         val loginCookie = RsvpCookie.make(RsvpId(id, secret), request.secure)
-        Redirect(routes.RsvpController.details()).withCookies(loginCookie)
+        loggedInResult.withCookies(loginCookie)
       // the ID and secret passed in don't match, but you have a valid cookie
       case Some(invite) if RsvpCookie.parse(request.cookies).exists(RsvpCookie.valid(invite, _)) =>
-        Redirect(routes.RsvpController.details())
+        loggedInResult
       // no match and no cookie
       case _ =>
         Redirect(routes.RsvpController.notRight()).
@@ -169,6 +177,14 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
     val client = Parser.get.parse(ua)
     val isOldBrowser = client.userAgent.family == "IE"
     Ok(views.html.rsvp.rsvp(isOldBrowser))
+  }
+
+  def guestList = RsvpLogin { implicit request =>
+    val allInvites = inviteRepository.getInviteList
+    val allQuestions = allInvites.map(i => QuestionMaster.questions(i, _.rsvp))
+    val adultNames = allQuestions.map(_.adultsComing).filter(_.nonEmpty).map(_.fullNames).toList.sorted
+    val childrenSummary = allQuestions.flatMap(_.childrenComing).agesBreakdown
+    Ok(views.html.rsvp.guestList(adultNames, childrenSummary))
   }
 
   def update(complete: Boolean) = RsvpLogin(parse.json) { implicit request =>
