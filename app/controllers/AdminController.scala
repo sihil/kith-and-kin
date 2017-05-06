@@ -155,14 +155,14 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
       val children = toCount.flatMap(_.childrenComing)
       adults -> children
     }
-    val arrival = Seq("thursEve", "friMorn", "friLunch", "friAft", "friEve", "friLate")
+    val arrival = Seq("thursEve", "thursLate", "friMorn", "friLunch", "friAft", "friEve", "friLate")
     val meals = Seq(
       "Thursday night" -> count(_.arrival.exists(arrival.take(1).contains)),
       "Friday breakfast" -> count { rsvp =>
-        rsvp.breakfast && rsvp.arrival.exists(arrival.take(1).contains)
+        rsvp.breakfast && rsvp.arrival.exists(arrival.take(2).contains)
       },
-      "Friday lunch" -> count(_.arrival.exists(arrival.take(3).contains)),
-      "Friday dinner" -> count(_.arrival.exists(arrival.take(5).contains)),
+      "Friday lunch" -> count(_.arrival.exists(arrival.take(4).contains)),
+      "Friday dinner" -> count(_.arrival.exists(arrival.take(6).contains)),
       "Saturday breakfast" -> count(_.breakfast),
       "Saturday wedding feast" -> count(_ => true),
       "Saturday evening" -> count(_ => true),
@@ -175,6 +175,35 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
       }
     }
     Ok(views.html.admin.foodDash(meals, diets))
+  }
+
+  def arrivalAndDepartures(sortByDep: Boolean) = WhitelistAction { implicit r =>
+    val arrivalSlots = List("thursEve", "thursLate", "friMorn", "friLunch", "friAft", "friEve", "friLate")
+    val departureSlots = List("sunMorn", "sunLunch", "sunAft")
+
+    implicit class RichList[A](list: List[A]) {
+      def takeWhileInc(p: A => Boolean) = {
+        val (start, end) = list.span(p)
+        start :+ end.head
+      }
+    }
+
+    val invites = inviteRepository.getInviteList.toList
+    val questionsList = invites.map(i => QuestionMaster.questions(i, _.rsvp)).filter(_.coming.nonEmpty)
+
+    val arrDeps = questionsList.flatMap { questions =>
+      for {
+        arr <- questions.rsvpFacet.arrival
+        dep <- questions.rsvpFacet.departure
+      } yield {
+        (questions.invite, arrivalSlots.dropWhile(arr!=), departureSlots.takeWhileInc(dep!=))
+      }
+    }.sortBy{ case (_, arr, dep) =>
+      val arrKey = arrivalSlots.indexOf(arr.head)
+      val depKey = departureSlots.indexOf(dep.last)
+      if (sortByDep) (-depKey, arrKey) else (arrKey, -depKey)
+    }
+    Ok(views.html.admin.arrivalAndDeparture(arrDeps, sortByDep))
   }
 
   def details(inviteId: String) = WhitelistAction { implicit r =>

@@ -1,0 +1,53 @@
+@import scala.language.postfixOps
+@import helpers._
+@(arrDep: List[(Invite, List[String], List[String])], sortByDep: Boolean)(implicit request: RequestHeader)
+
+@admin.adminPage("Arrivals & departures") {
+    <section class="section">
+        <div class="container">
+            <h1 class="heading">Arrivals & departures</h1>
+            <p>Sorted by @if(sortByDep){departure}else{arrival}. <a href="@routes.AdminController.arrivalAndDepartures(!sortByDep)">Sort by @if(!sortByDep){departure}else{arrival}</a></p>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th rowspan="2">Name</th>
+                        <th colspan="2">Thurs</th>
+                        <th colspan="5">Friday</th>
+                        <th rowspan="2">Saturday</th>
+                        <th colspan="3">Sunday</th>
+                    </tr>
+                    <tr>
+                        <th>Eve</th>
+                        <th>Late</th>
+                        <th>Morn</th>
+                        <th>Lunch</th>
+                        <th>Aft</th>
+                        <th>Eve</th>
+                        <th>Late</th>
+                        <th>Morn</th>
+                        <th>Lunch</th>
+                        <th>Aft</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @arrDep.map { case (invite, arr, dep) =>
+                <tr>
+                    <td><a href="@routes.AdminController.details(invite.id.toString)">@invite.giveMeFirstNames</a></td>
+                    @if(arr.contains("thursEve")) { <td class="present"/> } else { <td/> }
+                    @if(arr.contains("thursLate")) { <td class="present"/> } else { <td/> }
+                    @if(arr.contains("friMorn")) { <td class="present"/> } else { <td/> }
+                    @if(arr.contains("friLunch")) { <td class="present"/> } else { <td/> }
+                    @if(arr.contains("friAft")) { <td class="present"/> } else { <td/> }
+                    @if(arr.contains("friEve")) { <td class="present"/> } else { <td/> }
+                    @if(arr.contains("friLate")) { <td class="present"/> } else { <td/> }
+                    <td class="present"/>
+                    @if(dep.contains("sunMorn")) { <td class="present"/> } else { <td/> }
+                    @if(dep.contains("sunLunch")) { <td class="present"/> } else { <td/> }
+                    @if(dep.contains("sunAft")) { <td class="present"/> } else { <td/> }
+                </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
