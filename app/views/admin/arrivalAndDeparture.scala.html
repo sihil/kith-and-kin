@@ -7,7 +7,7 @@
         <div class="container">
             <h1 class="heading">Arrivals & departures</h1>
             <p>Sorted by @if(sortByDep){departure}else{arrival}. <a href="@routes.AdminController.arrivalAndDepartures(!sortByDep)">Sort by @if(!sortByDep){departure}else{arrival}</a></p>
-            <table class="table">
+            <table class="table gantt">
                 <thead>
                     <tr>
                         <th rowspan="2">Name</th>
@@ -33,17 +33,17 @@
                 @arrDep.map { case (invite, arr, dep) =>
                 <tr>
                     <td><a href="@routes.AdminController.details(invite.id.toString)">@invite.giveMeFirstNames</a></td>
-                    @if(arr.contains("thursEve")) { <td class="present"/> } else { <td/> }
-                    @if(arr.contains("thursLate")) { <td class="present"/> } else { <td/> }
-                    @if(arr.contains("friMorn")) { <td class="present"/> } else { <td/> }
-                    @if(arr.contains("friLunch")) { <td class="present"/> } else { <td/> }
-                    @if(arr.contains("friAft")) { <td class="present"/> } else { <td/> }
-                    @if(arr.contains("friEve")) { <td class="present"/> } else { <td/> }
-                    @if(arr.contains("friLate")) { <td class="present"/> } else { <td/> }
-                    <td class="present"/>
-                    @if(dep.contains("sunMorn")) { <td class="present"/> } else { <td/> }
-                    @if(dep.contains("sunLunch")) { <td class="present"/> } else { <td/> }
-                    @if(dep.contains("sunAft")) { <td class="present"/> } else { <td/> }
+                    @if(arr.contains("thursEve")) { <td class="present"/> } else { <td class="border-left thurs"/> }
+                    @if(arr.contains("thursLate")) { <td class="present"/> } else { <td class="thurs"/> }
+                    @if(arr.contains("friMorn")) { <td class="border-left present"/> } else { <td class="border-left fri"/> }
+                    @if(arr.contains("friLunch")) { <td class="present"/> } else { <td class="fri"/> }
+                    @if(arr.contains("friAft")) { <td class="present"/> } else { <td class="fri"/> }
+                    @if(arr.contains("friEve")) { <td class="present"/> } else { <td class="fri"/> }
+                    @if(arr.contains("friLate")) { <td class="present"/> } else { <td class="fri"/> }
+                    <td class="border-left border-right present"/>
+                    @if(dep.contains("sunMorn")) { <td class="present"/> } else { <td class="sun"/> }
+                    @if(dep.contains("sunLunch")) { <td class="present"/> } else { <td class="sun"/> }
+                    @if(dep.contains("sunAft")) { <td class="present"/> } else { <td class="sun"/> }
                 </tr>
                 }
                 </tbody>
