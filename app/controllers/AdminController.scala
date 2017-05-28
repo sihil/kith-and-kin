@@ -20,8 +20,8 @@ object HttpResults extends Results
 object Whitelist {
   val superusers = Set(
     "simon@hildrew.net",
-    "c.l.kelling@gmail.com", "c.l.kelling@googlemail.com",
-    "fionakelling@googlemail.com", "fionakelling@gmail.com",
+    "c.l.kelling@gmail.com",
+    "fionakelling@gmail.com",
     "matray@gmail.com"
   )
   val kidsUsers = Set(
@@ -48,7 +48,13 @@ trait AuthActions extends Actions {
 
   class WhitelistedActionFilter(whitelists: Set[String]*) extends ActionFilter[({ type R[A] = AuthenticatedRequest[A, UserIdentity] })#R] {
     override protected def filter[A](request: AuthenticatedRequest[A, UserIdentity]): Future[Option[Result]] = {
-      val whitelist = (Whitelist.superusers +: whitelists).reduce(_ ++ _)
+      def addGoogleMail(emails: Set[String]): Set[String] = emails.flatMap { email =>
+        if (email.toLowerCase.endsWith("gmail.com"))
+          Set(email, email.stripSuffix("gmail.com") + "googlemail.com")
+        else
+          Set(email)
+      }
+      val whitelist = addGoogleMail((Whitelist.superusers +: whitelists).reduce(_ ++ _))
       Future.successful{
         if (!whitelist.contains(request.user.email)) {
           Some(HttpResults.Unauthorized(s"User with e-mail ${request.user.email} is not authorized to view this page"))
