@@ -18,12 +18,16 @@ import scala.language.{postfixOps, reflectiveCalls}
 object HttpResults extends Results
 
 object Whitelist {
-  val users = Set(
+  val superusers = Set(
     "simon@hildrew.net",
     "c.l.kelling@gmail.com", "c.l.kelling@googlemail.com",
     "fionakelling@googlemail.com", "fionakelling@gmail.com",
     "matray@gmail.com"
   )
+  val kidsUsers = Set(
+    "buckle482@gmail.com",
+    "calamb1984@gmail.com"
+  ) ++ superusers
 }
 
 trait AuthActions extends Actions {
@@ -39,20 +43,21 @@ trait AuthActions extends Actions {
   )
   // your app's routing
   override val loginTarget = routes.AdminController.loginAction()
-  override val defaultRedirectTarget = routes.AdminController.index()
+  override val defaultRedirectTarget = routes.AdminController.summary()
   override val failureRedirectTarget = routes.KithAndKinController.index()
 
-  object WhitelistedActionFilter extends ActionFilter[({ type R[A] = AuthenticatedRequest[A, UserIdentity] })#R] {
+  class WhitelistedActionFilter(whitelists: Set[String]*) extends ActionFilter[({ type R[A] = AuthenticatedRequest[A, UserIdentity] })#R] {
     override protected def filter[A](request: AuthenticatedRequest[A, UserIdentity]): Future[Option[Result]] = {
+      val whitelist = (Whitelist.superusers +: whitelists).reduce(_ ++ _)
       Future.successful{
-        if (!Whitelist.users.contains(request.user.email)) {
-          Some(HttpResults.Unauthorized(s"User with e-mail ${request.user.email} is not authorized"))
+        if (!whitelist.contains(request.user.email)) {
+          Some(HttpResults.Unauthorized(s"User with e-mail ${request.user.email} is not authorized to view this page"))
         } else None
       }
     }
   }
 
-  val WhitelistAction = WhitelistedActionFilter compose AuthAction
+  def WhitelistAction(whitelists: Set[String]*) = new WhitelistedActionFilter(whitelists:_*) compose AuthAction
 }
 
 case class InviteSummary(questionsList: List[Questions],
@@ -74,7 +79,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
                       paymentRepository: PaymentRepository, emailService: EmailService, emailRepository: EmailRepository)
   extends Controller with AuthActions {
 
-  def index = WhitelistAction { implicit r =>
+  def summary = WhitelistAction(Whitelist.kidsUsers) { implicit r =>
     def comingSummary(questions: List[Questions]): InviteSummary = {
       // find all invites that are marked as coming
       val yes = questions.filter(_.coming.nonEmpty)
@@ -95,12 +100,12 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok(views.html.admin.summary(overall, coming, notComing, yetToRsvp))
   }
 
-  def list = WhitelistAction { implicit r =>
+  def list = WhitelistAction() { implicit r =>
     val invites = inviteRepository.getInviteList.toList
     Ok(views.html.admin.inviteList(invites))
   }
 
-  def payments = WhitelistAction { implicit r =>
+  def payments = WhitelistAction() { implicit r =>
     val invites = inviteRepository.getInviteList.toList.map(i => i.id -> i).toMap
     val payments = paymentRepository.getPaymentList.toList
     val total = payments.map(_.amount).sum
@@ -119,7 +124,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok(views.html.admin.paymentSummary(owed, total, confirmed, paymentList, outstandingInvitesStatusList.toList))
   }
 
-  def accommodation = WhitelistAction { implicit r =>
+  def accommodation = WhitelistAction() { implicit r =>
     val invites = inviteRepository.getInviteList.toList
     val questionsList = invites.map(i => QuestionMaster.questions(i, _.rsvp)).filter(_.coming.nonEmpty)
     def find[A](accomType: String)(include: Rsvp => A): List[(Questions, A)] = {
@@ -133,7 +138,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok(views.html.admin.accommodation(ownTent, camper, caravan, bellTent, offSite))
   }
 
-  def getInvolved = WhitelistAction { implicit r =>
+  def getInvolved = WhitelistAction(Whitelist.kidsUsers) { implicit r =>
     val invites = inviteRepository.getInviteList.toList
     val choices: Seq[(Invite, GetInvolvedChoice, String)] =
       for {
@@ -147,7 +152,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok(views.html.admin.getInvolved(sortedChoices))
   }
 
-  def foodDash = WhitelistAction { implicit r =>
+  def foodDash = WhitelistAction(Whitelist.kidsUsers) { implicit r =>
     val invites = inviteRepository.getInviteList.toList
     val questionsList = invites.map(i => QuestionMaster.questions(i, _.rsvp)).filter(_.coming.nonEmpty)
     def count(p: Rsvp => Boolean): (List[Adult], List[Child]) = {
@@ -178,7 +183,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok(views.html.admin.foodDash(meals, diets))
   }
 
-  def arrivalAndDepartures(sortByDep: Boolean) = WhitelistAction { implicit r =>
+  def arrivalAndDepartures(sortByDep: Boolean) = WhitelistAction(Whitelist.kidsUsers) { implicit r =>
     val arrivalSlots = List("thursEve", "thursLate", "friMorn", "friLunch", "friAft", "friEve", "friLate")
     val departureSlots = List("sunMorn", "sunLunch", "sunAft")
 
@@ -207,7 +212,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok(views.html.admin.arrivalAndDeparture(arrDeps, sortByDep))
   }
 
-  def details(inviteId: String) = WhitelistAction { implicit r =>
+  def details(inviteId: String) = WhitelistAction() { implicit r =>
     val maybeInvite = inviteRepository.getInvite(UUID.fromString(inviteId))
     maybeInvite.map { invite =>
       val questions = QuestionMaster.questions(invite, _.rsvp)
@@ -216,14 +221,14 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     }.getOrElse(NotFound)
   }
 
-  def create = WhitelistAction {
+  def create = WhitelistAction() {
     val adult = Adult("Simon Hildrew")
     val invite = Invite(UUID.randomUUID(), 0, None, Some("simon@hildrew.net"), emailPreferred = false, Some("62 Allendale Close\nLondon\nSE5 8SG"), 0, None, List(adult), Nil, "just me", None)
     inviteRepository.putInvite(invite)
     Ok("done")
   }
 
-  def emailDashboard = WhitelistAction { implicit request =>
+  def emailDashboard = WhitelistAction() { implicit request =>
     Ok(views.html.admin.emailDashboard(
       EmailTemplate.allTemplates,
       emailRepository.getEmailList.toSeq,
@@ -231,7 +236,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     ))
   }
 
-  def previewEmail(templateName: String) = WhitelistAction { implicit request =>
+  def previewEmail(templateName: String) = WhitelistAction() { implicit request =>
     val maybeTemplate = EmailTemplate.allTemplates.find(_.name == templateName)
     maybeTemplate.map { template =>
       val invites = inviteRepository.getInviteList.toSeq
@@ -244,7 +249,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     }.getOrElse(NotFound(s"No template called $templateName"))
   }
 
-  def sendEmail(templateName: String) = WhitelistAction { implicit request =>
+  def sendEmail(templateName: String) = WhitelistAction() { implicit request =>
     val maybeTemplate = EmailTemplate.allTemplates.find(_.name == templateName)
     maybeTemplate.map { template =>
       val emailRecord = Email(
@@ -275,7 +280,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     }.getOrElse(NotFound(s"No template called $templateName"))
   }
 
-  def setAllSecrets = WhitelistAction { request =>
+  def setAllSecrets = WhitelistAction() { request =>
     inviteRepository.getInviteList.foreach { invite =>
       if (invite.secret.isEmpty) {
         inviteRepository.putInvite(invite.copy(secret = Some(Secret.newSecret())))
@@ -288,7 +293,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     startGoogleLogin()
   }
 
-  def uploadCsv = WhitelistAction(parse.multipartFormData) { r =>
+  def uploadCsv = WhitelistAction()(parse.multipartFormData) { r =>
     import kantan.csv.generic._
     import kantan.csv.ops._
 
@@ -310,7 +315,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     }.getOrElse(UnprocessableEntity("No file"))
   }
 
-  def action = WhitelistAction { r =>
+  def action = WhitelistAction() { r =>
     val action = r.body.asFormUrlEncoded.flatMap { formData =>
       val id = formData.get("id").toList.flatten.headOption.map(UUID.fromString)
       val action = formData.get("action").toList.flatten.headOption

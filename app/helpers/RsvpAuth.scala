@@ -26,7 +26,7 @@ trait RsvpAuth extends UserIdentifier with Results {
   override def authConfig: GoogleAuthConfig = GoogleAuthConfig.withNoDomainRestriction("","","",enforceValidity = false)
 
   def inviteFrom(request: RequestHeader): Option[Auth] = RsvpCookie.parse(request.cookies).flatMap { rsvpId =>
-    val googleAuth = userIdentity(request).filter(user => Whitelist.users.contains(user.email))
+    val googleAuth = userIdentity(request).filter(user => Whitelist.superusers.contains(user.email))
     val invite = inviteRepository.getInvite(rsvpId.id)
     (invite, googleAuth) match {
       case (Some(i), _) if RsvpCookie.valid(i, rsvpId) =>
