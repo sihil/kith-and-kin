@@ -9,7 +9,7 @@ import play.api.mvc.RequestHeader
 case class Email(id: UUID, template: String, update: Int = 0, sentDate: DateTime, sentTo: List[String] = Nil)
 
 object EmailTemplate {
-  def allTemplates = List(ReminderEmailTemplate, SecondRoundEmailTemplate)
+  def allTemplates = List(ReminderEmailTemplate, SecondRoundEmailTemplate, RsvpLockDownEmailTemplate)
 }
 
 trait EmailTemplate {
@@ -39,4 +39,13 @@ object SecondRoundEmailTemplate extends EmailTemplate {
   override def recipientSelector = !_.sent
   override def preSendCheck = _.secret.nonEmpty
   override def postSendUpdate = Some{ invite => Some(invite.copy(sent = true)) }
+}
+
+object RsvpLockDownEmailTemplate extends EmailTemplate {
+  override def name = "RSVP lock down"
+  override def subject(invite: Invite) = "Confirm your Kith & Kin RSVP!"
+  override def text(invite: Invite)(implicit request: RequestHeader) = html(invite).map(HtmlToPlainText.convert).get
+  override def html(invite: Invite)(implicit request: RequestHeader) = Some(views.html.email.accommodationLockDown(invite).body)
+  override def recipientSelector = i => !i.rsvp.flatMap(_.coming).contains(false)
+  override def preSendCheck = _.secret.nonEmpty
 }

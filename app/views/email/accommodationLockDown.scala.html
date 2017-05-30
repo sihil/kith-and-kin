@@ -1,0 +1,174 @@
+@(invite: Invite)(implicit request: RequestHeader)
+@import helpers._
+
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Confirm your Kith & Kin accommodation!</title>
+        <style type="text/css">
+                a {
+                    color: #4A72AF;
+                }
+
+                body, #header h1, #header h2, p {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                #main {
+                    border: 1px solid #cfcece;
+                }
+
+                img {
+                    display: block;
+                }
+
+                #top-message p, #bottom-message p {
+                    color: #3f4042;
+                    font-size: 12px;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+
+                #header h1 {
+                    color: #ffffff !important;
+                    font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", sans-serif;
+                    font-size: 24px;
+                    margin-bottom: 0 !important;
+                    padding-bottom: 0;
+                }
+
+                #header h2 {
+                    color: #ffffff !important;
+                    font-family: Arial, Helvetica, sans-serif;
+                    font-size: 24px;
+                    margin-bottom: 0 !important;
+                    padding-bottom: 0;
+                }
+
+                #header p {
+                    color: #ffffff !important;
+                    font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", sans-serif;
+                    font-size: 14px;
+                }
+
+                h1, h2, h3, h4, h5, h6 {
+                    margin: 0 0 0.8em 0;
+                }
+
+                h3 {
+                    font-size: 28px;
+                    color: #444444 !important;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+
+                h4 {
+                    font-size: 22px;
+                    color: #4A72AF !important;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+
+                h5 {
+                    font-size: 18px;
+                    color: #444444 !important;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+
+                p {
+                    font-size: 14px;
+                    color: #404040 !important;
+                    font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", sans-serif;
+                    line-height: 1.5;
+                    padding-bottom: 7px;
+                }
+        </style>
+    </head>
+    <body>
+        <table width="100%" cellpadding="0" cellspacing="0" bgcolor="e4e4e4"><tr><td>
+            <table id="main" width="600" align="center" cellpadding="0" cellspacing="15" bgcolor="ffffff">
+                <tr>
+                    <td align="center">
+                        <img src="@routes.Assets.versioned("images/kith-kin-festival-combined-1000w.png").absoluteURL()" width="500" alt="Kith & Kin Festival">
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td>
+                        <table id="content-2" cellpadding="0" cellspacing="0" align="center">
+                            <tr>
+                                <td width="570"><p>
+                                    <p>Dear @invite.giveMeFirstNames,</p>
+
+                                    <p><em>No time to read a long e-mail? Please log in and double check your RSVP
+                                        before Sunday using the link below!</em></p>
+
+                                    <p>The countdown to Kith & Kin festival is well and truly counting down. With just
+                                        sixty-six days until we welcome you on site we're getting really excited about
+                                        all of you joining us in Inverness.</p>
+
+                                    <p>Logistically it's time for us to check whether we really need 20 (yes, 20) bell
+                                        tents on site, where to put the three camper vans that are turning up and what we
+                                        need to tell our chef so he doesn't make people eat things they don't like.</p>
+
+                                    <p>To make all of these possible, you will not be able to change your RSVP after the
+                                        end of this week (Sunday the 4th of June).</p>
+
+                                    @(invite.rsvp, invite.draftRsvp) match {
+                                        case (None, _) => {
+                                            <p><em>We've not yet received your RSVP so please fill it in ASAP. Get in touch
+                                                (reply to this) if you need information or assistance from us!</em></p>
+
+                                            <p>If you've not already looked at the
+                                                <a href="@routes.KithAndKinController.accommodation().absoluteURL()">accommodation</a>
+                                                and <a href="@routes.KithAndKinController.getInvolved().absoluteURL()">get involved</a>
+                                                pages on the Kith & Kin website then we recommend starting there.</p>
+                                        }
+                                        case (Some(r), Some(dr)) if r != dr => {
+                                            <p><em>We've noticed that you've made changes to your RSVP but haven't sent
+                                            them to us so please log in and double check.</em></p>
+                                        }
+                                        case _ => {}
+                                    }
+
+                                    <p>Our schedule is coming together nicely with activities all day Friday (a walk in
+                                    the nearby forest, board games, a whisky tasting, bands, our chef cooking dinner
+                                        over an open fire), all day Saturday (a WEDDING and a CEILIDH!) and much of
+                                        Sunday (an excellent breakfast, highland games, more music and a BBQ for lunch!)</p>
+
+                                    <p>If you are still not sure of your exact movements, please fill it in as best as
+                                        you can and then drop us an e-mail and let us know. We'll try and be flexible
+                                        where we can.</p>
+
+                                    <p>You can use this personalised link to visit your RSVP:
+                                        <a href="@invite.rsvpLink.absoluteURL()">@invite.rsvpLink.absoluteURL()</a></p>
+
+                                    <p>Finally: we have a secret Facebook group that is a good place to meet all of our other
+                                        guests. We've added as many as we can but it's quite possible that we are not
+                                        Facebook friends with all of you (or we missed one or two of you). Please let us
+                                        know if this is the case and we'll fix it. Pronto.</p>
+
+                                    <p>Fun festival vibes,</p>
+
+                                    <p>Christina and Simon</p>
+
+                                    <p>p.s. Any questions or comments? Reply to us at this e-mail address!</p>
+                                </td>
+                            </tr>
+                        </table><!-- content-2 -->
+                    </td>
+                </tr><!-- content-2 -->
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td align="center">
+                        <img src="@routes.Assets.versioned("images/cow-400w.png").absoluteURL()" width="200">
+                    </td>
+                </tr>
+            </table><!-- main -->
+        </td></tr></table><!-- wrapper -->
+
+
+    </body>
+</html>
