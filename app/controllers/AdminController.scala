@@ -27,7 +27,11 @@ object Whitelist {
   val kidsUsers = Set(
     "buckle482@gmail.com",
     "calamb1984@gmail.com"
-  ) ++ superusers
+  )
+  val otherUsers = Set(
+    "pranita88@gmail.com",
+    "katyharris@hotmail.co.uk"
+  )
 }
 
 trait AuthActions extends Actions {
@@ -85,7 +89,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
                       paymentRepository: PaymentRepository, emailService: EmailService, emailRepository: EmailRepository)
   extends Controller with AuthActions {
 
-  def summary = WhitelistAction(Whitelist.kidsUsers) { implicit r =>
+  def summary = WhitelistAction(Whitelist.kidsUsers ++ Whitelist.otherUsers) { implicit r =>
     def comingSummary(questions: List[Questions]): InviteSummary = {
       // find all invites that are marked as coming
       val yes = questions.filter(_.coming.nonEmpty)
@@ -106,7 +110,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok(views.html.admin.summary(overall, coming, notComing, yetToRsvp))
   }
 
-  def list = WhitelistAction() { implicit r =>
+  def list = WhitelistAction(Whitelist.kidsUsers ++ Whitelist.otherUsers) { implicit r =>
     val invites = inviteRepository.getInviteList.toList
     Ok(views.html.admin.inviteList(invites))
   }
@@ -144,7 +148,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok(views.html.admin.accommodation(ownTent, camper, caravan, bellTent, offSite))
   }
 
-  def getInvolved = WhitelistAction(Whitelist.kidsUsers) { implicit r =>
+  def getInvolved = WhitelistAction(Whitelist.kidsUsers ++ Whitelist.otherUsers) { implicit r =>
     val invites = inviteRepository.getInviteList.toList
     val choices: Seq[(Invite, GetInvolvedChoice, String)] =
       for {
@@ -189,7 +193,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok(views.html.admin.foodDash(meals, diets))
   }
 
-  def arrivalAndDepartures(sortByDep: Boolean) = WhitelistAction(Whitelist.kidsUsers) { implicit r =>
+  def arrivalAndDepartures(sortByDep: Boolean) = WhitelistAction(Whitelist.kidsUsers ++ Whitelist.otherUsers) { implicit r =>
     val arrivalSlots = List("thursEve", "thursLate", "friMorn", "friLunch", "friAft", "friEve", "friLate")
     val departureSlots = List("sunMorn", "sunLunch", "sunAft")
 
@@ -218,7 +222,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok(views.html.admin.arrivalAndDeparture(arrDeps, sortByDep))
   }
 
-  def details(inviteId: String) = WhitelistAction() { implicit r =>
+  def details(inviteId: String) = WhitelistAction(Whitelist.kidsUsers ++ Whitelist.otherUsers) { implicit r =>
     val maybeInvite = inviteRepository.getInvite(UUID.fromString(inviteId))
     maybeInvite.map { invite =>
       val questions = QuestionMaster.questions(invite, _.rsvp)

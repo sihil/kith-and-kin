@@ -23,8 +23,8 @@
                     </ul>
                 </div>
                 <p>Last logged in: @questions.invite.lastLoggedIn.map(DateTimeFormat.mediumDateTime().print).getOrElse("never")</p>
-                <p>Invite e-mail: @questions.invite.email.getOrElse("No e-mail for this invite")</p>
             }
+            <p>Invite e-mail: @questions.invite.email.getOrElse("No e-mail for this invite")</p>
             <p>Adults: @questions.invite.adults.map(_.name).mkString(", ")</p>
             @if(questions.invite.children.nonEmpty) {
                 <p>Children: @questions.invite.children.map(_.name).mkString(", ")</p>
