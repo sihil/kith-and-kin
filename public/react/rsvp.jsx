@@ -6,8 +6,10 @@ import animateScrollTo from 'animated-scroll-to';
 
 function Button(props) {
     const classes = "button is-large "+props.colour;
+    const editable = props.editable;
     return (
-        <button className={classes} value={props.value} onClick={() => props.onClick()}>{props.text}</button>
+        <button className={classes} value={props.value} disabled={!editable}
+                onClick={() => props.onClick()}>{props.text}</button>
     )
 }
 
@@ -35,9 +37,12 @@ class Textbox extends React.Component {
 
     render() {
         const placeholder = this.props.optional ? "" : "Type an answer to continue...";
+        const editable = this.props.editable;
         return (
             <div>
-                <textarea className="textarea" value={this.state.value} onChange={this.handleChange} placeholder={placeholder}/>
+                {/* TODO: use editable prop */}
+                <textarea className="textarea" value={this.state.value} disabled={!editable}
+                          onChange={this.handleChange} placeholder={placeholder}/>
             </div>
         );
     }
@@ -51,6 +56,8 @@ class Selection extends React.Component {
     }
     render() {
         const possibleAnswers = this.props.question.answers;
+        const editable = this.props.editable;
+
         const optionsHtml = possibleAnswers.map((answer, index) => {
             const answers = this.props.answers;
             const selected = answers[answer.key];
@@ -60,6 +67,7 @@ class Selection extends React.Component {
                         <input
                             type="checkbox"
                             defaultChecked={selected}
+                            disabled={!editable}
                             onChange={(event) => this.handleChange(event, answer.key)}
                         />
                         {answer.text}
@@ -136,17 +144,19 @@ class Question extends React.Component {
                 return answers.map((answer, index) => {
                     const colour = (this.props.answer === answer.key) ? "is-success" : "";
                     return (
-                        <Button key={index} colour={colour} text={answer.text}
+                        <Button key={index} colour={colour} text={answer.text} editable={this.props.editable}
                                 onClick={() => this.props.onAnswer(answer.key)}/>
                     );
                 });
             case "text":
                 return (
-                    <Textbox text={this.props.answer} optional={this.props.question.optional} onClick={(newAnswer) => this.props.onAnswer(newAnswer)}/>
+                    <Textbox text={this.props.answer} optional={this.props.question.optional} editable={this.props.editable}
+                             onClick={(newAnswer) => this.props.onAnswer(newAnswer)}/>
                 );
             case "selection":
                 return (
-                    <Selection question={this.props.question} answers={this.props.answer} onUpdate={(newAnswers) => this.props.onAnswer(newAnswers)} />
+                    <Selection question={this.props.question} answers={this.props.answer} editable={this.props.editable}
+                               onUpdate={(newAnswers) => this.props.onAnswer(newAnswers)} />
                 );
         }
     }
@@ -208,7 +218,10 @@ class Rsvp extends React.Component {
                 this.setState({
                     questions: json.questions, startKey: json.startPage, answers: json.answers,
                     submittedAnswers: json.submittedAnswers,
-                    unsent: json.unsent, modified: json.modified, prices: json.prices
+                    unsent: json.unsent,
+                    modified: json.modified,
+                    prices: json.prices,
+                    editable: json.editable
                 });
             });
         });
@@ -272,9 +285,10 @@ class Rsvp extends React.Component {
             }
         } else return [];
     }
-    renderQuestion(question, answer, price, scrollTo) {
+    renderQuestion(question, answer, price, scrollTo, editable) {
         return (
-            <Question key={question.key} question={question} answer={answer} price={price} scrollTo={scrollTo} onAnswer={(answer) => this.onAnswer(question, answer)}/>
+            <Question key={question.key} question={question} answer={answer} price={price} scrollTo={scrollTo}
+                      editable={editable} onAnswer={(answer) => this.onAnswer(question, answer)}/>
         );
     }
     finishRsvp() {
@@ -299,12 +313,13 @@ class Rsvp extends React.Component {
     }
     render() {
         if (this.state.questions) {
+            const editable = this.state.editable;
             const questionList = this.questionAnswers(this.state.startKey);
             const questionElements = questionList.map((question, index) => {
                 const bottomQuestion = index === questionList.length-1;
                 const lastQuestion = this.isTerminus(question.question);
                 const scrollTo = bottomQuestion && !lastQuestion;
-                return this.renderQuestion(question.question, question.answer, question.price, scrollTo);
+                return this.renderQuestion(question.question, question.answer, question.price, scrollTo, editable);
             });
             const bottomQuestion = questionList[questionList.length-1];
             const terminusQuestion = bottomQuestion.question.nextQuestion === undefined;
@@ -314,12 +329,22 @@ class Rsvp extends React.Component {
 
             return (
                 <div>
+                    {!editable &&
+                        <div className="margin-bottom">
+                            <div className="notification is-success">
+                                Your RSVP is shown below. Since we are finalising numbers for accommodation and food
+                                it's no longer possible for you to make changes. If something isn't right then contact
+                                Simon and Christina at <a href="mailto:info@kithandkin.wedding">info@kithandkin.wedding</a>.
+                            </div>
+                        </div>
+                    }
                     {finished &&
                         <div className="margin-bottom">
                             {modified && !unsent &&
                             <div className="notification is-danger">
-                                NOTE: You've made changes to your RSVP since you last sent it to us. Once you're happy
-                                with the changes remember to send them to us!
+                                <p>NOTE: You've made changes to your RSVP since you last sent it to us.</p>
+                                {editable && <p>Once you're happy with the changes remember to send them to us using the <strong>Update RSVP</strong> button below!</p>}
+                                {!editable && <p>You should get in touch with Simon and Christina to confirm your choices.</p>}
                             </div>
                             }
                         </div>
@@ -328,12 +353,14 @@ class Rsvp extends React.Component {
                     {finished &&
                         <div>
                             {!modified && <h2 className="heading">You're finished!</h2>}
-                            {modified && unsent && <Button colour="is-danger" onClick={() => this.finishRsvp()} text="Send RSVP"/>}
+                            {modified && unsent && <Button colour="is-danger" onClick={() => this.finishRsvp()} editable={editable} text="Send RSVP"/>}
                             {modified && !unsent &&
                                 <div className="question">
                                     <p>You've made changes to your RSVP since you last sent it to us. Remember to send them to us!</p>
-                                    <Button colour="is-danger" onClick={() => this.finishRsvp()} text="Update RSVP"/>
-                                    <Button colour="is-warning" onClick={() => this.resetRsvp()} text="Forget RSVP changes"/>
+                                    <Button colour="is-danger" onClick={() => this.finishRsvp()} editable={editable}
+                                            text="Update RSVP"/>
+                                    <Button colour="is-warning" onClick={() => this.resetRsvp()} editable={editable}
+                                            text="Forget RSVP changes"/>
                                 </div>
                             }
                         </div>

@@ -12,6 +12,8 @@
                 <p>@form(CSRF(routes.AdminController.action), 'class -> "inline") {
                     <input type="hidden" name="id" value="@questions.invite.id.toString">
                     <button class="button is-small is-danger" name="action" value="impersonate">Impersonate</button>
+                    <button class="button is-small@if(questions.invite.sent){ is-success}" name="action" value="toggleInviteSent">Mark as @if(questions.invite.sent){unsent}else{sent}</button>
+                    <button class="button is-small@if(questions.invite.isEditable){ is-warning}" name="action" value="toggleEditable">Make @if(questions.invite.isEditable){read only}else{editable}</button>
                 }</p>
                 <div class="notification">Magic login links for this invite (don't use these yourself, use the impersonate
                     button above):

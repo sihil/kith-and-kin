@@ -106,7 +106,8 @@ case class Invite(
   sent: Boolean = false,
   draftRsvp: Option[Rsvp] = None,
   rsvp: Option[Rsvp] = None,
-  onTheHouse: Option[Boolean] = None
+  onTheHouse: Option[Boolean] = None,
+  editable: Option[Boolean] = None
 ) {
   def firstName(name: String) = name.split(" ").head
   def firstNames(as: List[Adult], cs: List[Child]): List[String] = (as.map(_.name) ::: cs.map(_.name)).map(firstName)
@@ -115,5 +116,6 @@ case class Invite(
   def giveMeAName = addressee.getOrElse(giveMeFirstNames)
   def number = adults.size + children.size
   def numberOfAdults = adults.size
+  def isEditable = editable.contains(true)
 }
 

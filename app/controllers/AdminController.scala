@@ -342,7 +342,12 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
         inviteRepository.getInvite(id).map { invite =>
           inviteRepository.putInvite(invite.copy(sent = !invite.sent))
           Redirect(routes.AdminController.list())
-        }.getOrElse(NotFound(s"Invite $id not found"))
+        }.getOrElse(NotFound(s"Invite $id not found when toggling invite sent"))
+      case Some((id, "toggleEditable")) =>
+        inviteRepository.getInvite(id).map { invite =>
+          inviteRepository.putInvite(invite.copy(editable = Some(!invite.isEditable)))
+          Redirect(routes.AdminController.details(id.toString))
+        }.getOrElse(NotFound(s"Invite $id not found when toggling editable"))
       case unknown =>
         NotFound(s"Unknown id/action: $unknown")
     }

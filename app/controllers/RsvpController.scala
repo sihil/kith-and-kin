@@ -211,12 +211,23 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
                                   .filterNot(_ == questions.jsonPrices)
                                   .map(json => Json.obj("prices" -> json))
         val fields = Seq(Json.obj("result" -> "success")) ++ updatedQuestionJson ++ updatedPricesJson
-        if (invite.rsvp.isEmpty && complete && request.user.realUser) {
-          Future{
-            val payments = paymentRepository.getPaymentsForInvite(invite).toList
-            val paid = payments.map(_.amount).sum
-            val total = updatedDraftQuestions.totalPrice // since we just copied the RSVP into both places we can use the draft questions
-            emailService.sendRsvpSummary(updatedInvite, total, math.max(total-paid, 0))
+        if (complete && request.user.realUser) {
+          if (invite.rsvp.isEmpty) {
+            Future {
+              val payments = paymentRepository.getPaymentsForInvite(invite).toList
+              val paid = payments.map(_.amount).sum
+              val total = updatedDraftQuestions.totalPrice // since we just copied the RSVP into both places we can use the draft questions
+              emailService.sendRsvpSummary(updatedInvite, total, math.max(total - paid, 0))
+            }(context)
+          }
+          Future {
+            emailService.sendAdminEmail(
+              s"Invite update for ${invite.giveMeFirstNames}",
+              s"""The invite for ${invite.giveMeFirstNames} has been updated.
+                 |See details at ${routes.AdminController.details(invite.id.toString).absoluteURL()}
+                 |
+               """.stripMargin,
+              invite)
           }(context)
         }
         Ok(fields.reduce(_ ++ _))
@@ -248,7 +259,8 @@ class RsvpController(val inviteRepository: InviteRepository, paymentRepository: 
     val prices = draftQuestions.jsonPrices
     val answerJson = Json.obj(
       "answers" -> answers, "submittedAnswers" -> submittedAnswers,
-      "unsent" -> unsent, "modified" -> modified, "prices" -> prices
+      "unsent" -> unsent, "modified" -> modified, "prices" -> prices,
+      "editable" -> (invite.isEditable || !r.user.realUser)
     )
     Ok(draftQuestions.questionJson ++ answerJson)
   }
