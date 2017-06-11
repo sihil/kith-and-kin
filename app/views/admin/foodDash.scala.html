@@ -1,6 +1,6 @@
 @import scala.language.postfixOps
 @import helpers._
-@(meals: Seq[(String, (List[Adult], List[Child]))], diets: Seq[(String, String, String, String)])(implicit request: RequestHeader)
+@(meals: Seq[(String, (List[Adult], List[Child]))], diets: Seq[(String, List[Person], String, String)], noLinks: Boolean)(implicit request: RequestHeader)
 
 @admin.adminPage("Food report") {
     <section class="section">
@@ -29,16 +29,16 @@
                 <thead>
                     <tr>
                         <th>Who</th>
-                        <th>Description</th>
-                        <th>Context</th>
+                        <th>When</th>
+                        <th>Allergy</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @diets.map { case (id, who, desc, context) =>
+                    @diets.map { case (id, who, desc, when) =>
                         <tr>
                             <td><a href="@routes.AdminController.details(id)">@who</a></td>
+                            <td>@when</td>
                             <td>@desc</td>
-                            <td>@context</td>
                         </tr>
                     }
                 </tbody>

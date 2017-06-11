@@ -165,7 +165,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok(views.html.admin.getInvolved(sortedChoices))
   }
 
-  def foodDash = WhitelistAction(Whitelist.kidsUsers) { implicit r =>
+  def foodDash(noLinks: Boolean) = WhitelistAction(Whitelist.kidsUsers) { implicit r =>
     val invites = inviteRepository.getInviteList.toList
     val questionsList = invites.map(i => QuestionMaster.questions(i, _.rsvp)).filter(_.coming.nonEmpty)
     def count(p: Rsvp => Boolean): (List[Adult], List[Child]) = {
@@ -190,10 +190,14 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     )
     val diets = questionsList.sortBy(_.invite.giveMeFirstNames).flatMap{ questions =>
       questions.rsvpFacet.dietaryDetails.map { diet =>
-        (questions.invite.id.toString, questions.invite.giveMeFirstNames, diet, "")
+        val context = (questions.rsvpFacet.arrival, questions.rsvpFacet.departure) match {
+          case (Some(arr), Some(dep)) => s"$arr to $dep"
+          case _ => "???"
+        }
+        (questions.invite.id.toString, questions.adultsComing ++ questions.childrenComing, diet, context)
       }
     }
-    Ok(views.html.admin.foodDash(meals, diets))
+    Ok(views.html.admin.foodDash(meals, diets, noLinks))
   }
 
   def arrivalAndDepartures(sortByDep: Boolean) = WhitelistAction(Whitelist.kidsUsers ++ Whitelist.otherUsers) { implicit r =>

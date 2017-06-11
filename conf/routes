@@ -35,7 +35,7 @@ GET         /admin/list                    controllers.AdminController.list
 GET         /admin/payments                controllers.AdminController.payments
 GET         /admin/accommodation           controllers.AdminController.accommodation
 GET         /admin/getInvolved             controllers.AdminController.getInvolved
-GET         /admin/foodDash                controllers.AdminController.foodDash
+GET         /admin/foodDash                controllers.AdminController.foodDash(noLinks: Boolean ?= false)
 GET         /admin/details/:id             controllers.AdminController.details(id)
 GET         /admin/test/create             controllers.AdminController.create
 GET         /admin/loginAction             controllers.AdminController.loginAction
