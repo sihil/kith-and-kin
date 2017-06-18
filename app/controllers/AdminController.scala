@@ -40,7 +40,8 @@ object Whitelist {
   )
   val otherUsers = Emails(
     "pranita88@gmail.com",
-    "katyharris@hotmail.co.uk"
+    "katyharris@hotmail.co.uk",
+    "katyharris182@gmail.com"
   )
 }
 
