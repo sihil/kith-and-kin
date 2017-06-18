@@ -11,6 +11,7 @@ import play.api.Logger
 import play.api.libs.ws.WSClient
 import play.api.mvc.Security.AuthenticatedRequest
 import play.api.mvc._
+import views.html.helper.options
 
 import scala.concurrent.Future
 import scala.language.{postfixOps, reflectiveCalls}
@@ -200,6 +201,25 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     Ok(views.html.admin.foodDash(meals, diets, noLinks))
   }
 
+  def contacts(selected: Option[String]) = WhitelistAction(Whitelist.kidsUsers ++ Whitelist.otherUsers) { implicit r =>
+    val options: List[(String, Invite => Boolean)] = List(
+      "All" -> { _ => true },
+      "Just parents" -> { _.children.nonEmpty },
+      "On site" -> { !_.rsvp.flatMap(_.accommodation).contains(Accommodation.OFF_SITE)}
+    )
+    val selectedOption = selected.getOrElse(options.head._1)
+    val maybeFilter = options.find(_._1 == selectedOption).map(_._2)
+    maybeFilter match {
+      case Some(filter) =>
+        val invites = inviteRepository.getInviteList.toList
+          .filter(_.rsvp.flatMap(_.coming).contains(true))
+          .filter(filter)
+        Ok(views.html.admin.contactDashboard(invites, options.map(_._1), selectedOption))
+      case _ =>
+        NotFound("No such contact filter")
+    }
+  }
+
   def arrivalAndDepartures(sortByDep: Boolean) = WhitelistAction(Whitelist.kidsUsers ++ Whitelist.otherUsers) { implicit r =>
     val arrivalSlots = List("thursEve", "thursLate", "friMorn", "friLunch", "friAft", "friEve", "friLate")
     val departureSlots = List("sunMorn", "sunLunch", "sunAft")
@@ -297,6 +317,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
     }.getOrElse(NotFound(s"No template called $templateName"))
   }
 
+  //noinspection MutatorLikeMethodIsParameterless
   def setAllSecrets = WhitelistAction() { request =>
     inviteRepository.getInviteList.foreach { invite =>
       if (invite.secret.isEmpty) {

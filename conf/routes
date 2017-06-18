@@ -1,53 +1,54 @@
 # healthcheck for the ELB
-GET         /healthcheck                   controllers.KithAndKinController.healthcheck
+GET         /healthcheck                          controllers.KithAndKinController.healthcheck
 
 # pages
-GET         /                              controllers.KithAndKinController.index
-GET         /accommodation                 controllers.KithAndKinController.accommodation
-GET         /get-involved                  controllers.KithAndKinController.getInvolved
+GET         /                                     controllers.KithAndKinController.index
+GET         /accommodation                        controllers.KithAndKinController.accommodation
+GET         /get-involved                         controllers.KithAndKinController.getInvolved
 
 # rsvp
-GET         /rsvp                          controllers.RsvpController.start
-POST        /rsvp/lookup                   controllers.RsvpController.lookup
-GET         /rsvp/sent/:email              controllers.RsvpController.sentMessage(email: String)
-GET         /rsvp/notRight                 controllers.RsvpController.notRight
-GET         /rsvp/login/:id/:secret        controllers.RsvpController.loginDefault(id: String, secret: String)
-GET         /rsvp/login/:id/:secret/:dest  controllers.RsvpController.loginDest(id: String, secret: String, dest: String)
-GET         /rsvp/logout                   controllers.RsvpController.logout
+GET         /rsvp                                 controllers.RsvpController.start
+POST        /rsvp/lookup                          controllers.RsvpController.lookup
+GET         /rsvp/sent/:email                     controllers.RsvpController.sentMessage(email: String)
+GET         /rsvp/notRight                        controllers.RsvpController.notRight
+GET         /rsvp/login/:id/:secret               controllers.RsvpController.loginDefault(id: String, secret: String)
+GET         /rsvp/login/:id/:secret/:dest         controllers.RsvpController.loginDest(id: String, secret: String, dest: String)
+GET         /rsvp/logout                          controllers.RsvpController.logout
 
-GET         /rsvp/details                  controllers.RsvpController.details
-GET         /rsvp/rsvp                     controllers.RsvpController.rsvp
-POST        /rsvp/update                   controllers.RsvpController.update(complete: Boolean)
-GET         /rsvp/complete                 controllers.RsvpController.complete
-GET         /rsvp/questions                controllers.RsvpController.questions
-POST        /rsvp/reset                    controllers.RsvpController.reset
-GET         /rsvp/guestList                controllers.RsvpController.guestList
+GET         /rsvp/details                         controllers.RsvpController.details
+GET         /rsvp/rsvp                            controllers.RsvpController.rsvp
+POST        /rsvp/update                          controllers.RsvpController.update(complete: Boolean)
+GET         /rsvp/complete                        controllers.RsvpController.complete
+GET         /rsvp/questions                       controllers.RsvpController.questions
+POST        /rsvp/reset                           controllers.RsvpController.reset
+GET         /rsvp/guestList                       controllers.RsvpController.guestList
 
 # payments
-GET         /payments/home                 controllers.Payments.home
-POST        /payments/stripeForm           controllers.Payments.stripeForm
-POST        /payments/bankTransfer         controllers.Payments.bankTransfer
-GET         /payments/error                controllers.Payments.error
+GET         /payments/home                        controllers.Payments.home
+POST        /payments/stripeForm                  controllers.Payments.stripeForm
+POST        /payments/bankTransfer                controllers.Payments.bankTransfer
+GET         /payments/error                       controllers.Payments.error
 
 #admin
-GET         /admin                         controllers.AdminController.summary
-GET         /admin/list                    controllers.AdminController.list
-GET         /admin/payments                controllers.AdminController.payments
-GET         /admin/accommodation           controllers.AdminController.accommodation
-GET         /admin/getInvolved             controllers.AdminController.getInvolved
-GET         /admin/foodDash                controllers.AdminController.foodDash(noLinks: Boolean ?= false)
-GET         /admin/details/:id             controllers.AdminController.details(id)
-GET         /admin/test/create             controllers.AdminController.create
-GET         /admin/loginAction             controllers.AdminController.loginAction
-GET         /oauthCallback                 controllers.AdminController.oauth2Callback
-POST        /admin/uploadCsv               controllers.AdminController.uploadCsv
-POST        /admin/action                  controllers.AdminController.action
-GET         /admin/email                   controllers.AdminController.emailDashboard
-GET        /admin/email/preview/:template    controllers.AdminController.previewEmail(template: String)
-POST        /admin/email/send/:template    controllers.AdminController.sendEmail(template: String)
-POST        /admin/darkMagic/setAllSecrets controllers.AdminController.setAllSecrets
-GET         /admin/arrival-and-departures  controllers.AdminController.arrivalAndDepartures(sortByDep: Boolean ?= false)
+GET         /admin                                controllers.AdminController.summary
+GET         /admin/list                           controllers.AdminController.list
+GET         /admin/payments                       controllers.AdminController.payments
+GET         /admin/accommodation                  controllers.AdminController.accommodation
+GET         /admin/getInvolved                    controllers.AdminController.getInvolved
+GET         /admin/foodDash                       controllers.AdminController.foodDash(noLinks: Boolean ?= false)
+GET         /admin/contacts                       controllers.AdminController.contacts(selected: Option[String])
+GET         /admin/details/:id                    controllers.AdminController.details(id)
+GET         /admin/test/create                    controllers.AdminController.create
+GET         /admin/loginAction                    controllers.AdminController.loginAction
+GET         /oauthCallback                        controllers.AdminController.oauth2Callback
+POST        /admin/uploadCsv                      controllers.AdminController.uploadCsv
+POST        /admin/action                         controllers.AdminController.action
+GET         /admin/email                          controllers.AdminController.emailDashboard
+GET         /admin/email/preview/:template        controllers.AdminController.previewEmail(template: String)
+POST        /admin/email/send/:template           controllers.AdminController.sendEmail(template: String)
+POST        /admin/darkMagic/setAllSecrets        controllers.AdminController.setAllSecrets
+GET         /admin/arrival-and-departures         controllers.AdminController.arrivalAndDepartures(sortByDep: Boolean ?= false)
 
 # serve assets such as JS and images
-GET         /favicon.ico                   controllers.Assets.at(path="/public", file="favicon/favicon.ico")
-GET         /assets/*file                  controllers.Assets.versioned(path="/public", file: Asset)
+GET         /favicon.ico                          controllers.Assets.at(path="/public", file="favicon/favicon.ico")
+GET         /assets/*file                         controllers.Assets.versioned(path="/public", file: Asset)

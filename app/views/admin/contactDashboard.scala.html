@@ -1,0 +1,66 @@
+@import helpers.Auth
+@import org.joda.time.format.DateTimeFormat
+@(invitees: List[Invite], options: List[String], selected: String)(implicit request: RequestHeader)
+
+@admin.adminPage("Contact Dashboard"){
+    <section class="section">
+        <div class="container">
+            <h1 class="heading">Contact information</h1>
+            <div class="notification is-warning">
+                <p>Please treat this contact information with care. In particular if emailing more than a couple of
+                    people please ensure that you use the BCC field in your e-mail application.</p>
+                <p>For ease of use there is a field below this table that contains all of the e-mail addresses
+                in a format that is convenient to copy for Gmail etc.</p>
+            </div>
+            <p> Show contact information for: </p>
+            <p>
+                @options.map { button =>
+                    <a class="button is-large@if(button == selected){ is-success}"
+                    href="@routes.AdminController.contacts(Some(button))">@button</a>
+                }
+            </p>
+            <h2 class="heading">Details</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Full names</th>
+                        <th>Children</th>
+                        <th>When</th>
+                        <th>Contact e-mail</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @defining(false) { noLinks =>
+                    @invitees.sortBy(_.adults.head.name).map { invitee =>
+                        <tr>
+                            <td>
+                                <ul>
+                                    @invitee.adults.map { person =>
+                                        @if(!noLinks){<a href="@routes.AdminController.details(invitee.id.toString)">}
+                                    <li>@person.name</li>
+                                        @if(!noLinks){</a>}
+                                    }
+                                </ul>
+                            </td>
+                            <td>
+                            <ul>@invitee.children.map { kid =>
+                              <li>
+                                  @kid.name (@kid.age)
+                              </li>
+                            }
+                            </ul>
+                            </td>
+                            <td>
+                                @invitee.rsvp.flatMap(_.arrival) to @invitee.rsvp.flatMap(_.departure)
+                            </td>
+                            <td>@invitee.email.getOrElse{ <em>No e-mail</em> }</td>
+                        </tr>
+                    }
+                    }
+                </tbody>
+            </table>
+            <h2 class="heading">Emails (for copy pasting into <strong>BCC</strong> field)</h2>
+            <pre>@invitees.flatMap(_.email).mkString(",\n")</pre>
+        </div>
+    </section>
+}
