@@ -36,7 +36,15 @@
                 <tbody>
                     @diets.map { case (id, who, desc, when) =>
                         <tr>
-                            <td><a href="@routes.AdminController.details(id)">@who</a></td>
+                            <td>
+                                <ul>
+                                @who.map { person =>
+                                    @if(!noLinks){<a href="@routes.AdminController.details(id)">}
+                                    <li>@person.name</li>
+                                    @if(!noLinks){</a>}
+                                }
+                                </ul>
+                            </td>
                             <td>@when</td>
                             <td>@desc</td>
                         </tr>
