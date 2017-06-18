@@ -1,6 +1,6 @@
 @import helpers.Auth
 @import org.joda.time.format.DateTimeFormat
-@(invitees: List[Invite], options: List[String], selected: String)(implicit request: RequestHeader)
+@(inviteQuestions: List[Questions], options: List[String], selected: String)(implicit request: RequestHeader)
 
 @admin.adminPage("Contact Dashboard"){
     <section class="section">
@@ -19,7 +19,7 @@
                     href="@routes.AdminController.contacts(Some(button))">@button</a>
                 }
             </p>
-            <h2 class="heading">Details</h2>
+            <h2 class="heading">Details for @selected (@inviteQuestions.size invites, @inviteQuestions.map(_.coming.size).sum people)</h2>
             <table class="table">
                 <thead>
                     <tr>
@@ -31,19 +31,19 @@
                 </thead>
                 <tbody>
                     @defining(false) { noLinks =>
-                    @invitees.sortBy(_.adults.head.name).map { invitee =>
+                    @inviteQuestions.sortBy(_.adultsComing.head.name).map { invitee =>
                         <tr>
                             <td>
                                 <ul>
-                                    @invitee.adults.map { person =>
-                                        @if(!noLinks){<a href="@routes.AdminController.details(invitee.id.toString)">}
+                                    @invitee.adultsComing.map { person =>
+                                        @if(!noLinks){<a href="@routes.AdminController.details(invitee.invite.id.toString)">}
                                     <li>@person.name</li>
                                         @if(!noLinks){</a>}
                                     }
                                 </ul>
                             </td>
                             <td>
-                            <ul>@invitee.children.map { kid =>
+                            <ul>@invitee.childrenComing.map { kid =>
                               <li>
                                   @kid.name (@kid.age)
                               </li>
@@ -51,16 +51,16 @@
                             </ul>
                             </td>
                             <td>
-                                @invitee.rsvp.flatMap(_.arrival) to @invitee.rsvp.flatMap(_.departure)
+                                @invitee.rsvpFacet.arrival to @invitee.rsvpFacet.departure
                             </td>
-                            <td>@invitee.email.getOrElse{ <em>No e-mail</em> }</td>
+                            <td>@invitee.invite.email.getOrElse{ <em>No e-mail</em> }</td>
                         </tr>
                     }
                     }
                 </tbody>
             </table>
             <h2 class="heading">Emails (for copy pasting into <strong>BCC</strong> field)</h2>
-            <pre>@invitees.flatMap(_.email).mkString(",\n")</pre>
+            <pre>@inviteQuestions.flatMap(_.invite.email).mkString(",\n")</pre>
         </div>
     </section>
 }

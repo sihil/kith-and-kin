@@ -202,19 +202,20 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
   }
 
   def contacts(selected: Option[String]) = WhitelistAction(Whitelist.kidsUsers ++ Whitelist.otherUsers) { implicit r =>
-    val options: List[(String, Invite => Boolean)] = List(
+    val options: List[(String, Questions => Boolean)] = List(
       "All" -> { _ => true },
-      "Just parents" -> { _.children.nonEmpty },
-      "On site" -> { !_.rsvp.flatMap(_.accommodation).contains(Accommodation.OFF_SITE)}
+      "Just parents" -> { _.childrenComing.nonEmpty },
+      "On site" -> { !_.rsvpFacet.accommodation.contains(Accommodation.OFF_SITE)}
     )
     val selectedOption = selected.getOrElse(options.head._1)
     val maybeFilter = options.find(_._1 == selectedOption).map(_._2)
     maybeFilter match {
       case Some(filter) =>
         val invites = inviteRepository.getInviteList.toList
-          .filter(_.rsvp.flatMap(_.coming).contains(true))
+        val questionsList = invites.map(i => QuestionMaster.questions(i, _.rsvp))
+          .filter(_.coming.nonEmpty)
           .filter(filter)
-        Ok(views.html.admin.contactDashboard(invites, options.map(_._1), selectedOption))
+        Ok(views.html.admin.contactDashboard(questionsList, options.map(_._1), selectedOption))
       case _ =>
         NotFound("No such contact filter")
     }
