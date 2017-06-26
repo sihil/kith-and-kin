@@ -1,8 +1,10 @@
 package controllers
 
+import org.joda.time.{DateTime, Interval, Period}
 import play.api.mvc.{Action, Controller}
 
 class KithAndKinController extends Controller {
+  val firstDay = new DateTime(2017, 8, 4, 0, 0)
   val fifteenMinuteCache = CACHE_CONTROL -> "public; max-age=900"
 
   def healthcheck = Action {
@@ -19,5 +21,18 @@ class KithAndKinController extends Controller {
 
   def getInvolved = Action {
     Ok(views.html.getInvolved()).withHeaders(fifteenMinuteCache)
+  }
+
+  def festivalInfo = Action {
+    val days = new Interval(new DateTime(), firstDay).toDuration.getStandardDays
+    Ok(views.html.festivalInfo(days)).withHeaders(fifteenMinuteCache)
+  }
+
+  def robots = Action {
+    Ok(
+      """
+        |User-agent: *
+        |Disallow: /
+      """.stripMargin)
   }
 }

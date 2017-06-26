@@ -1,0 +1,135 @@
+@(daysLeft: Long)
+
+@page("Festival information") {
+    <section class="section">
+        <div class="container">
+            @*<img class="is-pulled-right accommodation-tent flip-x" src="@routes.Assets.versioned("images/bell-tent.png")">*@
+            <h1>Kith & Kin Festival info</h1>
+            <h2>All you need to know for the weekend!</h2>
+            @if(daysLeft > 0) {
+                <p>There are only @daysLeft days left until the gates to Kith & Kin are opened!</p>
+                <p>As every day goes past this crazy festival becomes more tangible and we become more excited. Below
+                    is more information than you can shake a stick at.</p>
+            }
+
+            <h2 class="heading">Schedule highlights</h2>
+
+            <div class="tile-ie-fix">
+                <div class="tile is-ancestor">
+                    <div class="tile is-parent is-vertical">
+                        <article class="tile is-child notification is-info">
+                            <div class="schedule">
+                                <h2>4</h2>
+                                <h3>4pm > Kaffee und Küchen</h3>
+                                <p>German tradition involving a LOT of cake</p>
+
+                                <h3>7pm > Indigo Velvet</h3>
+                                <img class="rounded-corners" src="@routes.Assets.versioned("images/schedule/IndigoVelvet.jpg")">
+                                <h3>8pm > Zervas and Pepper</h3>
+                                <img class="rounded-corners" src="@routes.Assets.versioned("images/schedule/ZervasAndPepper.jpg")">
+
+                                <p>Borrowed from the nearby Belladrum festival for one night only.</p>
+                                <h3>10pm > Bonfire</h3>
+                                <p>Folk stories, poems, songs. And marshmallows.</p>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="tile is-parent is-vertical">
+                        <article class="tile is-child notification is-warning">
+                            <div class="schedule">
+                                <h2>5</h2>
+                                <h3>12.30pm > The ceremony</h3>
+                                <p>(The important bit)
+                                    Followed by drinks and canapes</p>
+                                <h3>3pm > The feast</h3>
+                                <h3>7pm > Tweed Ceilidh Band</h3>
+                                <img class="rounded-corners" src="@routes.Assets.versioned("images/schedule/Tweed.jpg")">
+                                <p>They’ll get their music on while you get your dancing shoes on!</p>
+                                <h3>11pm > Silent disco</h3>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="tile is-parent is-vertical">
+                        <article class="tile is-child notification is-success">
+                            <div class="schedule">
+                                <h2>6</h2>
+                                <h3>11am > Highland Games</h3>
+                                <p>It’s not about who takes part, it’s about who wins.</p>
+                                <h3>1pm > Send-off BBQ</h3>
+                                <p>More frivolity and yummy food</p>
+                                <h3>5pm > Bride and groom leave</h3>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Dress code</h2>
+
+            <p><strong>Saturday</strong> = smart dress, national traditional dress encouraged if you have one.</p>
+
+            <p>If good weather we will be getting married outside, so bring a cardigan.
+                If wet, we’ll get married inside.
+                The wedding feast and ceilidh will be indoors.</p>
+
+            <p>For those camping, there will be indoor space to hang dresses, suits and the vicar’s robes. There will also be places for you to get ready and plug in your hairdryer!</p>
+
+            <p><strong>Friday</strong> and <strong>Sunday</strong>
+                = typical festival get-up (casual, colourful, short shorts, sequins, glitter).</p>
+
+            <h2>Cash</h2>
+            <p>Bring cash with you! The bar on-site will take cash and card but there are other activities you may want to take part in that need cash. These include:
+        <ul class="asterisk">
+            <li>Manicures / pedicures on site on the Friday (£10 - £40 depending what you fancy)</li>
+            <li>Whisky / Gin tasting by a local distillery (£tbc)</li>
+            <li>Highland Games on the Sunday (£tbc).</li>
+        </ul>
+        </p>
+
+            <h2>Packing list</h2>
+            <p>Recommended things to bring:
+        <ul class="asterisk">
+            <li>Midge repellent (it’s Scotland, according to the marines <a href="https://www.avon.uk.com/product/354-5072/skin-so-soft/skin-so-soft-original-dry-oil-spray">
+                this is the stuff</a>)</li>
+            <li>Sunglasses & suncream (it’s Scotland, but you never know)</li>
+            <li>Blanket(s) for keeping warm around the bonfire</li>
+            <li>Towels (hot showers provided, but bring your own towels)</li>
+            <li>Wellies (in the unlikely event that it’s wet)</li>
+            <li>Your best festival outfit (sequins encouraged!)</li>
+            <li>Your wedding outfit and dancing shoes</li>
+            <li>Children (OK, don’t put them in your rucksack)</li>
+        </ul>
+        </p>
+
+                <p>Recommended not to bring:
+        <ul class="asterisk"><li>Stiletto heels and farms don’t go very well together. The ceremony will be in a field so unless your get involved activity is providing entertainment for all, we recommend wearing flat shoes!</li></ul></p>
+
+                <h2>Camping</h2>
+
+            <p>Bell tents are allocated and they have signs saying whom is staying where. When you arrive on site, you’ll be pointed in the right direction.</p>
+
+            <p>Campers and caravans are located close to the entrance for access to electricity.</p>
+
+            <p><strong>Water:</strong> There is a tap near the entrance of the field for drinking water. We will also be providing 24/7 access to hot drinks.</p>
+
+            <p><strong>Gas cookers:</strong> You are welcome to use gas cookers if you so desire but we ask that you refrain from lighting any larger fires and to be aware of the highly flammable (!) hay bales that are scattered around the camping areas. We want a wedding to remember but rather not in that way.</p>
+
+            <p><strong>Toilets and showers:</strong> There are 2 blocks toilets and plenty of showers on site. There will be a shower schedule operating on Saturday morning to make sure everyone gets one that needs to.</p>
+
+
+            <h2>Parking</h2>
+            <p>There is designated parking for cars, close to the campsite. The campsite is only a 5 minute walk from the car parking and although cars will be able to drop off gear at the campsite, all cars will be expected to remain at the car park.</p>
+
+            <h2>Wedding gifts</h2>
+            <p>We chose not to have a gift list, in favour of a truly participatory wedding where you can give as you like - time, energy, skills or creativity. A few of you have however indicated that you prefer to give a more traditional present, and if that is you, then we would not say no to a contribution to our honey-sun-moon-fund. We’ll be driving the Pacific West Coast of America from San Diego to Seattle, via Madras in Oregon to witness a total solar eclipse on 21 August.</p>
+
+            <p>We would also very much welcome traditional presents from your home country or something that you think we will treasure for years to come.</p>
+
+            <p>(Coming soon)</p>
+
+            <h2>Questions?</h2>
+            <p>Just drop us a line on <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a> or by whatsapp, phone or any other way you know how. Alternatively post your question in our <a href="https://www.facebook.com/groups/kithandkin2017">Facebook group</a>.</p>
+
+        </div>
+    </section>
+}

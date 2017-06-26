@@ -1,10 +1,12 @@
 # healthcheck for the ELB
 GET         /healthcheck                          controllers.KithAndKinController.healthcheck
+GET         /robots.txt                           controllers.KithAndKinController.robots
 
 # pages
 GET         /                                     controllers.KithAndKinController.index
 GET         /accommodation                        controllers.KithAndKinController.accommodation
 GET         /get-involved                         controllers.KithAndKinController.getInvolved
+GET         /festivalInfo                         controllers.KithAndKinController.festivalInfo
 
 # rsvp
 GET         /rsvp                                 controllers.RsvpController.start
