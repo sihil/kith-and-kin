@@ -295,10 +295,21 @@ table.gantt
   h3
     font-family: 'Janda', serif
     font-weight: bolder
+  h3:not(:first-of-type)
+    padding-top: 1em
+
   p
     padding-top: 0.4em
 
-img.rounded-corners
-  -webkit-border-radius: 5px
-  -moz-border-radius: 5px
-  border-radius: 5px
+div.photo-frame
+  border: 0.25em solid white
+  border-bottom-width: 0.5em
+  background-color: white
+  & img
+    -webkit-border-radius: 5px
+    -moz-border-radius: 5px
+    border-radius: 5px
+  & p
+    color: black
+    font-size: 1rem
+    padding: 0
