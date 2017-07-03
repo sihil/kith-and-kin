@@ -1,0 +1,314 @@
+@(questions: Questions, payments: List[Payment], paid: Int)(implicit request: RequestHeader)
+@import helpers.IntCurrency
+@import helpers.RichInvite
+
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Less than six weeks to Kith & Kin!</title>
+        <style type="text/css">
+                a {
+                    color: #4A72AF;
+                }
+
+                body, h1, h2, p {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                #main {
+                    border: 1px solid #cfcece;
+                }
+
+                img {
+                    display: block;
+                }
+
+                #top-message p, #bottom-message p {
+                    color: #3f4042;
+                    font-size: 12px;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+
+                h1 {
+                    color: #444444 !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 24px;
+                    margin-bottom: 0 !important;
+                    padding-bottom: 0;
+                    padding-top: 7px;
+                }
+
+                h2 {
+                    color: #444444 !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 20px;
+                    margin-bottom: 0 !important;
+                    padding-bottom: 0;
+                    padding-top: 5px;
+                }
+
+                h1, h2, h3, h4, h5, h6 {
+                    margin: 0 0 0.8em 0;
+                }
+
+                h3 {
+                    font-size: 20px;
+                    color: #4A72AF !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                }
+
+                h4 {
+                    font-size: 18px;
+                    color: #4A72AF !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                }
+
+                h5 {
+                    font-size: 16px;
+                    color: #4A72AF !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                }
+
+                p {
+                    font-size: 14px;
+                    color: #404040 !important;
+                    font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", sans-serif;
+                    line-height: 1.5;
+                    padding-bottom: 7px;
+                }
+
+                ul.asterisk {
+                    font-size: 14px;
+                    color: #404040 !important;
+                    font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", sans-serif;
+                    list-style: none;
+                    margin-left: 0;
+                    padding-left: 0;
+                }
+
+                ul.asterisk li {
+                    padding-left: 1em;
+                    text-indent: -1em;
+                }
+
+                ul.asterisk li:before {
+                    content: "*";
+                    padding-right: 5px;
+                }
+        </style>
+    </head>
+    <body>
+        <table width="100%" cellpadding="0" cellspacing="0" bgcolor="e4e4e4"><tr><td>
+            <table id="main" width="600" align="center" cellpadding="0" cellspacing="15" bgcolor="ffffff">
+                <tr>
+                    <td align="center">
+                        <img src="@routes.Assets.versioned("images/kith-kin-festival-combined-1000w.png").absoluteURL()" width="500" alt="Kith & Kin Festival">
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td>
+                        <table id="content-2" cellpadding="0" cellspacing="0" align="center">
+                            <tr>
+                                <td width="570"><p>
+                                <p>Hi @Invite.stringifyList(Invite.firstNames(questions.coming))!</p>
+
+                                    <p>It’s been another busy week of festival and wedding planning at Kith & Kin HQ
+                                        (AKA our flat). We’re writing this exactly six weeks to the hour before we get
+                                        married. We are on the train to Simon’s sixth form friend Nik’s ordination (he’s
+                                        marrying us in six weeks, so it is a relief that he’s passed his vicar exams
+                                        just in the Nik of time [groan, says Christina]).</p>
+
+                                    <p>We’re really looking forward to spending time with you in a month's time and wanted
+                                        to give you a heads up on a few bits and pieces so that you can fully enjoy this
+                                        Kith & Kin adventure with us.</p>
+
+                                    <p>Most importantly (because we're so excited about it) we can announce four
+                                        awesome bands on our line up. On Friday night we’ve got up and coming singer
+                                        songwriter Tamzene followed by Indigo Velvet who have been described by some
+                                        critics as tropical pop. Finally our headline act, bringing a big serving
+                                        of 1970's California folk rock, is six piece Zervas & Pepper. On Saturday night
+                                        we’ll be reeling with our awesome Ceilidh band Tweed, so make sure you pack your
+                                        dancing shoes! We’ve put together a
+                                        <a href="https://open.spotify.com/user/simonhildrew/playlist/2Fh2ALd6vr2RMK3R6KNZ7Q">
+                                            Spotify playlist for you</a> with a handful of their best tracks.</p>
+
+                                    <h1>Important things to know</h1>
+                                    <p>Most of the information below is also available on the
+                                        <a href="@routes.KithAndKinController.festivalInfo()">Festival Information</a>
+                                        section of the Kith & Kin website where we will continue to update it.</p>
+
+                                    <h2>Schedule</h2>
+                                    <p>We’ll send a detailed schedule nearer the time but here are key events and
+                                        timings to take note of.</p>
+
+                                    <h3>Friday</h3>
+                                    <ul class="asterisk">
+                                        <li><strong>11am</strong> Walking in the woods</li>
+                                        <li><strong>1pm</strong> Lunch</li>
+                                        <li><strong>4pm</strong>
+                                            Kaffee and Küchen - a German tradition involving lots of tasty cake</li>
+                                        <li><strong>6pm</strong> Live music starts</li>
+                                        <li><strong>10pm</strong> Bonfire (bring a folk story, poems, songs)</li>
+                                    </ul>
+
+                                    <h3>Saturday</h3>
+                                    <ul class="asterisk">
+                                        <li><strong>12:30</strong> The ceremony!</li>
+                                        <li><strong>1:30pm</strong> Refreshments</li>
+                                        <li><strong>3pm</strong> Wedding feast</li>
+                                        <li><strong>7pm</strong> Ceilidh</li>
+                                        <li><strong>11pm</strong> Disco</li>
+                                    </ul>
+
+                                    <h3>Sunday</h3>
+                                    <ul class="asterisk">
+                                        <li><strong>1pm</strong> Lunch</li>
+                                        <li><strong>5pm</strong> Bride & Groom leave</li>
+                                    </ul>
+
+                                    <h2>Getting Involved</h2>
+                                    <p>Our on-site activity planning dream team have already e-mailed you to
+                                        start working how all of your generous offers of contributions will fit into
+                                        our festival schedule. If you want to contact them sooner you can reach them at
+                                        <a href="mailto:activities@@kithandkin.wedding">activities@@kithandkin.wedding</a>
+                                        .
+                                        If you know you signed up for stuff but haven’t seen an email, do drop them a line.
+                                    </p>
+
+                                    <h2>Dress code</h2>
+                                    <p>We’re getting married so please bring your glad rags! If the weather co-operates
+                                        then the wedding ceremony and refreshments will be outside (so bear outdoor
+                                        temperatures in mind) - failing that we have a wet weather plan indoors. The
+                                        wedding feast and ceilidh will be indoors.</p>
+
+                                    <p>For those of you who are camping, we will provide indoor hanging space for
+                                        storing dresses and suits. There will also be places for you to get changed / ready
+                                        and hairdryers to use (or a place to plug in your own).</p>
+
+                                    <p>For the rest of the weekend we encourage typical festival garb - if you’re the
+                                        kind of person that has ten festival outfits then maybe bring extras to share
+                                        with those that don’t.</p>
+
+                                    <h2>Money</h2>
+                                    <p>There will be a bar throughout the weekend that takes cash and card. However
+                                        there will be other activities that will be cash only and there is no cash
+                                        machine on site (such as mani/pedicures, whisky/gin tastings and highland
+                                        games). Please bring cash if any of these interest you.</p>
+
+                                    <p>All food and on-site accommodation costs are already included in the payments we
+                                        calculated from your RSVP.</p>
+
+                                    @if(paid < questions.totalPrice) {
+                                        <p>From what you've told us we think you still owe us
+                                            @{
+                                                (questions.totalPrice - paid).sterling(true)
+                                            }. It will make festival admin
+                                            easier for us if all the money owed for accommodation (and food if you're
+                                            around on Friday or Sunday) is paid ahead of time. You can see details of
+                                            what you owe and pay by bank transfer or debit/credit card on the
+                                            Kith & Kin website
+                                            <a href="@questions.invite.rsvpLink(routes.Payments.home())">payments page</a>.</p>
+                                    }
+                                    @if(paid != 0 && paid == questions.totalPrice) {
+                                        <p>Thanks so much for already having paid us for your accommodation / food
+                                            costs. That'll make things a lot easier over the weekend so we truly
+                                            appreciate it!</p>
+                                    }
+                                    @if(paid > questions.totalPrice) {
+                                        <p>Somehow you've managed to send us too much money. We think we owe you
+                                            @{
+                                                (paid - questions.totalPrice).sterling(true)
+                                            }. We'll sort this out eventually
+                                            but if you'd like it back sooner please give us a nudge.</p>
+                                    }
+
+                                    <h2>Arriving</h2>
+                                    <p>There is designated parking for cars, close to the campsite. The campsite is
+                                        only a short walk from the car parking and whist cars will be able to
+                                        drop off gear at the camping area we ask that you move all cars to the
+                                        parking area once you've unloaded.</p>
+
+                                    <h2>Packing list</h2>
+                                    <p>Here are a few things that you might want to put in your rucksack before you leave home…</p>
+                                    <ul class="asterisk">
+                                        <li>Midge repellent (it’s Scotland, according to the marines <a href="https://www.avon.uk.com/product/354-5072/skin-so-soft/skin-so-soft-original-dry-oil-spray">
+                                            this is the stuff</a>)</li>
+                                        <li>Sunglasses & suncream (it’s Scotland, but you never know)</li>
+                                        <li>Blanket(s) for keeping warm around the bonfire</li>
+                                        <li>Towels (hot showers provided, but bring your own towels)</li>
+                                        <li>A small torch (you might find this useful if you're camping)</li>
+                                        <li>Wellies</li>
+                                        <li>Your best festival outfit (sequins encouraged!)</li>
+                                        <li>Your wedding outfit and dancing shoes</li>
+                                        <li>Children (OK, don’t put them in your rucksack)</li>
+                                    </ul>
+
+                                    <h2>Camping</h2>
+                                    <p>Bell tents are booked and allocated - if you are staying in one, signs (and
+                                        helpful volunteers on-site) will let you know exactly where you are staying.</p>
+
+                                    <p>If you’re in a camper van or a caravan then you’ll be located close to the
+                                        entrance of the field so that you have access to electricity.</p>
+
+                                    <p>There is a tap near the entrance of the field so you can fill up your water
+                                        bottles or kettles (that said, we will be providing 24/7 access to hot drinks
+                                        not far from the campsite).</p>
+
+                                    <p>You are welcome to use gas cookers if you so desire but ask that you refrain
+                                        from lighting any larger fires and to be aware of the highly flammable (!) hay
+                                        bales that are scattered around the camping areas. We want a wedding to r
+                                        emember but not in that way.</p>
+
+                                    <p>If you are in a camper van or caravan please note that there is no Chemical
+                                        Toilet Disposal Point at Bogbain. Unfortunately the venue has a septic tank that
+                                        cannot take the chemicals and it’s not viable for us to hire alternatives. That
+                                        said we’ve spoken to Ardtower Caravan Park, a campsite 3 miles away, who are
+                                        happy to accept waste for a fee of £10. Given the proximity of the toilets in
+                                        the main building we recommend you use those for the most part and suggest that
+                                        you swing by the campsite prior to arriving and/or after leaving Kith & Kin.</p>
+
+                                    <h2>Wedding gifts</h2>
+                                    <p>We chose not to have a gift list, in favour of a truly participatory wedding
+                                        where you can give as you like - time, energy, skills or creativity. A few of
+                                        you have a more traditional present and if that is you, then we
+                                        would love a contribution to our honeymoon (we’re driving the Pacific coast from
+                                        San Diego to Seattle via Madras, Oregon for the total solar eclipse on the 21st
+                                        of August), or of course you are totally welcome to ad lib and give us something
+                                        to treasure for years to come (maybe a book or board game). You can go here
+                                        ???.</p>
+
+                                    <h2>Questions?</h2>
+                                    <p>If you have a question or think we've missed some vital information (such as
+                                        what shade of lipstick we recommend to pair with our wine choice) then
+                                        please drop us a line at
+                                        <a href="mailto:info@@kithandkin.wedding">info@@kithandkin.wedding</a> or by
+                                        WhatsApp, phone or any other way you know how (the floo network etc).
+                                        Alternatively reach out to the borg mind and post your question in the
+                                        <a href="https://www.facebook.com/groups/kithandkin2017">Facebook group</a>.</p>
+
+                                    <p>Fun festival vibes,</p>
+
+                                    <p>Christina and Simon</p>
+
+                                    <p>p.s. Any questions or comments? Reply to us at this e-mail address!</p>
+                                </td>
+                            </tr>
+                        </table><!-- content-2 -->
+                    </td>
+                </tr><!-- content-2 -->
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td align="center">
+                        <img src="@routes.Assets.versioned("images/cow-400w.png").absoluteURL()" width="200">
+                    </td>
+                </tr>
+            </table><!-- main -->
+        </td></tr></table><!-- wrapper -->
+    </body>
+</html>

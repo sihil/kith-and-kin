@@ -109,13 +109,17 @@ case class Invite(
   onTheHouse: Option[Boolean] = None,
   editable: Option[Boolean] = None
 ) {
-  def firstName(name: String) = name.split(" ").head
-  def firstNames(as: List[Adult], cs: List[Child]): List[String] = (as.map(_.name) ::: cs.map(_.name)).map(firstName)
-  def stringifyList(list: List[String]) = if (list.size <= 1) list.mkString(", ") else s"${list.init.mkString(", ")} and ${list.last}"
-  def giveMeFirstNames = stringifyList(firstNames(adults, children))
+  def giveMeFirstNames = Invite.stringifyList(Invite.firstNames(adults, children))
   def giveMeAName = addressee.getOrElse(giveMeFirstNames)
   def number = adults.size + children.size
   def numberOfAdults = adults.size
   def isEditable = editable.contains(true)
+}
+
+object Invite {
+  def firstName(name: String) = name.split(" ").head
+  def firstNames(ps: List[Person]) = ps.map(p => firstName(p.name))
+  def firstNames(as: List[Adult], cs: List[Child]): List[String] = firstNames(as ::: cs)
+  def stringifyList(list: List[String]) = if (list.size <= 1) list.mkString(", ") else s"${list.init.mkString(", ")} and ${list.last}"
 }
 

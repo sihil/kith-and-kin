@@ -2,14 +2,20 @@ package models
 
 import java.util.UUID
 
+import db.PaymentRepository
 import helpers.HtmlToPlainText
 import org.joda.time.DateTime
 import play.api.mvc.RequestHeader
 
 case class Email(id: UUID, template: String, update: Int = 0, sentDate: DateTime, sentTo: List[String] = Nil)
 
-object EmailTemplate {
-  def allTemplates = List(ReminderEmailTemplate, SecondRoundEmailTemplate, RsvpLockDownEmailTemplate)
+class EmailTemplates(paymentRepository: PaymentRepository) {
+  def allTemplates = List(
+    ReminderEmailTemplate,
+    SecondRoundEmailTemplate,
+    RsvpLockDownEmailTemplate,
+    new OneMonthEmailTemplate(paymentRepository)
+  )
 }
 
 trait EmailTemplate {
@@ -47,5 +53,19 @@ object RsvpLockDownEmailTemplate extends EmailTemplate {
   override def text(invite: Invite)(implicit request: RequestHeader) = html(invite).map(HtmlToPlainText.convert).get
   override def html(invite: Invite)(implicit request: RequestHeader) = Some(views.html.email.accommodationLockDown(invite).body)
   override def recipientSelector = i => !i.rsvp.flatMap(_.coming).contains(false)
+  override def preSendCheck = _.secret.nonEmpty
+}
+
+class OneMonthEmailTemplate(paymentRepository: PaymentRepository) extends EmailTemplate {
+  override def name = "One month comms"
+  override def subject(invite: Invite) = "One month until Kith & Kin Festival!"
+  override def text(invite: Invite)(implicit request: RequestHeader) = html(invite).map(HtmlToPlainText.convert).get
+  override def html(invite: Invite)(implicit request: RequestHeader) = {
+    val questions = QuestionMaster.questions(invite, _.rsvp)
+    val payments = paymentRepository.getPaymentsForInvite(invite).toList
+    val paid = payments.filter{p => p.stripePayment.forall(_.charged) || p.bankTransfer.forall(_.received)}.map(_.amount).sum
+    Some(views.html.email.oneMonthComms(questions, payments, paid).body)
+  }
+  override def recipientSelector = i => i.rsvp.flatMap(_.coming).contains(true)
   override def preSendCheck = _.secret.nonEmpty
 }

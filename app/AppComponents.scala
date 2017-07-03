@@ -6,7 +6,7 @@ import controllers._
 import db.{EmailRepository, InviteRepository, PaymentRepository}
 import filters.{AccessLoggingFilter, ForwardingFilter}
 import helpers.EmailService
-import models.StripeKeys
+import models.{EmailTemplates, StripeKeys}
 import play.api.ApplicationLoader.Context
 import play.api._
 import play.api.cache.EhCacheComponents
@@ -74,9 +74,11 @@ class AppComponents(context: Context)
   val paymentRepository = new PaymentRepository(dynamoClient, stage)
   val emailRepository = new EmailRepository(dynamoClient, stage)
 
+  val emailTemplates = new EmailTemplates(paymentRepository)
+
   val kithKinController = new KithAndKinController()
   val rsvpController = new RsvpController(inviteRepository, paymentRepository, emailService, operationContext, environment.mode)
-  val adminController = new AdminController(wsClient, baseUrl, inviteRepository, paymentRepository, emailService, emailRepository)
+  val adminController = new AdminController(wsClient, baseUrl, inviteRepository, paymentRepository, emailService, emailRepository, emailTemplates)
   val paymentsController = new Payments(inviteRepository, paymentRepository, emailService, stripeKeys)
   val assets = new Assets(httpErrorHandler)
 

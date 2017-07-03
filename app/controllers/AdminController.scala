@@ -91,7 +91,8 @@ object InviteSummary {
 case class InvitePaymentStatus(invite: Invite, total: Int, paid: Int, confirmed: Int)
 
 class AdminController(val wsClient: WSClient, val baseUrl: String, inviteRepository: InviteRepository,
-                      paymentRepository: PaymentRepository, emailService: EmailService, emailRepository: EmailRepository)
+                      paymentRepository: PaymentRepository, emailService: EmailService,
+                      emailRepository: EmailRepository, emailTemplates: EmailTemplates)
   extends Controller with AuthActions {
 
   def summary = WhitelistAction(Whitelist.kidsUsers ++ Whitelist.otherUsers) { implicit r =>
@@ -269,14 +270,14 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
 
   def emailDashboard = WhitelistAction() { implicit request =>
     Ok(views.html.admin.emailDashboard(
-      EmailTemplate.allTemplates,
+      emailTemplates.allTemplates,
       emailRepository.getEmailList.toSeq,
       inviteRepository.getInviteList.toSeq
     ))
   }
 
   def previewEmail(templateName: String) = WhitelistAction() { implicit request =>
-    val maybeTemplate = EmailTemplate.allTemplates.find(_.name == templateName)
+    val maybeTemplate = emailTemplates.allTemplates.find(_.name == templateName)
     maybeTemplate.map { template =>
       val invites = inviteRepository.getInviteList.toSeq
       if (invites.forall(template.preSendCheck)) {
@@ -289,7 +290,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
   }
 
   def sendEmail(templateName: String) = WhitelistAction() { implicit request =>
-    val maybeTemplate = EmailTemplate.allTemplates.find(_.name == templateName)
+    val maybeTemplate = emailTemplates.allTemplates.find(_.name == templateName)
     maybeTemplate.map { template =>
       val emailRecord = Email(
         id = UUID.randomUUID(),
