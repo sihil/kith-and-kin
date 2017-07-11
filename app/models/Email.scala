@@ -14,7 +14,8 @@ class EmailTemplates(paymentRepository: PaymentRepository) {
     ReminderEmailTemplate,
     SecondRoundEmailTemplate,
     RsvpLockDownEmailTemplate,
-    new OneMonthEmailTemplate(paymentRepository)
+    new OneMonthEmailTemplate(paymentRepository),
+    new ChasePaymentsEmailTemplate(paymentRepository)
   )
 }
 
@@ -67,5 +68,25 @@ class OneMonthEmailTemplate(paymentRepository: PaymentRepository) extends EmailT
     Some(views.html.email.oneMonthComms(questions, payments, paid).body)
   }
   override def recipientSelector = i => i.rsvp.flatMap(_.coming).contains(true)
+  override def preSendCheck = _.secret.nonEmpty
+}
+
+class ChasePaymentsEmailTemplate(paymentRepository: PaymentRepository) extends EmailTemplate {
+  override def name = "Chase payments"
+  override def subject(invite: Invite) = "🌻 Kith & Kin Payment Reminder"
+  override def text(invite: Invite)(implicit request: RequestHeader) = html(invite).map(HtmlToPlainText.convert).get
+  override def html(invite: Invite)(implicit request: RequestHeader) = {
+    val questions = QuestionMaster.questions(invite, _.rsvp)
+    val paid = paymentRepository.getPaymentsForInvite(invite).filter(_.confirmed).map(_.amount).sum
+    val maybeBreakdown = questions.breakdown
+    maybeBreakdown.map { breakdown =>
+      views.html.email.chasePayments(questions, paid, breakdown).body
+    }
+  }
+  override def recipientSelector = invite => {
+    val questions = QuestionMaster.questions(invite, _.rsvp)
+    val paid = paymentRepository.getPaymentsForInvite(invite).filter(_.confirmed).map(_.amount).sum
+    paid < questions.totalPrice
+  }
   override def preSendCheck = _.secret.nonEmpty
 }

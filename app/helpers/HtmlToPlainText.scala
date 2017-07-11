@@ -76,7 +76,8 @@ class HtmlToPlainText {
     override def tail(node: Node, depth: Int) = {
       if (skipping.isEmpty) {
         val name = node.nodeName
-        if (StringUtil.in(name, "br", "dd", "dt", "p", "h1", "h2", "h3", "h4", "h5")) append("\n")
+        if (StringUtil.in(name, "br", "dd", "dt", "p", "h1", "h2", "h3", "h4", "h5", "tr")) append("\n")
+        else if (StringUtil.in(name, "td", "th")) append("\t")
         else if (name == "img") append(s"${node.attr("alt")}\n")
         else if (name == "a") append(s" <${node.attr("href")}>")
       } else if (skipping.contains(node.nodeName())) {

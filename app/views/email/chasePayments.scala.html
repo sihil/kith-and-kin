@@ -1,0 +1,201 @@
+@import cats.data.NonEmptyList
+@(questions: Questions, paid: Int, breakdown: NonEmptyList[PriceBreakdown])(implicit request: RequestHeader)
+@import helpers.IntCurrency
+@import helpers.RichInvite
+
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Kith & Kin payments due!</title>
+        <style type="text/css">
+                a {
+                    color: #4A72AF;
+                }
+
+                body, h1, h2, p {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                #main {
+                    border: 1px solid #cfcece;
+                }
+
+                img {
+                    display: block;
+                }
+
+                #top-message p, #bottom-message p {
+                    color: #3f4042;
+                    font-size: 12px;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+
+                h1 {
+                    color: #444444 !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 24px;
+                    margin-bottom: 0 !important;
+                    padding-bottom: 0;
+                    padding-top: 7px;
+                }
+
+                h2 {
+                    color: #444444 !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 20px;
+                    margin-bottom: 0 !important;
+                    padding-bottom: 0;
+                    padding-top: 5px;
+                }
+
+                h1, h2, h3, h4, h5, h6 {
+                    margin: 0 0 0.8em 0;
+                }
+
+                h3 {
+                    font-size: 20px;
+                    color: #4A72AF !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                }
+
+                h4 {
+                    font-size: 18px;
+                    color: #4A72AF !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                }
+
+                h5 {
+                    font-size: 16px;
+                    color: #4A72AF !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                }
+
+                p {
+                    font-size: 14px;
+                    color: #404040 !important;
+                    font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", sans-serif;
+                    line-height: 1.5;
+                    padding-bottom: 7px;
+                }
+
+                ul.asterisk {
+                    font-size: 14px;
+                    color: #404040 !important;
+                    font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", sans-serif;
+                    list-style: none;
+                    margin-left: 0;
+                    padding-left: 0;
+                }
+
+                ul.asterisk li {
+                    padding-left: 1em;
+                    text-indent: -1em;
+                }
+
+                ul.asterisk li:before {
+                    content: "*";
+                    padding-right: 5px;
+                }
+
+                .align-right {
+                    text-align: right;
+                }
+
+                .align-left {
+                    text-align: left;
+                }
+        </style>
+    </head>
+    <body>
+        <table width="100%" cellpadding="0" cellspacing="0" bgcolor="e4e4e4"><tr><td>
+            <table id="main" width="600" align="center" cellpadding="0" cellspacing="15" bgcolor="ffffff">
+                <tr>
+                    <td align="center">
+                        <img src="@routes.Assets.versioned("images/kith-kin-festival-combined-1000w.png").absoluteURL()" width="500" alt="Kith & Kin Festival">
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td>
+                        <table id="content-2" cellpadding="0" cellspacing="0" align="center">
+                            <tr>
+                                <td width="570"><p>
+                                <p>Hello @Invite.stringifyList(Invite.firstNames(questions.coming)),</p>
+
+                                    <p>This is a short note to say that we think you have yet to pay for the
+                                        accommodation and food options you've chosen for Kith & Kin.</p>
+
+                                    <p>We've calculated the following based on your RSVP answers:</p>
+
+                                    <table class="table" cellpadding="3">
+                                        <thead>
+                                            <tr>
+                                                <th width="350" class="align-left">Description</th>
+                                                <th width="100" class="align-right">Price</th>
+                                                <th width="100" class="align-right">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        @breakdown.toList.map { price =>
+                                            <tr>
+                                                <td>@price.desc</td>
+                                                <td class="align-right">@price.itemAmount.sterling</td>
+                                                <td class="align-right">@price.subTotal.sterling</td>
+                                            </tr>
+                                        }
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th></th>
+                                                <th class="align-right">Total</th>
+                                                <th class="align-right">@questions.totalPrice.sterling</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+
+                                    @if(paid != 0) {
+                                    <p>You've already paid @paid.sterling(true) and we think you still owe us
+                                    @{
+                                        (questions.totalPrice - paid).sterling(true)
+                                    }.
+                                </p>
+                                    }
+
+                                    <p>If that doesn't look right to you then please reply to this and we'll sort it out.</p>
+
+                                    <p>Our preference would be that all money owed for accommodation (and food if you're
+                                        around on Friday or Sunday) is paid ahead of time but if that's not possible
+                                        for some reason please get in touch and let us know.</p>
+
+                                    <p>You can see details of
+                                        what you owe and pay by bank transfer or debit/credit card on the
+                                        Kith & Kin website
+                                        <a href="@questions.invite.rsvpLink(routes.Payments.home()).map(_.absoluteURL())">
+                                            payments page</a>
+                                        (apologies that this link did not work on the last e-mail we sent).</p>
+
+                                    <p>Many thanks,</p>
+
+                                    <p>Christina and Simon</p>
+
+                                    <p>p.s. Any questions or comments? Reply to us at this e-mail address!</p>
+                                </td>
+                            </tr>
+                        </table><!-- content-2 -->
+                    </td>
+                </tr><!-- content-2 -->
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td align="center">
+                        <img src="@routes.Assets.versioned("images/cow-400w.png").absoluteURL()" width="200">
+                    </td>
+                </tr>
+            </table><!-- main -->
+        </td></tr></table><!-- wrapper -->
+    </body>
+</html>
