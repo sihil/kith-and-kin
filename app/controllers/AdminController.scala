@@ -122,22 +122,26 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
   }
 
   def payments = WhitelistAction() { implicit r =>
-    val invites = inviteRepository.getInviteList.toList.map(i => i.id -> i).toMap
+    val invitesMap = inviteRepository.getInviteList.toList.map(i => i.id -> i).toMap
+    val questionsMap = invitesMap.mapValues { invite => QuestionMaster.questions(invite, _.rsvp) }
     val payments = paymentRepository.getPaymentList.toList
     val total = payments.map(_.amount).sum
     val confirmed = payments.filter(_.confirmed).map(_.amount).sum
-    val paymentList = payments.flatMap { payment => invites.get(payment.inviteId).map(invite => (payment, invite)) }
-    val inviteStatusList = invites.filter(_._2.rsvp.nonEmpty).map { case (id, invite) =>
-      val questions = QuestionMaster.questions(invite, _.rsvp)
+    val paymentList = payments.flatMap { payment => invitesMap.get(payment.inviteId).map(invite => (payment, invite)) }
+    val inviteStatusList = questionsMap.filter(_._2.maybeRsvpFacet.nonEmpty).map { case (id, questions) =>
       val totalForInvite = questions.totalPrice
       val paymentsForInvite = payments.filter(_.inviteId == id)
       val paidForInvite = paymentsForInvite.map(_.amount).sum
       val confirmedForInvite = paymentsForInvite.filter(_.confirmed).map(_.amount).sum
-      InvitePaymentStatus(invite, totalForInvite, paidForInvite, confirmedForInvite)
+      InvitePaymentStatus(questions.invite, totalForInvite, paidForInvite, confirmedForInvite)
     }
     val owed = inviteStatusList.map(_.total).sum
     val outstandingInvitesStatusList = inviteStatusList.filter { status => status.total != status.paid || status.total != status.confirmed }
-    Ok(views.html.admin.paymentSummary(owed, total, confirmed, paymentList, outstandingInvitesStatusList.toList))
+    val allBreakdowns = questionsMap.values.flatMap(_.breakdown).flatMap(_.toList)
+    val breakdownSummary = allBreakdowns.groupBy(_.desc).mapValues { breakdowns =>
+      breakdowns.reduce { (one, two) => one.copy(subTotal = one.subTotal + two.subTotal) }
+    }.values.toList.sortBy(_.desc)
+    Ok(views.html.admin.paymentSummary(owed, total, confirmed, paymentList, outstandingInvitesStatusList.toList, breakdownSummary))
   }
 
   def accommodation = WhitelistAction() { implicit r =>

@@ -1,6 +1,7 @@
 @import helpers._
 @import org.joda.time.format.DateTimeFormat
-@(owed: Int, total: Int, confirmed: Int, paymentList: List[(Payment, Invite)], inviteStatus: List[InvitePaymentStatus])(implicit request: RequestHeader)
+@(owed: Int, total: Int, confirmed: Int, paymentList: List[(Payment, Invite)], inviteStatus: List[InvitePaymentStatus],
+        breakdowns: List[PriceBreakdown])(implicit request: RequestHeader)
 
 @admin.adminPage("Payments") {
     <section class="section">
@@ -11,6 +12,28 @@
                 <div class="column"><p>All payments: @total.sterling(true)</p></div>
                 <div class="column"><p>Confirmed payments: @confirmed.sterling(true)</p></div>
             </div>
+            <h2 class="heading">Breakdown of payments</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Desc</th>
+                        <th>Number</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @breakdowns.map { breakdown =>
+                        <tr>
+                            <td>@breakdown.desc</td>
+                            <td>@{breakdown.subTotal / breakdown.itemAmount}</td>
+                            <td>@breakdown.itemAmount.sterling</td>
+                            <td>@breakdown.subTotal.sterling</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <h2 class="heading">All payments</h2>
             <table class="table">
                 <thead>
                     <tr>
