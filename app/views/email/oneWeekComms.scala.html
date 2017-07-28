@@ -1,0 +1,198 @@
+@(questions: Questions, payments: List[Payment], paid: Int)(implicit request: RequestHeader)
+@import helpers.IntCurrency
+@import helpers.RichInvite
+
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>One week until Kith & Kin festival!</title>
+        <style type="text/css">
+                a {
+                    color: #4A72AF;
+                }
+
+                body, h1, h2, p {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                #main {
+                    border: 1px solid #cfcece;
+                }
+
+                img {
+                    display: block;
+                }
+
+                #top-message p, #bottom-message p {
+                    color: #3f4042;
+                    font-size: 12px;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+
+                h1 {
+                    color: #444444 !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 24px;
+                    margin-bottom: 0 !important;
+                    padding-bottom: 0;
+                    padding-top: 7px;
+                }
+
+                h2 {
+                    color: #444444 !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 20px;
+                    margin-bottom: 0 !important;
+                    padding-bottom: 0;
+                    padding-top: 5px;
+                }
+
+                h1, h2, h3, h4, h5, h6 {
+                    margin: 0 0 0.8em 0;
+                }
+
+                h3 {
+                    font-size: 20px;
+                    color: #4A72AF !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                }
+
+                h4 {
+                    font-size: 18px;
+                    color: #4A72AF !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                }
+
+                h5 {
+                    font-size: 16px;
+                    color: #4A72AF !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                }
+
+                p {
+                    font-size: 14px;
+                    color: #404040 !important;
+                    font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", sans-serif;
+                    line-height: 1.5;
+                    padding-bottom: 7px;
+                }
+
+                ul.asterisk {
+                    font-size: 14px;
+                    color: #404040 !important;
+                    font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", sans-serif;
+                    list-style: none;
+                    margin-left: 0;
+                    padding-left: 0;
+                }
+
+                ul.asterisk li {
+                    padding-left: 1em;
+                    text-indent: -1em;
+                }
+
+                ul.asterisk li:before {
+                    content: "*";
+                    padding-right: 5px;
+                }
+        </style>
+    </head>
+    <body>
+        <table width="100%" cellpadding="0" cellspacing="0" bgcolor="e4e4e4"><tr><td>
+            <table id="main" width="600" align="center" cellpadding="0" cellspacing="15" bgcolor="ffffff">
+                <tr>
+                    <td align="center">
+                        <img src="@routes.Assets.versioned("images/kith-kin-festival-combined-1000w.png").absoluteURL()" width="500" alt="Kith & Kin Festival">
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td>
+                        <table id="content-2" cellpadding="0" cellspacing="0" align="center">
+                            <tr>
+                                <td width="570"><p>
+                                <p>Hi @Invite.stringifyList(Invite.firstNames(questions.coming))!</p>
+
+                                <p>There's only one week to go!! We’re at fever pitch here at K&K HQ, with last minute
+                                    conversations with bands, chefs, printers & vicars! This weekend we are moving our
+                                    base of operations up to Scotland, so we are trying to figure out how to pack for a
+                                    week of preparations, then the wedding and then our honeymoon. Luckily the extra
+                                    large suitcases we ordered arrived last night!</p>
+
+                                <h2>Travel</h2>
+                                <p>As you plan your journey, if you’d like to share taxis, offer lifts or just find a
+                                    travel companion, please leave a message in the
+                                    <a href="https://www.facebook.com/groups/kithandkin2017">Facebook group</a>. And if
+                                    you want a
+                                    great playlist for the journey, <a href="https://open.spotify.com/user/simonhildrew/playlist/2Fh2ALd6vr2RMK3R6KNZ7Q">this is music</a>
+                                     from the bands we've got playing over the festival.</p>
+
+                                <p>If you get lost or anything goes wrong with your journey then contact Megan on 07835 047664.</p>
+
+                                <h2>Practicalities</h2>
+                                <p>For information about what to bring, what to wear, presents etc, please visit the
+                                    <a href="https://www.kithandkin.wedding/festivalInfo">Festival info</a> page of our
+                                    website. We will have people driving to the local
+                                    supermarket every morning, so if you don’t have a car and forget anything vital
+                                    let us know.</p>
+
+                                <h2>Showers</h2>
+                                <p>You can now book showers over the weekend. Head over to
+                                    <a href="https://docs.google.com/spreadsheets/d/1y_OqYOCzMdpGtcQlVbmjdNJ9q8LPBHjlGLlWDrqqa3k/edit#gid=0">our shared spreadsheet</a>
+                                and pop your name into a space on the days you want to have a shower.</p>
+
+                                <h2>Kids</h2>
+                                <p>We've got plenty of children coming, so we've been planning loads of fun activities
+                                    for them, from origami to building dinosaur lairs.</p>
+
+                                <h2>Games</h2>
+                                <p>Board games - at last count, people are bringing over 40 different games. You can
+                                    find the list <a href="https://docs.google.com/spreadsheets/d/15kYqjCrcadMJYeR7V5ALOaVVP090GR90xNo9O82WgVg/edit#gid=506700889">here</a>
+                                    and if you've got a favourite that isn’t there, please bring it along.</p>
+
+                                <h2>Weather</h2>
+                                <p>The festival is in a Scottish field - there will be weather! So along with wedding
+                                    glamour, please remember a warm jumper, waterproofs, sensible-ish shoes and midge
+                                    repellent! There is plenty of inside space if it does rain, but we do want to enjoy
+                                    the beautiful outdoors as much as we can.</p>
+
+                                <h2>Solo guests</h2>
+                                <p>If you don't know many people at the wedding, don’t worry! We promise there will be
+                                    lots of amazing, friendly people to get to know. But if you'd like to, you could
+                                    introduce yourself in the
+                                    <a href="https://www.facebook.com/groups/kithandkin2017">Facebook group</a> before
+                                    the wedding, so people can be sure to say hi when you arrive.</p>
+
+                                <h2>Questions?</h2>
+                                <p>If there's anything else you'd like to know, just reach out to us. Either reply to
+                                    this email, or contact us through Facebook, Whatsapp, or give us a call!</p>
+
+                                <p>We can't wait to welcome you to the festival. Along with the great bands, fun
+                                    activities and amazing food we've got planned, it's our hope that you'll have the
+                                    time and space to relax and spend quality time with family and friends in the
+                                    beautiful highlands.</p>
+
+                                <p>Much love and see you soon!</p>
+
+                                <p>Simon & Christina</p>
+
+                                </td>
+                            </tr>
+                        </table><!-- content-2 -->
+                    </td>
+                </tr><!-- content-2 -->
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td align="center">
+                        <img src="@routes.Assets.versioned("images/cow-400w.png").absoluteURL()" width="200">
+                    </td>
+                </tr>
+            </table><!-- main -->
+        </td></tr></table><!-- wrapper -->
+    </body>
+</html>

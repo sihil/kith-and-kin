@@ -15,6 +15,7 @@ class EmailTemplates(paymentRepository: PaymentRepository) {
     SecondRoundEmailTemplate,
     RsvpLockDownEmailTemplate,
     new OneMonthEmailTemplate(paymentRepository),
+    new OneWeekEmailTemplate(paymentRepository),
     new ChasePaymentsEmailTemplate(paymentRepository)
   )
 }
@@ -66,6 +67,20 @@ class OneMonthEmailTemplate(paymentRepository: PaymentRepository) extends EmailT
     val payments = paymentRepository.getPaymentsForInvite(invite).toList
     val paid = payments.filter{p => p.stripePayment.forall(_.charged) || p.bankTransfer.forall(_.received)}.map(_.amount).sum
     Some(views.html.email.oneMonthComms(questions, payments, paid).body)
+  }
+  override def recipientSelector = i => i.rsvp.flatMap(_.coming).contains(true)
+  override def preSendCheck = _.secret.nonEmpty
+}
+
+class OneWeekEmailTemplate(paymentRepository: PaymentRepository) extends EmailTemplate {
+  override def name = "One week comms"
+  override def subject(invite: Invite) = "One week until Kith & Kin festival!"
+  override def text(invite: Invite)(implicit request: RequestHeader) = html(invite).map(HtmlToPlainText.convert).get
+  override def html(invite: Invite)(implicit request: RequestHeader) = {
+    val questions = QuestionMaster.questions(invite, _.rsvp)
+    val payments = paymentRepository.getPaymentsForInvite(invite).toList
+    val paid = payments.filter{p => p.stripePayment.forall(_.charged) || p.bankTransfer.forall(_.received)}.map(_.amount).sum
+    Some(views.html.email.oneWeekComms(questions, payments, paid).body)
   }
   override def recipientSelector = i => i.rsvp.flatMap(_.coming).contains(true)
   override def preSendCheck = _.secret.nonEmpty
