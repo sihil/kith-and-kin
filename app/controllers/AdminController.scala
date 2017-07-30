@@ -2,19 +2,24 @@ package controllers
 
 import java.util.UUID
 
+import akka.actor.ActorSystem
 import com.gu.googleauth.{Actions, GoogleAuthConfig, UserIdentity}
 import db.{EmailRepository, InviteRepository, PaymentRepository}
 import helpers.{AWSEmail, EmailService, RsvpCookie, RsvpId, Secret}
 import models._
 import org.joda.time.DateTime
 import play.api.Logger
+import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.mvc.Security.AuthenticatedRequest
 import play.api.mvc._
 import views.html.helper.options
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.{postfixOps, reflectiveCalls}
+import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object HttpResults extends Results
 
@@ -92,8 +97,10 @@ case class InvitePaymentStatus(invite: Invite, total: Int, paid: Int, confirmed:
 
 class AdminController(val wsClient: WSClient, val baseUrl: String, inviteRepository: InviteRepository,
                       paymentRepository: PaymentRepository, emailService: EmailService,
-                      emailRepository: EmailRepository, emailTemplates: EmailTemplates)
+                      emailRepository: EmailRepository, emailTemplates: EmailTemplates, actorSystem: ActorSystem)
   extends Controller with AuthActions {
+
+  actorSystem.scheduler.schedule(10 seconds, 30 minutes)(checkSolDuc())
 
   def summary = WhitelistAction(Whitelist.kidsUsers ++ Whitelist.otherUsers) { implicit r =>
     def comingSummary(questions: List[Questions]): InviteSummary = {
@@ -382,6 +389,49 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
         }.getOrElse(NotFound(s"Invite $id not found when toggling editable"))
       case unknown =>
         NotFound(s"Unknown id/action: $unknown")
+    }
+  }
+
+  case class Availability(DateKey: String, AvailableCount: Int)
+
+  def solDucAvail: Future[List[Availability]] = {
+    implicit val reads = Json.reads[Availability]
+    val time = System.currentTimeMillis()
+    wsClient
+      .url(s"https://reservations.ahlsmsworld.com/WashingtonParks/Search/GetInventoryCountData?CresPropCode=POLYME&MultiPropCode=S&UnitTypeCode=&StartDate=Sat+Aug+19+2017&EndDate=Sat+Sep+02+2017&_=$time")
+      .get()
+      .map{
+        _.json.as[List[Availability]]
+      }
+      .map{ avail =>
+        avail.filter(a => a.DateKey == "2017-08-25" || a.DateKey == "2017-08-26").filter(_.AvailableCount > 0)
+      }
+  }
+
+  def checkSolDuc() = {
+    solDucAvail.onComplete {
+      case Success(avail) if avail.nonEmpty =>
+        // send an e-mail
+        val email = AWSEmail(
+          "info@kithandkin.wedding",
+          "SolDuc available!",
+          s"There now seems to be availability at SolDuc:\n$avail")
+        emailService.sendEmail(email)
+      case Success(_) => // do nothing
+        Logger.logger.info("Still nothing at sol duc")
+      case Failure(t) => // failed to check
+        Logger.logger.warn("Failed to check solduc", t)
+        val email = AWSEmail(
+          "info@kithandkin.wedding",
+          "SolDuc update failure",
+          s"Failed to retrieve update of SolDuc availability:\n${t.getStackTraceString}")
+        emailService.sendEmail(email)
+    }
+  }
+
+  def solDuc = Action.async { implicit request =>
+    solDucAvail.map { avail =>
+      Ok(avail.toString)
     }
   }
 

@@ -50,6 +50,7 @@ GET         /admin/email/preview/:template        controllers.AdminController.pr
 POST        /admin/email/send/:template           controllers.AdminController.sendEmail(template: String)
 POST        /admin/darkMagic/setAllSecrets        controllers.AdminController.setAllSecrets
 GET         /admin/arrival-and-departures         controllers.AdminController.arrivalAndDepartures(sortByDep: Boolean ?= false)
+GET         /admin/solDuc                         controllers.AdminController.solDuc
 
 # serve assets such as JS and images
 GET         /favicon.ico                          controllers.Assets.at(path="/public", file="favicon/favicon.ico")
