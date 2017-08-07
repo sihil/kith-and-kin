@@ -54,16 +54,20 @@ class EmailService(sesClient:AmazonSimpleEmailService, stage: String) {
     }
   }
 
-  def sendAdminEmail(subject: String, message: String, invite: Invite): Unit = {
-    val inviteData =
+  def sendAdminEmail(subject: String, message: String, invite: Invite): Unit =
+    sendAdminEmail(subject, message, Some(invite))
+
+  def sendAdminEmail(subject: String, message: String, invite: Option[Invite] = None): Unit = {
+    val inviteData = invite.map { i =>
       s"""
         |
         |Invite Data
         |-----------
-        |ID: ${invite.id}
-        |Adults: ${invite.adults.map(_.name).mkString(", ")}
-        |Contact e-mail: ${invite.email}
-      """.stripMargin
-    sendEmail(AWSEmail("info@kithandkin.wedding", subject, message + inviteData))
+        |ID: ${i.id}
+        |Adults: ${i.adults.map(_.name).mkString(", ")}
+        |Contact e-mail: ${i.email}
+    """.stripMargin
+      }
+    sendEmail(AWSEmail("info@kithandkin.wedding", subject, message + inviteData.getOrElse("\nNo invite data known")))
   }
 }

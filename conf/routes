@@ -31,6 +31,14 @@ POST        /payments/stripeForm                  controllers.Payments.stripeFor
 POST        /payments/bankTransfer                controllers.Payments.bankTransfer
 GET         /payments/error                       controllers.Payments.error
 
+# honeymoon payments
+GET         /honeymoon                              controllers.Payments.honeymoon
+POST        /honeymoon/ownAmount                    controllers.Payments.honeymoonAnyAmount
+GET         /honeymoon/contribute                 controllers.Payments.honeymoonContribution(amount: Int, transfer: Boolean, title: String)
+GET         /honeymoon/thanks                   controllers.Payments.honeymoonThanks
+POST        /honeymoon/bankTransfer               controllers.Payments.honeymoonBankTransfer
+POST        /honeymoon/card                        controllers.Payments.honeymoonStripeForm
+
 #admin
 GET         /admin                                controllers.AdminController.summary
 GET         /admin/list                           controllers.AdminController.list

@@ -1,0 +1,125 @@
+@()(implicit rh: RequestHeader)
+@import helper._
+
+@page("Honeymoon gift list", reactComponent = Some("payment")) {
+    <section class="section">
+        <div class="container">
+            <h1 class="heading">Pacific Coast: Total Eclipse of the... Sun</h1>
+            <div class="columns">
+                <div class="column is-half">
+                    <p>As we've said before, your presence and contributions at Kith & Kin have been more than enough
+                        and we don't expect gifts. Having said that, a few of you have indicated that you would still
+                        like to give a more traditional present and if that is you, then we would not say no to a
+                        contribution to our honey-sun-moon-earth fund.</p>
+                </div>
+                <div class="column is-half">
+                    <p>Our honeymoon will be driving the Pacific West Coast of America for 3 weeks from San Diego to
+                        Seattle. We'll be travelling via Madras, Oregon to witness a total solar eclipse on 21 August.
+                        In a Mustang...</p>
+                </div>
+            </div>
+            <div class="is-clearfix"></div>
+
+            <div class="tile is-ancestor">
+                <div class="tile-ie-fix">
+                    <div class="tile is-parent is-vertical">
+                        <div class="tile is-parent">
+                            @views.html.payments.honeymoonOption(
+                                "Scotland",
+                                2500,
+                                routes.Assets.versioned("images/honeymoon/scotland.jpg")
+                            ){
+                                <p>We're going to spend a couple of nights in the Cairngorms to recover from all that
+                                    festival frivolity. </p>
+                            }
+                        </div>
+                        <div class="tile is-parent">
+                        @views.html.payments.honeymoonOption(
+                            "Surfing USA",
+                            4000,
+                            routes.Assets.versioned("images/honeymoon/surfing.jpg")
+                        ){
+                            <p>The beach boys are likely to be the soundtrack to our honeymoon (apart from Bonnie Tyler
+                                obviously) & Christina is most looking forward to a surf lesson or two at Venice beach.</p>
+                        }
+                        </div>
+                        <div class="tile is-parent">
+                            @views.html.payments.honeymoonOption(
+                                "San Francisco",
+                                7500,
+                                routes.Assets.versioned("images/honeymoon/bridge.jpg")
+                            ){
+                                    <p>Two nights taking in the sights of San Fran, including
+                                        that rather large bridge...</p>
+                            }
+                        </div>
+                        <div class="tile is-parent">
+                        @views.html.payments.honeymoonOption(
+                            "Portland",
+                            4000,
+                            routes.Assets.versioned("images/honeymoon/portland.jpg")
+                        ){
+                            <p>We haven't met a single person who hasn't recommended visiting Portland on our trip.
+                                Look at that big mountain in the background! </p>
+                        }
+                        </div>
+                    </div>
+                </div>
+                    <div class="tile-ie-fix">
+                        <div class="tile is-parent is-vertical">
+                            <div class="tile is-parent">
+                            @views.html.payments.honeymoonOption(
+                                "In a Mustang, baby!",
+                                5000,
+                                routes.Assets.versioned("images/honeymoon/mustang.jpg")
+                            ){
+                                <p>We'll if you're going to do it, you gotta do it in style...</p>
+                            }
+                            </div>
+                            <div class="tile is-parent">
+                            @views.html.payments.honeymoonOption(
+                                "A night on the Queen Mary",
+                                10000,
+                                routes.Assets.versioned("images/honeymoon/queenmary.jpg")
+                            ){
+                                <p>That's this big ship! A one of a kind stay on the liner, now permanently moored at
+                                    Long Beach, Los Angeles.</p>
+                            }
+                            </div>
+                            <div class="tile is-parent">
+                            @views.html.payments.honeymoonOption(
+                                "SOLARFEST!!!",
+                                6000,
+                                routes.Assets.versioned("images/honeymoon/solarfest.png")
+                            ){
+                                <p>Simon's favourite geek bit! We're going to be at NASA's official viewing site for
+                                    the solar eclipse, staying in a bell tent on a fairground in Madras. Yes, there
+                                    really is a place called that.</p>
+                            }
+                            </div>
+                            <div class="tile is-parent">
+                            @views.html.payments.honeymoonOption(
+                                "Olympic National Park",
+                                10000,
+                                routes.Assets.versioned("images/honeymoon/olympic_park.jpg")
+                            ){
+                                <p>A few nights in the Olympic National Park. Hot springs and rainforest tours.</p>
+                            }
+                            </div>
+                            <div class="tile is-parent">
+                            <article class="tile is-child notification is-success">
+                                <h3>Something else?</h3>
+                                <p>Want to give another amount or for something specific? Here is your opportunity
+                                - you'll be able to send us a message on the next page.</p>
+                                @form(CSRF(routes.Payments.honeymoonAnyAmount)) {
+                                    <div id="anyAmount"></div>
+                                }
+                            </article>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}

@@ -1,0 +1,15 @@
+@(title: String, amount: Int, image: Call, colourClass: String = "is-info")(description: Html)
+@import helpers._
+
+<article class="tile is-child notification @colourClass">
+    <h3 class="heading">@title</h3>
+    <div class="photo-frame">
+        <img src="@image">
+        @description
+        <div class="notification payment payment-flex">
+            <span>Contribute @{amount.sterling(true)} by:</span>
+            <a class="button is-large is-info" href="@routes.Payments.honeymoonContribution(amount, true, title)">bank transfer</a>
+            <a class="button is-large is-info" href="@routes.Payments.honeymoonContribution(amount, false, title)">card</a>
+        </div>
+    </div>
+</article>

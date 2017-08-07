@@ -404,7 +404,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
         _.json.as[List[Availability]]
       }
       .map{ avail =>
-        avail.filter(a => a.DateKey == "2017-08-25" || a.DateKey == "2017-08-26").filter(_.AvailableCount > 0)
+        avail.filter(a => a.DateKey == "2017-08-25").filter(_.AvailableCount > 0)
       }
   }
 

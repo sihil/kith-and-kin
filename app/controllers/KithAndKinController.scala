@@ -24,8 +24,7 @@ class KithAndKinController extends Controller {
   }
 
   def festivalInfo = Action {
-    val days = new Interval(new DateTime(), firstDay).toDuration.getStandardDays
-    Ok(views.html.festivalInfo(days)).withHeaders(fifteenMinuteCache)
+    Ok(views.html.festivalInfo(0)).withHeaders(fifteenMinuteCache)
   }
 
   def robots = Action {

@@ -5,7 +5,9 @@
   "main": "public/index.html",
   "scripts": {
     "build-dev": "webpack ./public/react/rsvp.jsx ./public/build/rsvp.js --config ./webpack.conf.js --watch",
+    "build-pay-dev": "webpack ./public/react/payment.jsx ./public/build/payment.js --config ./webpack.conf.js --watch",
     "build": "webpack -p ./public/react/rsvp.jsx ./public/build/rsvp.js --config ./webpack.conf.js",
+    "build-pay": "webpack -p ./public/react/payment.jsx ./public/build/payment.js --config ./webpack.conf.js",
     "test": "jest"
   },
   "repository": {

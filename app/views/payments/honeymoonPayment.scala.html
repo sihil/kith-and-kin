@@ -1,0 +1,103 @@
+@(maybeInvite: Option[Invite], amount: Int, title: String, publishableKey: String, transfer: Boolean)(implicit request: RequestHeader)
+@import helpers._
+@import helper._
+
+@views.html.page("Honeymoon gift!") {
+    <section class="section">
+        <div class="container">
+            <div>
+                <h1>Honeymoon gift!</h1>
+
+                <p>Thanks so much for generously contributing towards our honeymoon!</p>
+
+                @if(transfer) {
+                    <div class="tile is-parent">
+                        <article class="tile is-child notification is-success">
+                            <h3>By bank transfer</h3>
+                            <p>Please use a reference we recognise so that we know who the gift is from (your surname
+                                and initials, or something amusing if you prefer). Our account details are:</p>
+                            <pre class="is-success">Simon Hildrew<br/>The Co-operative Bank<br/>s/c: 08-91-03<br/>a/c: 14152119</pre>
+                            <p>Tell us to look out for your bank transfer by filling out this little form:</p>
+                            @form(CSRF(routes.Payments.honeymoonBankTransfer)) {
+                                <input type="hidden" name="amount" value="@amount"/>
+                                <input type="hidden" name="title" value="@title"/>
+                                @maybeInvite match {
+                                    case None => {
+                                        <p class="control">
+                                            <input class="input" name="who" type="text" placeholder="Who are you?"@maybeInvite.map{i => value="@i.giveMeFirstNames"}>
+                                        </p>
+                                    }
+                                    case Some(invite) => {
+                                        <input type="hidden" name="who" value="@invite.adults.map(_.name).mkString(",")"/>
+                                    }
+                                }
+                                <p class="control">
+                                    <input class="input" name="reference" type="text" placeholder="Reference to look out for">
+                                </p>
+                                <p class="control">
+                                    <textarea class="textarea" name="message" type="text" placeholder="Message to Christina & Simon"></textarea>
+                                </p>
+                                <div class="has-text-right">
+                                    <button class="button is-large" type="submit">
+                                        I'm contributing @amount.sterling(true) by transfer</button>
+                                </div>
+                            }
+                        </article>
+                    </div>
+                } else {
+                    <div class="tile is-parent">
+                        <article class="tile is-child notification is-info">
+                            <h3>Card payment</h3>
+                            <p>We're using a well known online credit card payments provider called Stripe to
+                                take these payments. Stripe handle the card information, we don't see or store
+                                any of your personal information.</p>
+                            @maybeInvite.flatMap(_.email).map { emailAddress =>
+                                <p>Once complete you'll receive a receipt for the payment to @emailAddress. </p>
+                            }
+                            @if(publishableKey.contains("test")) {
+                                <p><strong>(note that this payments system is currently configured in test mode
+                                    and will not work with real credit cards, you can use 4242 4242 4242 4242 to
+                                    test with a future expiry, any CVC and a UK postcode)</strong></p>
+                            }
+                            @form(CSRF(routes.Payments.honeymoonStripeForm)) {
+                                <input type="hidden" name="amount" value="@amount"/>
+                                <input type="hidden" name="title" value="@title"/>
+                                <script
+                                src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+                                data-key="@publishableKey"
+                                data-amount="@amount"
+                                data-name="Kith & Kin"
+                                    @maybeInvite.flatMap(_.email).map { emailAddress => data-email="@emailAddress" }
+                                data-description="Accommodation and food"
+                                data-image="@routes.Assets.versioned("favicon/apple-touch-icon-152x152.png")"
+                                data-locale="auto"
+                                data-zip-code="true"
+                                data-currency="GBP"
+                                data-allow-remember-me="false">
+                                </script>
+                                @maybeInvite match {
+                                    case None => {
+                                        <p class="control">
+                                            <input class="input" name="who" type="text" placeholder="Who are you?"@maybeInvite.map{i => value="@i.giveMeFirstNames"}>
+                                        </p>
+                                    }
+                                    case Some(invite) => {
+                                        <input type="hidden" name="who" value="@invite.adults.map(_.name).mkString(",")"/>
+                                    }
+                                }
+                                <p class="control">
+                                    <textarea class="textarea" name="message" type="text" placeholder="Message to Christina & Simon"></textarea>
+                                </p>
+                                <div class="has-text-right">
+                                    <button class="button is-large" type="submit">
+                                        Contribute @amount.sterling(true) by card</button>
+                                </div>
+                            }
+
+                        </article>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
