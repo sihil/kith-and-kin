@@ -10,6 +10,7 @@ REMOTE_DEB_LOCATION="s3://kithandkin/application/kith-and-kin_1.0_all.deb"
 nvm use 6
 yarn
 yarn build
+yarn build-pay
 
 # build the deb
 sbt debian:packageBin

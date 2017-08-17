@@ -9,13 +9,14 @@
                 <div class="column is-half">
                     <p>As we've said before, your presence and contributions at Kith & Kin have been more than enough
                         and we don't expect gifts. Having said that, a few of you have indicated that you would still
-                        like to give a more traditional present and if that is you, then we would not say no to a
+                        like to give a more traditional present and, if that is you, then we would not refuse a
                         contribution to our honey-sun-moon-earth fund.</p>
                 </div>
                 <div class="column is-half">
-                    <p>Our honeymoon will be driving the Pacific West Coast of America for 3 weeks from San Diego to
-                        Seattle. We'll be travelling via Madras, Oregon to witness a total solar eclipse on 21 August.
-                        In a Mustang...</p>
+                    <p>Our honeymoon will be driving the beautiful Pacific West Coast of America for
+                        3 weeks from San Diego all the way north to Seattle (about one and a half
+                        thousand miles). We'll be travelling via Madras, Oregon to witness a total
+                        solar eclipse on 21 August.</p>
                 </div>
             </div>
             <div class="is-clearfix"></div>
@@ -27,7 +28,8 @@
                             @views.html.payments.honeymoonOption(
                                 "Scotland",
                                 2500,
-                                routes.Assets.versioned("images/honeymoon/scotland.jpg")
+                                routes.Assets.versioned("images/honeymoon/scotland.jpg"),
+                                "is-danger"
                             ){
                                 <p>We're going to spend a couple of nights in the Cairngorms to recover from all that
                                     festival frivolity. </p>
@@ -37,7 +39,8 @@
                         @views.html.payments.honeymoonOption(
                             "Surfing USA",
                             4000,
-                            routes.Assets.versioned("images/honeymoon/surfing.jpg")
+                            routes.Assets.versioned("images/honeymoon/surfing.jpg"),
+                            "is-success"
                         ){
                             <p>The beach boys are likely to be the soundtrack to our honeymoon (apart from Bonnie Tyler
                                 obviously) & Christina is most looking forward to a surf lesson or two at Venice beach.</p>
@@ -47,7 +50,8 @@
                             @views.html.payments.honeymoonOption(
                                 "San Francisco",
                                 7500,
-                                routes.Assets.versioned("images/honeymoon/bridge.jpg")
+                                routes.Assets.versioned("images/honeymoon/bridge.jpg"),
+                                "is-warning"
                             ){
                                     <p>Two nights taking in the sights of San Fran, including
                                         that rather large bridge...</p>
@@ -57,7 +61,8 @@
                         @views.html.payments.honeymoonOption(
                             "Portland",
                             4000,
-                            routes.Assets.versioned("images/honeymoon/portland.jpg")
+                            routes.Assets.versioned("images/honeymoon/portland.jpg"),
+                            "is-primary"
                         ){
                             <p>We haven't met a single person who hasn't recommended visiting Portland on our trip.
                                 Look at that big mountain in the background! </p>
@@ -80,7 +85,8 @@
                             @views.html.payments.honeymoonOption(
                                 "A night on the Queen Mary",
                                 10000,
-                                routes.Assets.versioned("images/honeymoon/queenmary.jpg")
+                                routes.Assets.versioned("images/honeymoon/queenmary.jpg"),
+                                "is-primary"
                             ){
                                 <p>That's this big ship! A one of a kind stay on the liner, now permanently moored at
                                     Long Beach, Los Angeles.</p>
@@ -90,7 +96,8 @@
                             @views.html.payments.honeymoonOption(
                                 "SOLARFEST!!!",
                                 6000,
-                                routes.Assets.versioned("images/honeymoon/solarfest.png")
+                                routes.Assets.versioned("images/honeymoon/solarfest.png"),
+                                "is-purple"
                             ){
                                 <p>Simon's favourite geek bit! We're going to be at NASA's official viewing site for
                                     the solar eclipse, staying in a bell tent on a fairground in Madras. Yes, there

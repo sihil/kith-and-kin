@@ -16,7 +16,8 @@ class EmailTemplates(paymentRepository: PaymentRepository) {
     RsvpLockDownEmailTemplate,
     new OneMonthEmailTemplate(paymentRepository),
     new OneWeekEmailTemplate(paymentRepository),
-    new ChasePaymentsEmailTemplate(paymentRepository)
+    new ChasePaymentsEmailTemplate(paymentRepository),
+    ThanksEmailTemplate
   )
 }
 
@@ -84,6 +85,16 @@ class OneWeekEmailTemplate(paymentRepository: PaymentRepository) extends EmailTe
   }
   override def recipientSelector = i => i.rsvp.flatMap(_.coming).contains(true)
   override def preSendCheck = _.secret.nonEmpty
+}
+
+object ThanksEmailTemplate extends EmailTemplate {
+  override def name = "Thanks & honeymoon"
+  override def subject(invite: Invite) = "🌻 The best is yet to come! 🌻"
+  override def text(invite: Invite)(implicit request: RequestHeader) = html(invite).map(HtmlToPlainText.convert).get
+  override def html(invite: Invite)(implicit request: RequestHeader) = {
+    Some(views.html.email.thanksAndHoneymoon(invite).body)
+  }
+  override def recipientSelector = _ => true
 }
 
 class ChasePaymentsEmailTemplate(paymentRepository: PaymentRepository) extends EmailTemplate {

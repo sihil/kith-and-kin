@@ -1,0 +1,202 @@
+@(invite: Invite)(implicit request: RequestHeader)
+@import helpers.IntCurrency
+@import helpers.RichInvite
+
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>The honeymoon has begun!</title>
+        <style type="text/css">
+                a {
+                    color: #4A72AF;
+                }
+
+                body, h1, h2, p {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                #main {
+                    border: 1px solid #cfcece;
+                }
+
+                img {
+                    display: block;
+                }
+
+                #top-message p, #bottom-message p {
+                    color: #3f4042;
+                    font-size: 12px;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+
+                h1 {
+                    color: #444444 !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 24px;
+                    margin-bottom: 0 !important;
+                    padding-bottom: 0;
+                    padding-top: 7px;
+                }
+
+                h2 {
+                    color: #444444 !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 20px;
+                    margin-bottom: 0 !important;
+                    padding-bottom: 0;
+                    padding-top: 5px;
+                }
+
+                h1, h2, h3, h4, h5, h6 {
+                    margin: 0 0 0.8em 0;
+                }
+
+                h3 {
+                    font-size: 20px;
+                    color: #4A72AF !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                }
+
+                h4 {
+                    font-size: 18px;
+                    color: #4A72AF !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                }
+
+                h5 {
+                    font-size: 16px;
+                    color: #4A72AF !important;
+                    font-family: Helvetica, Arial, sans-serif;
+                }
+
+                p {
+                    font-size: 14px;
+                    color: #404040 !important;
+                    font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", sans-serif;
+                    line-height: 1.5;
+                    padding-bottom: 7px;
+                }
+
+                ul.asterisk {
+                    font-size: 14px;
+                    color: #404040 !important;
+                    font-family: "Lucida Grande", "Lucida Sans", "Lucida Sans Unicode", sans-serif;
+                    list-style: none;
+                    margin-left: 0;
+                    padding-left: 0;
+                }
+
+                ul.asterisk li {
+                    padding-left: 1em;
+                    text-indent: -1em;
+                }
+
+                ul.asterisk li:before {
+                    content: "*";
+                    padding-right: 5px;
+                }
+        </style>
+    </head>
+    <body>
+        <table width="100%" cellpadding="0" cellspacing="0" bgcolor="e4e4e4"><tr><td>
+            <table id="main" width="600" align="center" cellpadding="0" cellspacing="15" bgcolor="ffffff">
+                <tr>
+                    <td align="center">
+                        <img src="@routes.Assets.versioned("images/kith-kin-festival-combined-1000w.png").absoluteURL()" width="500" alt="Kith & Kin Festival">
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td>
+                        <table id="content-2" cellpadding="0" cellspacing="0" align="center">
+                            <tr>
+                                <td width="570"><p/>
+                                <h2>The best is yet to come...</h2>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="570" align="center">
+
+<p>                                <img width="500" height="500" src="@routes.Assets.versioned("images/group_drone.jpg").absoluteURL()"></p>
+                                </td>
+                            </tr>
+                        <tr>
+<td width="570">
+                                <p>Hi @invite.giveMeFirstNames!</p>
+
+                                    @if(invite.rsvp.flatMap(_.coming).contains(true)) {
+                                        @*came*@
+                                        <p>Thank you so much for being apart of our crazy wedding festival weekend! We hope you enjoyed
+                                            it as much as we did. Thank you to everyone who helped out with different parts of the weekend -
+                                        it wouldn't have been what it was without the presence and participation of all of you, our kith and kin.</p>
+                                    } else {
+                                        @*didn't come*@
+                                        <p>We missed your presence at Kith & Kin wedding festival this weekend. You'll no doubt see photos up and around
+                                        on facebook with some of the highlights. We'll share official photos in a few weeks time. If you want to have a
+                                            peek at our ceremony, you can download our
+                                            <a href="@routes.Assets.versioned("downloads/Order of service.pdf").absoluteURL()">order of service here</a>. </p>
+                                    }
+
+                                    <h2>Honeymoon and gifts</h2>
+                                    <p>Our honeymoon will be driving the beautiful Pacific West Coast of America for 3 weeks from San Diego all the way
+                                north to Seattle (about one and a half thousand miles). We'll be travelling via Madras, Oregon to witness a total solar
+                                        eclipse on 21 August.</p>
+
+                                    <p>In a Mustang... (provided we can find Christina's driving licence before we fly). </p>
+
+                                    <p>As we've said before, your presence and contributions at Kith & Kin have been more than enough
+                                and we don't expect gifts. Having said that, a few of you have indicated that you would still
+                                like to give a more traditional present and, if that is you, then we would not refuse a
+                                contribution to our honey-sun-moon-earth fund. If you do want to contribute
+                                then head over to the
+                                    <a href="@routes.Payments.honeymoon().absoluteURL()">Kith & Kin website honeymoon page</a>.</p>
+
+                                    <h2>Autumn and Lego</h2>
+                                    <p>Simon's one low-light of the weekend was discovering (on Sunday afternoon) that
+                                        we'd forgotten to get the Apollo 11 lego set out of it's box! To compensate for
+                                        this, we plan to have a couple of whisky and lego evenings in
+                                London this autumn. If you're interested then please get in touch.</p>
+
+                                    <p>Even if you're not into recreating childhood construction memories, we hope to
+                                see many of you in the autumn as life returns to normal!</p>
+
+                                    <h2>Feedback</h2>
+                                    <p>Before you start wondering, we're not intending to have a 2018 edition of Kith & Kin festival!</p>
+                                    <p>However, Bogbain have done dozens of weddings and lots of festivals but this was
+                                        the first time they have combined the two. They did a great job and we'd love
+                                        to give them some feedback on what worked well and what didn't.
+                                        We've made a super simple feedback form for you to fill in which we'll pass on
+                                        after we get back from honeymoon. If you've got something to say go <a href="https://goo.gl/forms/o3Wh0IT9xlsxIVvd2">here</a>.</p>
+
+
+    <h2>Contact details</h2>
+    <p>We look forward to catching up with you soon.</p>
+    <p>Our e-mail addresses are simon@@hildrew.net and christina@@hildrew.net and our postal address is:</p>
+    <p>62 Allendale Close<br/>London<br/>SE5 8SG</p>
+
+    <p/>
+    <p/>
+                                    <p>Much love to you all,</p>
+
+                                    <p>The Hildrews (aaaaah!!)</p>
+
+                                </td>
+                            </tr>
+                        </table><!-- content-2 -->
+                    </td>
+                </tr><!-- content-2 -->
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td align="center">
+                        <img src="@routes.Assets.versioned("images/cow-400w.png").absoluteURL()" width="200">
+                    </td>
+                </tr>
+            </table><!-- main -->
+        </td></tr></table><!-- wrapper -->
+    </body>
+</html>

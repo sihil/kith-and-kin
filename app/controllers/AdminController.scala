@@ -100,7 +100,7 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
                       emailRepository: EmailRepository, emailTemplates: EmailTemplates, actorSystem: ActorSystem)
   extends Controller with AuthActions {
 
-  actorSystem.scheduler.schedule(10 seconds, 30 minutes)(checkSolDuc())
+  //actorSystem.scheduler.schedule(10 seconds, 30 minutes)(checkSolDuc())
 
   def summary = WhitelistAction(Whitelist.kidsUsers ++ Whitelist.otherUsers) { implicit r =>
     def comingSummary(questions: List[Questions]): InviteSummary = {
