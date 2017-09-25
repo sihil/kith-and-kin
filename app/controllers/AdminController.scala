@@ -1,11 +1,13 @@
 package controllers
 
+import java.io.StringWriter
 import java.util.UUID
 
 import akka.actor.ActorSystem
 import com.gu.googleauth.{Actions, GoogleAuthConfig, UserIdentity}
 import db.{EmailRepository, InviteRepository, PaymentRepository}
 import helpers.{AWSEmail, EmailService, RsvpCookie, RsvpId, Secret}
+import kantan.csv
 import models._
 import org.joda.time.DateTime
 import play.api.Logger
@@ -365,6 +367,23 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
       }
       Ok(s"Inserted ${invitesToInsert.size} invites from CSV (${list.size - invitesToInsert.size} filtered out)")
     }.getOrElse(UnprocessableEntity("No file"))
+  }
+
+  def exportCsv = WhitelistAction() { r =>
+    import kantan.csv.generic._
+    import kantan.csv.ops._
+    import kantan.csv._
+    case class CsvExport(names: String, postalAddress: String, came: String)
+    val currentInviteList = inviteRepository.getInviteList
+    val csvRows = currentInviteList.map { invite =>
+      val came = if (invite.rsvp.flatMap(_.coming).getOrElse(false)) "Yes" else "No"
+      CsvExport(invite.giveMeFirstNames, invite.address.getOrElse(""), came)
+    }
+
+    val output = new StringWriter()
+    val writer = output.asCsvWriter[CsvExport](',', "Names", "Address", "Came?")
+    writer.write(csvRows)
+    Ok(output.toString).as("text/csv")
   }
 
   def action = WhitelistAction() { r =>
