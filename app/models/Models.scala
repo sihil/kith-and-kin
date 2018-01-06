@@ -118,7 +118,10 @@ case class Invite(
 
 object Invite {
   def firstName(name: String) = name.split(" ").head
-  def firstNames(ps: List[Person]) = ps.map(p => firstName(p.name))
+  def firstNames(ps: List[Person]) = ps match {
+    case singleton :: Nil => List(singleton.name)
+    case other => other.map(p => firstName(p.name))
+  }
   def firstNames(as: List[Adult], cs: List[Child]): List[String] = firstNames(as ::: cs)
   def stringifyList(list: List[String]) = if (list.size <= 1) list.mkString(", ") else s"${list.init.mkString(", ")} and ${list.last}"
 }
