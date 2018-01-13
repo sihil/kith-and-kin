@@ -26,15 +26,6 @@ Parameters:
     Description: ARN of a TLS certificate to install in cloudfront (must be in us-east-1)
     Type: String
     Default: arn:aws:acm:us-east-1:862718471841:certificate/6ef64df7-7e36-4274-9f4c-0d362cea3085
-  App:
-    Type: String
-    Default: kithandkin
-  ArtifactBucket:
-    Description: Bucket where plambda artifact is located
-    Type: String
-  ArtifactKey:
-    Description: Key in the bucket where the artifact is located
-    Type: String
 
 Resources:
   LoadBalancerSecurityGroup:
@@ -62,7 +53,8 @@ Resources:
       - IpProtocol: tcp
         FromPort: 9000
         ToPort: 9000
-        SourceSecurityGroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
+        SourceSecurityGroupId:
+          Fn::GetAtt: LoadBalancerSecurityGroup.GroupId
         # allow SSH access (port 22 for now)
       - IpProtocol: tcp
         FromPort: 22
@@ -94,16 +86,6 @@ Resources:
             - cloudwatch:*
             - logs:*
             Resource: '*'
-
-  ApplicationPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: ApplicationPolicy
-      Roles:
-      - !Ref InstanceRole
-      - !Ref LambdaRole
-      PolicyDocument:
-        Statement:
           # allow instance to read from and append to dynamo db tables
           - Effect: Allow
             Action:
@@ -220,7 +202,7 @@ Resources:
         Interval: 30
         Timeout: 10
       SecurityGroups:
-      - !GetAtt LoadBalancerSecurityGroup.GroupId
+      - Fn::GetAtt: LoadBalancerSecurityGroup.GroupId
 
   LaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -230,7 +212,7 @@ Resources:
       ImageId:
         Ref: AMI
       SecurityGroups:
-      - !GetAtt InstanceSecurityGroup.GroupId
+      - Fn::GetAtt: InstanceSecurityGroup.GroupId
       InstanceType: t2.micro
       IamInstanceProfile:
         Ref: InstanceProfile
@@ -279,22 +261,11 @@ Resources:
         - www.kithandkin.wedding
         - kithandkin.wedding
         Origins:
-        - Id: "kithandkin"
-          CustomOriginConfig:
+        - CustomOriginConfig:
             HTTPSPort: 443
             OriginProtocolPolicy: "https-only"
           DomainName: !GetAtt LoadBalancer.DNSName
-        - Id: "kithandkin-assets"
-          CustomOriginConfig:
-            HTTPSPort: 443
-            OriginProtocolPolicy: "https-only"
-          DomainName: s3.eu-west-2.amazonaws.com
-          OriginPath: /kithandkin-plambda-assets/public
-        - Id: "kithandkin-lambda"
-          CustomOriginConfig:
-            HTTPSPort: 443
-            OriginProtocolPolicy: "https-only"
-          DomainName: !Sub ${API}.execute-api.${AWS::Region}.amazonaws.com
+          Id: "kithandkin"
         DefaultCacheBehavior:
           AllowedMethods: [DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT]
           Compress: true
@@ -304,24 +275,16 @@ Resources:
             QueryString: true
             Cookies:
               Forward: all
-          TargetOriginId: "kithandkin-lambda"
+          TargetOriginId: "kithandkin"
           ViewerProtocolPolicy: "redirect-to-https"
         CacheBehaviors:
         - PathPattern: "assets/*"
           Compress: true
           ForwardedValues:
             QueryString: false
-          TargetOriginId: "kithandkin-assets"
-          ViewerProtocolPolicy: "redirect-to-https"
-        - PathPattern: "lambda/*"
-          Compress: true
-          ForwardedValues:
             Headers:
-            - "*"
-            QueryString: true
-            Cookies:
-              Forward: all
-          TargetOriginId: "kithandkin-lambda"
+            - Host
+          TargetOriginId: "kithandkin"
           ViewerProtocolPolicy: "redirect-to-https"
         CustomErrorResponses:
         - ErrorCachingMinTTL: 5
@@ -333,248 +296,6 @@ Resources:
           MinimumProtocolVersion: TLSv1
           SslSupportMethod: "sni-only"
         HttpVersion: http2
-
-  LambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - lambda.amazonaws.com
-          Action:
-          - sts:AssumeRole
-      Path: /
-      Policies:
-      # Allow logging to CloudWatch Logs
-      - PolicyName: logs
-        PolicyDocument:
-          Statement:
-            Effect: Allow
-            Action:
-            - logs:CreateLogGroup
-            - logs:CreateLogStream
-            - logs:PutLogEvents
-            Resource: "arn:aws:logs:*:*:*"
-      - PolicyName: lambda
-        PolicyDocument:
-          Statement:
-            Effect: Allow
-            Action:
-            - lambda:InvokeFunction
-            Resource: "*"
-
-  # Allow API gateway to execute the lambda
-  GateWayExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - apigateway.amazonaws.com
-          Action:
-          - sts:AssumeRole
-      Path: /
-      Policies:
-      - PolicyName: root
-        PolicyDocument:
-          Statement:
-            Effect: Allow
-            Action:
-            - lambda:InvokeFunction
-            - iam:PassRole
-            Resource:
-            - "*"
-
-  LambdaSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Plambda security group
-
-  # S3 bucket containing binary responses - auto expires content after a day
-  BinaryDataBucket:
-    Type: AWS::S3::Bucket
-#    DeletionPolicy: Retain
-    Properties:
-      BucketName: !Sub ${App}-plambda-binary-data
-      LifecycleConfiguration:
-        Rules:
-        - ExpirationInDays: 1
-          Status: Enabled
-      CorsConfiguration:
-        CorsRules:
-        - AllowedMethods: [GET]
-          AllowedOrigins: ["*"]
-
-  # Policy to grant access to the binary response bucket - both get and put are needed
-  BinaryDataBucketPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: BinaryDataBucketPolicy
-      PolicyDocument:
-        Statement:
-        - Effect: Allow
-          Action:
-          - s3:PutObject*
-          - s3:GetObject
-          Resource: !Sub arn:aws:s3:::${BinaryDataBucket}/*
-      Roles:
-      - !Ref LambdaRole
-
-  # S3 bucket containing assets
-  AssetsBucket:
-    Type: AWS::S3::Bucket
-#    DeletionPolicy: Retain
-    Properties:
-      BucketName: !Sub ${App}-plambda-assets
-      CorsConfiguration:
-        CorsRules:
-        - AllowedMethods: [GET]
-          AllowedOrigins: ["*"]
-
-  # Policy to grant access to the assets bucket - get is globally available
-  AssetsBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref AssetsBucket
-      PolicyDocument:
-        Statement:
-        - Effect: Allow
-          Action:
-          - s3:GetObject
-          Resource: !Sub arn:aws:s3:::${AssetsBucket}/*
-          Principal: "*"
-
-  PlambdaLambda:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: !Sub ${App}-plambda
-      Code:
-        S3Bucket: !Ref ArtifactBucket
-        S3Key: !Ref ArtifactKey
-      Handler: plambda.LambdaEntrypoint::run
-      MemorySize: 1536
-      Role: !GetAtt LambdaRole.Arn
-      Runtime: java8
-      Timeout: 120
-      Environment:
-        Variables:
-          BinaryBucketName: !Ref BinaryDataBucket
-
-  PlambdaLambdaPermissions:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:invokeFunction
-      FunctionName: !GetAtt PlambdaLambda.Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${API}/*
-
-  # Event rule that triggers the first lambda every 5 minutes
-#  PlambdaLambdaPingRule:
-#    Type: AWS::Events::Rule
-#    Properties:
-#      ScheduleExpression: rate(5 minutes)
-#      Targets:
-#      - Id: PlambdaLambdaPingRule
-#        Arn: !GetAtt PlambdaLambda.Arn
-#        Input: '{"httpMethod": "PING", "path": "/plambda/ping"}'
-
-  # Permission to allow the event rule to trigger the first lambda
-#  InvokePlambdaLambdaPermission:
-#    Type: AWS::Lambda::Permission
-#    Properties:
-#      FunctionName: !GetAtt PlambdaLambda.Arn
-#      Action: lambda:InvokeFunction
-#      Principal: events.amazonaws.com
-#      SourceArn: !GetAtt PlambdaLambdaPingRule.Arn
-
-  API:
-    Type: AWS::ApiGateway::RestApi
-    Properties:
-      Name: !Sub Plambda ${App}
-      Description: !Sub Plambda ${App} API gateway
-      EndpointConfiguration:
-        Types:
-        - REGIONAL
-
-  ProxyRootResourceAny:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      HttpMethod: ANY
-      ResourceId: !GetAtt API.RootResourceId
-      RestApiId: !Ref API
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PlambdaLambda.Arn}/invocations
-
-  ProxyResource:
-      Type: AWS::ApiGateway::Resource
-      Properties:
-        ParentId: !GetAtt API.RootResourceId
-        PathPart: "{path+}"
-        RestApiId: !Ref API
-
-  ProxyResourceAny:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      HttpMethod: ANY
-      ResourceId:
-        Ref: ProxyResource
-      RestApiId:
-        Ref: API
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PlambdaLambda.Arn}/invocations
-
-  APIDeployment:
-      Type: AWS::ApiGateway::Deployment
-      Properties:
-          Description: CFN deployment 2016-09-08 22:47
-          RestApiId: !Ref API
-          # ha ha ha - prod.
-          StageName: PROD
-      DependsOn:
-      - ProxyRootResourceAny
-      - ProxyResourceAny
-
-  APIDomainName:
-    Type: "AWS::ApiGateway::DomainName"
-    Properties:
-      DomainName: www.kithandkin.wedding
-      EndpointConfiguration:
-        Types:
-        - REGIONAL
-      RegionalCertificateArn: !Ref TLSCert
-
-  ApexAPIDomainName:
-    Type: "AWS::ApiGateway::DomainName"
-    Properties:
-      DomainName: kithandkin.wedding
-      EndpointConfiguration:
-        Types:
-        - REGIONAL
-      RegionalCertificateArn: !Ref TLSCert
-
-  APIBasePathMapping:
-    Type: "AWS::ApiGateway::BasePathMapping"
-    Properties:
-      DomainName: !Ref APIDomainName
-      RestApiId: !Ref API
-      Stage: PROD
-
-  ApexAPIBasePathMapping:
-    Type: "AWS::ApiGateway::BasePathMapping"
-    Properties:
-      DomainName: !Ref ApexAPIDomainName
-      RestApiId: !Ref API
-      Stage: PROD
 
   DNSRecords:
     Type: "AWS::Route53::RecordSetGroup"

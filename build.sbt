@@ -8,6 +8,8 @@ scalaVersion := "2.11.8"
 
 val awsVersion = "1.11.86"
 
+resolvers += "Plambda Releases" at "https://dl.bintray.com/sihil/plambda"
+
 libraryDependencies ++= Seq(
   // webjars
   "org.webjars" %% "webjars-play" % "2.5.0",
@@ -34,32 +36,23 @@ libraryDependencies ++= Seq(
   // play framework
   filters,
   ws,
-  cache
+  cache,
+  // plambda adaptor
+  "net.sihil" %% "plambda" % "0.0.4-SNAPSHOT",
+  "com.amazonaws" % "aws-java-sdk-s3" % awsVersion,
+  component("play-test")
 )
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala, JDebPackaging, SbtWeb).settings(
+publishMavenStyle := false
+
+lazy val root = (project in file(".")).enablePlugins(PlayScala, SbtWeb).settings(
   JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
 
   pipelineStages := Seq(autoprefixer, digest),
 
   packageName in Universal := name.value,
-  maintainer := "Simon Hildrew <simon@hildrew.net>",
-  packageSummary := "Kith and Kin website",
-  packageDescription := """Play app that runs the kith and kin website""",
-  debianPackageDependencies := Seq("openjdk-8-jre-headless"),
-
-  javaOptions in Universal ++= Seq(
-    "-Dpidfile.path=/dev/null",
-    "-J-XX:MaxRAMFraction=2",
-    "-J-XX:InitialRAMFraction=2",
-    "-J-XX:MaxMetaspaceSize=300m",
-    "-J-XX:+PrintGCDetails",
-    "-J-XX:+PrintGCDateStamps",
-    s"-J-Xloggc:/var/log/${packageName.value}/gc.log"
-  ),
-
-  serverLoading in Debian := Systemd,
-
+  PlayKeys.externalizeResources := false,
+  topLevelDirectory in Universal := None,
   sources in (Compile,doc) := Seq.empty,
   publishArtifact in (Compile, packageDoc) := false
 )

@@ -1,5 +1,5 @@
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.auth.{AWSCredentialsProviderChain, InstanceProfileCredentialsProvider}
+import com.amazonaws.auth.{AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder
 import controllers._
@@ -27,7 +27,7 @@ class AppComponents(context: Context)
   override lazy val httpFilters = Seq(
     new AccessLoggingFilter(),
     csrfFilter,
-    gzipFilter,
+//    gzipFilter,
     new ForwardingFilter(context.environment.mode == Mode.Prod)
   )
 
@@ -58,6 +58,7 @@ class AppComponents(context: Context)
 
   private val credentialsProviderChain = new AWSCredentialsProviderChain(
     new ProfileCredentialsProvider("kk"),
+    new EnvironmentVariableCredentialsProvider(),
     InstanceProfileCredentialsProvider.getInstance()
   )
   val dynamoClient = AmazonDynamoDBClientBuilder.standard().
