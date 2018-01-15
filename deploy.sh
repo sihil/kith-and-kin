@@ -4,7 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 AWS_DEFAULT_PROFILE=kk
 AWS_DEFAULT_REGION=eu-west-2
-REMOTE_DEB_LOCATION="s3://kithandkin/application/kith-and-kin_1.0_all.deb"
+PLAMBDA_BUCKET="kithandkin"
+PLAMBDA_KEY="application/plambda/kith-and-kin.zip"
+REMOTE_PLAMBDA_LOCATION="s3://${PLAMBDA_BUCKET}/${PLAMBDA_KEY}"
 
 . $(brew --prefix nvm)/nvm.sh
 nvm use 6
@@ -12,20 +14,23 @@ yarn
 yarn build
 yarn build-pay
 
-# build the deb
-sbt debian:packageBin
+# build the lambda zip
+sbt universal:packageBin
+
+# upload the assets
+ASSETS=${DIR}/target/plamda-assets
+mkdir -p ${ASSETS}
+rm -rf ${ASSETS}/*
+unzip ${DIR}/target/scala-2.11/kith-and-kin_2.11-1.0-web-assets.jar -d ${ASSETS}/
+aws s3 sync --exclude .DS_Store ${ASSETS}/public/ s3://kithandkin-plambda-assets/public/assets/
 
 # copy to S3
-aws s3 cp ${DIR}/target/kith-and-kin_1.0_all.deb ${REMOTE_DEB_LOCATION}
+aws s3 cp ${DIR}/target/universal/kith-and-kin.zip ${REMOTE_PLAMBDA_LOCATION}
 
-# find instance
-INSTANCE_ID=$( aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names KithAndKin-AutoscalingGroup-7XNO9TRBKHH6 | jq -r .AutoScalingGroups[0].Instances[0].InstanceId )
-HOSTNAME=$( aws ec2 describe-instances --instance-ids ${INSTANCE_ID} | jq -r .Reservations[0].Instances[0].PublicDnsName )
-
-# update the instance
-ssh -t ${HOSTNAME} "sudo aws --region eu-west-2 s3 cp ${REMOTE_DEB_LOCATION} /kithkin"
-ssh -t ${HOSTNAME} "sudo dpkg -i /kithkin/kith-and-kin_1.0_all.deb"
-ssh -t ${HOSTNAME} "sudo service kith-and-kin restart"
+# update the lambda function
+aws lambda update-function-code --function-name kithandkin-plambda \
+                                --s3-bucket ${PLAMBDA_BUCKET} \
+                                --s3-key ${PLAMBDA_KEY}
 
 #
 echo
