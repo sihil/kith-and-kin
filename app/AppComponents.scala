@@ -43,18 +43,15 @@ class AppComponents(context: Context)
     "DEV"
   }
 
-  val stripeKeys =
-    if (environment.mode == Mode.Prod) {
-      StripeKeys(
-        publishable = "***REMOVED***",
-        secret = "***REMOVED***"
-      )
-    } else {
-      StripeKeys(
-        publishable = "***REMOVED***",
-        secret = "***REMOVED***"
-      )
-    }
+  private val maybeStripeKeys =
+    for {
+      publishableKey <- Option(System.getenv("STRIPE_KEY"))
+      secretKey <- Option(System.getenv("STRIPE_SECRET_KEY"))
+    } yield StripeKeys(publishableKey, secretKey)
+
+  private val stripeKeys = maybeStripeKeys.getOrElse {
+    throw new IllegalArgumentException("STRIPE_KEY and STRIPE_SECRET_KEY environment variables must be set")
+  }
 
   private val credentialsProviderChain = new AWSCredentialsProviderChain(
     new ProfileCredentialsProvider("kk"),

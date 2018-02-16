@@ -27,6 +27,12 @@ Parameters:
   ArtifactKey:
     Description: Key in the bucket where the artifact is located
     Type: String
+  StripeKey:
+    Description: The publishable Stripe key
+    Type: String
+  StripeSecretKey:
+    Description: The secret Stripe key
+    Type: String
 
 Resources:
   ApplicationPolicy:
@@ -302,6 +308,8 @@ Resources:
       Environment:
         Variables:
           BinaryBucketName: !Ref BinaryDataBucket
+          STRIPE_KEY: !Ref StripeKey
+          STRIPE_SECRET_KEY: !Ref StripeSecretKey
 
   PlambdaLambdaPermissions:
     Type: AWS::Lambda::Permission
