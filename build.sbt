@@ -38,7 +38,7 @@ libraryDependencies ++= Seq(
   ws,
   cache,
   // plambda adaptor
-  "net.sihil" %% "plambda" % "0.0.4-SNAPSHOT",
+  "net.sihil" %% "plambda" % "0.0.4",
   "com.amazonaws" % "aws-java-sdk-s3" % awsVersion,
   component("play-test")
 )
