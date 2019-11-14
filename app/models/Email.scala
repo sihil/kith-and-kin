@@ -17,7 +17,8 @@ class EmailTemplates(paymentRepository: PaymentRepository) {
     new OneMonthEmailTemplate(paymentRepository),
     new OneWeekEmailTemplate(paymentRepository),
     new ChasePaymentsEmailTemplate(paymentRepository),
-    ThanksEmailTemplate
+    ThanksEmailTemplate,
+    MilestonesEmailTemplate
   )
 }
 
@@ -93,6 +94,16 @@ object ThanksEmailTemplate extends EmailTemplate {
   override def text(invite: Invite)(implicit request: RequestHeader) = html(invite).map(HtmlToPlainText.convert).get
   override def html(invite: Invite)(implicit request: RequestHeader) = {
     Some(views.html.email.thanksAndHoneymoon(invite).body)
+  }
+  override def recipientSelector = _ => true
+}
+
+object MilestonesEmailTemplate extends EmailTemplate {
+  override def name = "Milestones"
+  override def subject(invite: Invite) = "🌻 Milestones 🌻"
+  override def text(invite: Invite)(implicit request: RequestHeader) = html(invite).map(HtmlToPlainText.convert).get
+  override def html(invite: Invite)(implicit request: RequestHeader) = {
+    Some(views.html.email.milestonesParty(invite).body)
   }
   override def recipientSelector = _ => true
 }

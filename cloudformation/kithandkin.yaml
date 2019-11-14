@@ -301,10 +301,10 @@ Resources:
         S3Bucket: !Ref ArtifactBucket
         S3Key: !Ref ArtifactKey
       Handler: plambda.LambdaEntrypoint::run
-      MemorySize: 1536
+      MemorySize: 3008
       Role: !GetAtt LambdaRole.Arn
       Runtime: java8
-      Timeout: 120
+      Timeout: 300
       Environment:
         Variables:
           BinaryBucketName: !Ref BinaryDataBucket

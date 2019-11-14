@@ -282,10 +282,17 @@ class AdminController(val wsClient: WSClient, val baseUrl: String, inviteReposit
   }
 
   def emailDashboard = WhitelistAction() { implicit request =>
+    Logger.info("Rendering email dashboard")
+    val templates = emailTemplates.allTemplates
+    Logger.info("Got templates")
+    val allEmails = emailRepository.getEmailList.toSeq
+    Logger.info("Got emails")
+    val invites = inviteRepository.getInviteList.toSeq
+    Logger.info("Got invites")
     Ok(views.html.admin.emailDashboard(
-      emailTemplates.allTemplates,
-      emailRepository.getEmailList.toSeq,
-      inviteRepository.getInviteList.toSeq
+      templates,
+      allEmails,
+      invites
     ))
   }
 
